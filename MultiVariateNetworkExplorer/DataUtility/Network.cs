@@ -18,8 +18,8 @@ namespace DataUtility
         public bool this[string vertice1, string vertice2]
         {
             get
-            {
-                return BinarySearch(this.network[vertice1], vertice2);
+            {   
+                return Utils.BinarySearch<string>(this.network[vertice1], vertice2);
             }
 
         }
@@ -31,8 +31,12 @@ namespace DataUtility
             if (!this.network.ContainsKey(vertice1))
                 this.network[vertice1] = new List<string>();
 
-            
-            
+            if (!this.network.ContainsKey(vertice2))
+                this.network[vertice2] = new List<string>();
+
+            AddWithOrder(vertice1, vertice2);
+
+
         }
 
         public void AddIndirectedEdge(string vertice1, string vertice2)
@@ -43,18 +47,18 @@ namespace DataUtility
             if (!this.network.ContainsKey(vertice2))
                 this.network[vertice2] = new List<string>();
 
-            this.network[vertice1].Add(vertice2);
-            this.network[vertice2].Add(vertice1);
+            AddWithOrder(vertice1, vertice2);
+            AddWithOrder(vertice2, vertice1);
         }
 
         private void AddWithOrder(string vertice1, string vertice2)
         {
             int numberOfEdges = this.network[vertice1].Count;
             int insertIndex = numberOfEdges - 1;
-            for (int i = 0; i < numberOfEdges; i++)
+            for (int i = 0; i < numberOfEdges - 1; i++)
             {
                 
-                if (string.Compare(vertice2, this.network[vertice1][i]) < 0)
+                if (vertice2.CompareTo(this.network[vertice1][i]) < 0)
                 {
                     insertIndex = i;
                     break;
@@ -85,7 +89,24 @@ namespace DataUtility
 
                     string[] splitLine = line.Split(separator);
 
-                    
+                    if (!this.network.ContainsKey(splitLine[0]))
+                        this.network[splitLine[0]] = new List<string>();
+
+                    if (!this.network.ContainsKey(splitLine[1]))
+                        this.network[splitLine[1]] = new List<string>();
+
+                    if(directed)
+                    {
+                        AddWithOrder(splitLine[0], splitLine[1]);
+                    }
+
+                    else
+                    {
+                        AddWithOrder(splitLine[0], splitLine[1]);
+                        AddWithOrder(splitLine[1], splitLine[0]);
+                    }
+
+
                 }
             }
         }

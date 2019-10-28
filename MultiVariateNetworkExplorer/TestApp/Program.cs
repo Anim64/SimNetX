@@ -7,8 +7,14 @@ namespace TestApp
     {
         static void Main(string[] args)
         {
-            VectorData v = new VectorData();
-            v.ReadFromFile("iris.data", ',');
+            //DataFrame v = new DataFrame();
+            //v.ReadFromFile("iris.data", ',');
+
+
+            
+
+          
+
             
         }
     }
