@@ -18,10 +18,11 @@ namespace DataUtility
             
         }
 
-        public DataFrame(string fileName, char separator, bool header = false)
+        public DataFrame(string fileName, bool header = false, params char[] separator)
         {
+            dataFrame = new SortedDictionary<string, IList>();
             DataCount = 0;
-            this.ReadFromFile(fileName, separator, header);
+            this.ReadFromFile(fileName, header, separator);
         }
 
         
@@ -98,7 +99,7 @@ namespace DataUtility
         /// <param name="radius">Threshold under which every vertice will create an edge</param>
         /// <param name="N">Number of minimum edges per vertice</param>
         /// <returns>Returns a network representation of the DataFrame</returns>
-        public Network CreateNetwork(float radius, int N)
+        public Network CreateNetwork(double radius, int N)
         {
             Network result = new Network();
             Matrix<double> kernelMatrix = KernelMatrix();
@@ -118,13 +119,13 @@ namespace DataUtility
 
                 }
 
-                var orderedDict = dict.OrderByDescending(key => key.Value);
+                var orderedDict = dict.OrderBy(key => key.Value);
 
                 int edgeCount = 0;
 
                 foreach (KeyValuePair<int, double> pair in orderedDict)
                 {
-                    if (edgeCount >= N && pair.Value <= radius)
+                    if (edgeCount >= N && pair.Value >= radius)
                         break;
 
                     result.AddIndirectedEdge(i.ToString(), pair.Key.ToString());
@@ -173,7 +174,7 @@ namespace DataUtility
         /// <param name="filename"></param>
         /// <param name="header"></param>
         /// <param name="separator"></param>
-        public void ReadFromFile(string filename, char separator, bool header = false)
+        public void ReadFromFile(string filename, bool header = false, params char[] separator)
         {
             try
             {
@@ -184,6 +185,7 @@ namespace DataUtility
                     string[] headers;
                     string[] vector;
                     string line;
+                    //Load headers
                     if (header)
                     {
                         if((line = sr.ReadLine()) != null)
@@ -203,15 +205,15 @@ namespace DataUtility
                                         this.dataFrame[headers[i]].Add(resultInt);
 
                                     }
-                                    else if (float.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out float resultFloat))
+                                    else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                     {
-                                        this.dataFrame[headers[i]] = new List<float>();
+                                        this.dataFrame[headers[i]] = new List<double>();
                                         this.dataFrame[headers[i]].Add(resultFloat);
                                     }
                                     else
                                     {
                                         this.dataFrame[headers[i]] = new List<string>();
-                                        this.dataFrame[headers[i]].Add(resultFloat);
+                                        this.dataFrame[headers[i]].Add(vector[i]);
 
                                     }
 
@@ -224,6 +226,7 @@ namespace DataUtility
                        
                     }
 
+                    //Load default headers
                     else
                     {
                         if ((line = sr.ReadLine()) != null)
@@ -244,15 +247,15 @@ namespace DataUtility
                                     this.dataFrame[headers[i]].Add(resultInt);
 
                                 }
-                                else if (float.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out float resultFloat))
+                                else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                 {
-                                    this.dataFrame[headers[i]] = new List<float>();
+                                    this.dataFrame[headers[i]] = new List<double>();
                                     this.dataFrame[headers[i]].Add(resultFloat);
                                 }
                                 else
                                 {
                                     this.dataFrame[headers[i]] = new List<string>();
-                                    this.dataFrame[headers[i]].Add(resultFloat);
+                                    this.dataFrame[headers[i]].Add(vector[i]);
 
                                 }
 
@@ -261,7 +264,7 @@ namespace DataUtility
                     }
 
                     
-                    DataCount++;
+                    
 
                     
                     //Load Data to Frame
@@ -281,8 +284,8 @@ namespace DataUtility
                         for (int i = 0; i < this.dataFrame.Count; i++)
                         {
                             keys.MoveNext();
-                            if (this.dataFrame[keys.Current] is List<float>)
-                                this.dataFrame[keys.Current].Add(float.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            if (this.dataFrame[keys.Current] is List<double>)
+                                this.dataFrame[keys.Current].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
                             else if (this.dataFrame[keys.Current] is List<string>)
                                 this.dataFrame[keys.Current].Add(vector[i]);
                             

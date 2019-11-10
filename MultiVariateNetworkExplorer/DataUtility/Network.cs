@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
 namespace DataUtility
 {
-    public class Network
+    public class Network : IEnumerable<KeyValuePair<string, SortedSet<string>>>
     {
-        SortedDictionary<string, List<string>> network;
+        private SortedDictionary<string, SortedSet<string>> network;
 
         public Network()
         {
-            network = new SortedDictionary<string, List<string>>();
+            network = new SortedDictionary<string, SortedSet<string>>();
             
         }
 
@@ -28,46 +29,63 @@ namespace DataUtility
 
         public void AddDirectedEdge(string vertice1, string vertice2)
         {
-            if (!this.network.ContainsKey(vertice1))
-                this.network[vertice1] = new List<string>();
 
-            if (!this.network.ContainsKey(vertice2))
-                this.network[vertice2] = new List<string>();
+            if(!this.network.TryGetValue(vertice1, out SortedSet<string> links_v1))
+            {
+                if (links_v1 == null)
+                {
+                    this.network[vertice1] = links_v1;
+                    links_v1 = new SortedSet<string>();
+                }
+                
+            }
 
-            AddWithOrder(vertice1, vertice2);
+            if (!this.network.TryGetValue(vertice2, out SortedSet<string> links_v2))
+            {
+                if (links_v2 == null)
+                {
+                    this.network[vertice1] = links_v2;
+                    links_v2 = new SortedSet<string>();
+                }
+
+
+            }
+
+            this.network[vertice1].Add(vertice2);
+
+
 
 
         }
 
         public void AddIndirectedEdge(string vertice1, string vertice2)
         {
-            if (!this.network.ContainsKey(vertice1))
-                this.network[vertice1] = new List<string>();
-
-            if (!this.network.ContainsKey(vertice2))
-                this.network[vertice2] = new List<string>();
-
-            AddWithOrder(vertice1, vertice2);
-            AddWithOrder(vertice2, vertice1);
-        }
-
-        private void AddWithOrder(string vertice1, string vertice2)
-        {
-            int numberOfEdges = this.network[vertice1].Count;
-            int insertIndex = numberOfEdges - 1;
-            for (int i = 0; i < numberOfEdges - 1; i++)
+            if (!this.network.TryGetValue(vertice1, out SortedSet<string> links_v1))
             {
-                
-                if (vertice2.CompareTo(this.network[vertice1][i]) < 0)
+                if (links_v1 == null)
                 {
-                    insertIndex = i;
-                    break;
+                    this.network[vertice1] = new SortedSet<string>();
+                    
                 }
+
                 
             }
 
-            this.network[vertice1].Insert(insertIndex, vertice2);
+            if (!this.network.TryGetValue(vertice2, out SortedSet<string> links_v2))
+            {
+                if (links_v2 == null)
+                {
+                    this.network[vertice2] = new SortedSet<string>();
+                }
+
+
+            }
+
+            this.network[vertice1].Add(vertice2);
+            this.network[vertice2].Add(vertice1);
         }
+
+       
 
         public void ReadFromFile(string filename, char separator, bool header = false, bool directed = false)
         {
@@ -90,25 +108,37 @@ namespace DataUtility
                     string[] splitLine = line.Split(separator);
 
                     if (!this.network.ContainsKey(splitLine[0]))
-                        this.network[splitLine[0]] = new List<string>();
+                        this.network[splitLine[0]] = new SortedSet<string>();
 
                     if (!this.network.ContainsKey(splitLine[1]))
-                        this.network[splitLine[1]] = new List<string>();
+                        this.network[splitLine[1]] = new SortedSet<string>();
 
                     if(directed)
                     {
-                        AddWithOrder(splitLine[0], splitLine[1]);
+                        AddDirectedEdge(splitLine[0], splitLine[1]);
                     }
 
                     else
                     {
-                        AddWithOrder(splitLine[0], splitLine[1]);
-                        AddWithOrder(splitLine[1], splitLine[0]);
+                        AddIndirectedEdge(splitLine[0], splitLine[1]);
                     }
 
 
                 }
             }
+        }
+
+        public IEnumerator<KeyValuePair<string, SortedSet<string>>> GetEnumerator()
+        {
+            foreach(KeyValuePair<string, SortedSet<string>> pair in this.network)
+            {
+                yield return pair;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -1,0 +1,59 @@
+﻿body {
+    background-image: url(../images/bg_networking.jpg);
+    background-size: cover;
+    padding-top: 50px;
+    padding-bottom: 20px;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    font-size: 50px;
+    
+}
+
+
+.center-div {
+    position: page;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+
+.inputfile {
+    height: 0;
+    overflow: hidden;
+    width: 0;
+}
+
+.inputfile + label {
+    background: #f15d22;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-family: 'Poppins', sans-serif;
+    font-size: inherit;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    outline: none;
+    padding: 1rem 50px;
+    position: relative;
+    transition: all 0.3s;
+    vertical-align: middle;
+}
+.inputfile:focus + label,
+.inputfile + label:hover {
+    background-color: darken(#f15d22, 10%);
+}
+
+.inputfile:focus + label {
+    outline: 1px dotted #000;
+    
+}
+
+
