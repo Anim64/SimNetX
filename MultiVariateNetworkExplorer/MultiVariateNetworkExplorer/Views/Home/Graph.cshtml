@@ -1,0 +1,34 @@
+﻿
+@{
+    ViewData["Title"] = "Graph";
+}
+
+@model string
+@section Styles {
+    <style>
+        .links line {
+            stroke: #aaa;
+        }
+
+        .nodes circle {
+            pointer-events: all;
+            stroke: none;
+            stroke-width: 40px;
+        }
+
+    </style>
+}
+
+<h2>Graph</h2>
+
+<svg width="960" height="600"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="~/js/graph.js"></script>
+<script>
+    drawNetwork(@Html.Raw(Model));
+</script>
+
+
+
+
+

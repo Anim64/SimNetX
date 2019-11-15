@@ -153,7 +153,7 @@ namespace DataUtility
                         
                         if(!(pair.Value is List<string>))
                         {
-                            euclideanDistance += Math.Pow((double)((double)pair.Value[i] - (double)pair.Value[j]), 2);
+                            euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
                         }
                         
                     }
@@ -284,7 +284,9 @@ namespace DataUtility
                         for (int i = 0; i < this.dataFrame.Count; i++)
                         {
                             keys.MoveNext();
-                            if (this.dataFrame[keys.Current] is List<double>)
+                            if (this.dataFrame[keys.Current] is List<int>)
+                                this.dataFrame[keys.Current].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            else if (this.dataFrame[keys.Current] is List<double>)
                                 this.dataFrame[keys.Current].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
                             else if (this.dataFrame[keys.Current] is List<string>)
                                 this.dataFrame[keys.Current].Add(vector[i]);

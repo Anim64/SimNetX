@@ -1,25 +1,11 @@
 ﻿body {
-    background-image: url(../images/bg_networking.jpg);
-    background-size: cover;
-    padding-top: 50px;
-    padding-bottom: 20px;
+    background-image: none;
     color: white;
     text-align: center;
 }
 
 h1 {
     font-size: 50px;
-    
-}
-
-
-.center-div {
-    position: page;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
 }
 
 
@@ -46,6 +32,7 @@ h1 {
     transition: all 0.3s;
     vertical-align: middle;
 }
+
 .inputfile:focus + label,
 .inputfile + label:hover {
     background-color: darken(#f15d22, 10%);
@@ -53,7 +40,6 @@ h1 {
 
 .inputfile:focus + label {
     outline: 1px dotted #000;
-    
 }
 
 

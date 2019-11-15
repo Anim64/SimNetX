@@ -49,6 +49,7 @@ namespace DataUtility
             root["nodes"] = jNodes;
             root["links"] = jLinks;
 
+            
             string json = root.ToString();
 
             return json;
