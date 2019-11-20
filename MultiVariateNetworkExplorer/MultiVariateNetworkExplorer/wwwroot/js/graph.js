@@ -1,48 +1,96 @@
-﻿function drawNetwork(data){
+﻿var graph = null;
 
-    var graph = data;
+var node = null;
 
-    alert(graph);
+var link = null;
 
-    var svg = d3.select("svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+var svg = d3.select("svg"),
+    width = +svg.node().getBoundingClientRect().width,
+    height = +svg.node().getBoundingClientRect().height;
 
-    var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(d => d.id))
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(width / 2, height/2))
-        .force("x", d3.forceX())
-        .force("y", d3.forceY());
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink())
+    .force("charge", d3.forceManyBody())
+    .force("collide", d3.forceCollide())
+    .force("center", d3.forceCenter())
+    .force("forceX", d3.forceX())
+    .force("forceY", d3.forceY());
 
-    var link = svg.append("g")
+var forceProperties = {
+    center: {
+        x: 0.5,
+        y: 0.5
+    },
+
+    charge: {
+        enabled: true,
+        strength: -30,
+        distanceMin: 1,
+        distanceMax: 2000
+    },
+
+    collide: {
+        enabled: true,
+        strength: 0.7,
+        radius: 5,
+        iterations: 1
+    },
+
+    forceX: {
+        enabled: true,
+        strength: 0.1,
+        x: 0.5
+    },
+
+    forceY: {
+        enabled: true,
+        strength: 0.1,
+        y: 0.5
+    },
+
+    link: {
+        enabled: true,
+        distance: 50,
+        iterations: 1
+    }
+
+};
+
+function drawNetwork(data) {
+
+    graph = data;
+
+
+    link = svg.append("g")
         .attr("class", "links")
         .selectAll("line")
         .data(graph.links)
         .enter().append("line");
-
-    var node = svg.append("g")
+    
+    node = svg.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
         .data(graph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
             const scale = d3.scaleOrdinal(d3.schemeCategory10);
-            return scale(d.id);})
+            return scale(d.id);
+        })
         .attr("r", 5)
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended));
 
+    
     node.append("title")
         .text(function (d) { return d.id; });
 
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked);
-        
 
+    updateForces();
     simulation.force("link")
         .links(graph.links);
 
@@ -75,5 +123,59 @@
         d.fy = null;
     }
 
-
+    
+   
 }
+
+function updateForces() {
+    simulation.force("center")
+        .x(width * forceProperties.center.x)
+        .y(height * forceProperties.center.y);
+    simulation.force("charge")
+        .strength(forceProperties.charge.strength * forceProperties.charge.enabled)
+        .distanceMin(forceProperties.charge.distanceMin)
+        .distanceMax(forceProperties.charge.distanceMax);
+    simulation.force("collide")
+        .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
+        .radius(forceProperties.collide.radius)
+        .iterations(forceProperties.collide.iterations);
+    simulation.force("forceX")
+        .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+        .x(width * forceProperties.forceX.x);
+    simulation.force("forceY")
+        .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+        .y(height * forceProperties.forceY.y);
+    simulation.force("link")
+        .id(function (d) { return d.id; })
+        .distance(forceProperties.link.distance)
+        .iterations(forceProperties.link.iterations)
+        .links(forceProperties.link.enabled ? graph.links : []);
+
+    // updates ignored until this is run
+    // restarts the simulation (important if simulation has already slowed down)
+    simulation.alpha(1).restart();
+}
+
+function updateDisplay() {
+    node
+        .attr("r", forceProperties.collide.radius)
+        .attr("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
+        .attr("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
+
+    link
+        .attr("stroke-width", forceProperties.link.enabled ? 1 : .5)
+        .attr("opacity", forceProperties.link.enabled ? 1 : 0);
+}
+
+function updateAll() {
+    updateForces();
+    updateDisplay();
+}
+
+d3.select(window).on("resize", function () {
+    width = +svg.node().getBoundingClientRect().width;
+    height = +svg.node().getBoundingClientRect().height;
+    updateForces();
+});
+
+

@@ -1,5 +1,7 @@
 ﻿using DataUtility;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace TestApp
 {
@@ -11,12 +13,13 @@ namespace TestApp
             //v.ReadFromFile("iris.data", ',');
 
 
-            MultiVariateNetwork mvn = new MultiVariateNetwork("iris.data", false , ',');
+            /*MultiVariateNetwork mvn = new MultiVariateNetwork("iris.data", false , ',');
             string json = mvn.ToD3Json();
-            Console.WriteLine(json);
+            Console.WriteLine(json);*/
             
-          
 
+
+            
             
         }
     }
