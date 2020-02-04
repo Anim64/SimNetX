@@ -19,7 +19,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> FileUpload(IFormFile file)
+        public async Task<IActionResult> Graph(IFormFile file)
         {
             long size = file.Length;
 
@@ -40,7 +40,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
 
 
-                return View("Graph",multiVariateNetwork.ToD3Json());
+                return View("Graph", multiVariateNetwork);
             }
 
 

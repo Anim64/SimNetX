@@ -11,6 +11,21 @@ namespace DataUtility
     {
         private SortedDictionary<string, IList> dataFrame;
         public int DataCount { get; set; }
+
+        public class MinMaxStruct{
+            public double minAttrValue { get; set; }
+            public double maxAttrValue { get; set; }
+
+            public MinMaxStruct(double min, double max)
+            {
+                this.minAttrValue = min;
+                this.maxAttrValue = max;
+            }
+        }
+
+        public Dictionary<string, MinMaxStruct> numAtrrExtremes { get; }
+        public Dictionary<string, List<string>> catAttrValues { get; }
+        
         public DataFrame()
         {
             dataFrame = new SortedDictionary<string, IList>();
@@ -22,7 +37,13 @@ namespace DataUtility
         {
             dataFrame = new SortedDictionary<string, IList>();
             DataCount = 0;
+
+            numAtrrExtremes = new Dictionary<string, MinMaxStruct>();
+            catAttrValues = new Dictionary<string, List<string>>();
+
             this.ReadFromFile(fileName, header, separator);
+            this.FindAttributeExtremesAndValues();
+            
         }
 
         
@@ -137,6 +158,47 @@ namespace DataUtility
 
 
         }
+
+        private void FindAttributeExtremesAndValues()
+        {
+            
+
+            foreach (var column in this.dataFrame)
+            {
+                if (column.Value is List<int> || column.Value is List<double>)
+                {
+                    double min = double.PositiveInfinity;
+                    double max = double.NegativeInfinity;
+                
+                    foreach (var value in column.Value)
+                    {
+                        double dValue = Convert.ToDouble(value);
+
+                        if (dValue > max)
+                            max = dValue;
+
+                        if (dValue < min)
+                            min = dValue;
+                    }
+
+                    this.numAtrrExtremes[column.Key] = new MinMaxStruct(min, max);
+                }
+
+                else if (column.Value is List<string>)
+                {
+                    this.catAttrValues[column.Key] = ((List<string>)column.Value).Distinct().ToList();
+                }
+
+                
+                
+
+
+
+            }
+
+        }
+
+
 
         private Matrix<double> KernelMatrix()
         {

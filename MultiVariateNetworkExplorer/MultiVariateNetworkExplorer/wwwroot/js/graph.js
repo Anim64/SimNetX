@@ -102,8 +102,8 @@ function drawNetwork(data) {
             .attr("y2", function (d) { return d.target.y; });
 
         node
-            .attr("cx", function (d) { return d.x; })
-            .attr("cy", function (d) { return d.y; });
+            .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
+            .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
     }
 
     function dragstarted(d) {
