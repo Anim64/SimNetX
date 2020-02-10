@@ -14,6 +14,7 @@ namespace MultiVariateNetworkExplorer
     {
         public static void Main(string[] args)
         {
+            
             CreateWebHostBuilder(args).Build().Run();
         }
 

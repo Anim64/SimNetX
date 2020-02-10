@@ -63,17 +63,17 @@
             </li>
         </ul>
         <div class="tabcontent" id="attributes">
-            @foreach (var pair in Model.VectorData.numAtrrExtremes)
+            @foreach (var pair in Model.VectorData.NumAtrrExtremes)
             {
                 <div class="force">
                     <p><label>@pair.Key</label></p>
                     <div class="small-12 medium-2 columns">
-                        <input type="number" id="@(pair.Key + "-sliderOutput1")">
+                        <input type="number" id="@(pair.Key + "-sliderOutput1")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.minAttrValue" step="0.01">
                     </div>
                     <div id="@(pair.Key + "-slider")"></div>
                     <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutput1")', '@(pair.Key + "-sliderOutput2")', @pair.Value.minAttrValue, @pair.Value.maxAttrValue)</script>
                     <div class="small-12 medium-2 columns">
-                        <input type="number" id="@(pair.Key + "-sliderOutput2")">
+                        <input type="number" id="@(pair.Key + "-sliderOutput2")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.maxAttrValue" step="0.01">
                     </div>
                 </div>
             }
@@ -183,15 +183,16 @@
             $('#defaultTab').click();
         </script>
     </div>
-    <div class="col-sm-6">
-        <svg width="960" height="800"></svg>
+    <div class="col-sm-7">
+        <svg viewBox="0 0 1080 1080" preserveAspectRatio="xMidYMid meet"></svg>
         <script src="https://d3js.org/d3.v4.min.js"></script>
         <script src="~/js/graph.js"></script>
         <script>
         drawNetwork(@Html.Raw(Model.ToD3Json()));
         </script>
     </div>
-    <div class="col-sm-3">
+    <div class="col-sm-2 form-group" id="node_properties">
+        
 
     </div>
 </div>

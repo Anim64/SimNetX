@@ -53,7 +53,7 @@ function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue
             $("#" + maxValueId).val(ui.values[1]);
         }
     });
-    $("#" + minValueId).val($("#" + sliderId).slider("values", 0));
-    $("#" + maxValueId).val($("#" + sliderId).slider("values", 1));
+    //$("#" + minValueId).val($("#" + sliderId).slider("values", 0));
+    //$("#" + maxValueId).val($("#" + sliderId).slider("values", 1));
     
 }

@@ -9,7 +9,7 @@ namespace DataUtility
 {
     public class DataFrame
     {
-        private SortedDictionary<string, IList> dataFrame;
+        private readonly SortedDictionary<string, IList> dataFrame;
         public int DataCount { get; set; }
 
         public class MinMaxStruct{
@@ -23,8 +23,8 @@ namespace DataUtility
             }
         }
 
-        public Dictionary<string, MinMaxStruct> numAtrrExtremes { get; }
-        public Dictionary<string, List<string>> catAttrValues { get; }
+        public Dictionary<string, MinMaxStruct> NumAtrrExtremes { get; }
+        public Dictionary<string, List<string>> CatAttrValues { get; }
         
         public DataFrame()
         {
@@ -38,8 +38,8 @@ namespace DataUtility
             dataFrame = new SortedDictionary<string, IList>();
             DataCount = 0;
 
-            numAtrrExtremes = new Dictionary<string, MinMaxStruct>();
-            catAttrValues = new Dictionary<string, List<string>>();
+            NumAtrrExtremes = new Dictionary<string, MinMaxStruct>();
+            CatAttrValues = new Dictionary<string, List<string>>();
 
             this.ReadFromFile(fileName, header, separator);
             this.FindAttributeExtremesAndValues();
@@ -155,8 +155,11 @@ namespace DataUtility
             }
 
             return result;
+        }
 
-
+        public IEnumerable<string> Columns()
+        {
+            return this.dataFrame.Keys;
         }
 
         private void FindAttributeExtremesAndValues()
@@ -181,12 +184,12 @@ namespace DataUtility
                             min = dValue;
                     }
 
-                    this.numAtrrExtremes[column.Key] = new MinMaxStruct(min, max);
+                    this.NumAtrrExtremes[column.Key] = new MinMaxStruct(min, max);
                 }
 
                 else if (column.Value is List<string>)
                 {
-                    this.catAttrValues[column.Key] = ((List<string>)column.Value).Distinct().ToList();
+                    this.CatAttrValues[column.Key] = ((List<string>)column.Value).Distinct().ToList();
                 }
 
                 
@@ -197,8 +200,6 @@ namespace DataUtility
             }
 
         }
-
-
 
         private Matrix<double> KernelMatrix()
         {
@@ -325,10 +326,6 @@ namespace DataUtility
                         }
                     }
 
-                    
-                    
-
-                    
                     //Load Data to Frame
                     while ((line = sr.ReadLine()) != null)
                     {

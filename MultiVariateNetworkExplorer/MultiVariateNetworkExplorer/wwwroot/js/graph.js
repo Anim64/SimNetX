@@ -4,9 +4,11 @@ var node = null;
 
 var link = null;
 
+var nodeColor = "#000000";
+
 var svg = d3.select("svg"),
-    width = +svg.node().getBoundingClientRect().width,
-    height = +svg.node().getBoundingClientRect().height;
+    width = svg.node().getClientRects()[0].width,
+    height = svg.node().getClientRects()[0].height;
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink())
@@ -60,6 +62,10 @@ function drawNetwork(data) {
 
     graph = data;
 
+    for (var node in graph["nodes"]) {
+        graph["nodes"][node].color = nodeColor;
+    }
+
 
     link = svg.append("g")
         .attr("class", "links")
@@ -73,14 +79,17 @@ function drawNetwork(data) {
         .data(graph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
-            const scale = d3.scaleOrdinal(d3.schemeCategory10);
-            return scale(d.id);
+            /*const scale = d3.scaleSequential()
+                .domain([0, 100])
+                .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
+            return d.color;
         })
         .attr("r", 5)
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
-            .on("end", dragended));
+            .on("end", dragended))
+        .on("click", displayNodeProperties);
 
     
     node.append("title")
@@ -121,6 +130,38 @@ function drawNetwork(data) {
         if (!d3.event.active) simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
+    }
+
+    function displayNodeProperties(d) {
+        node_properties_div = d3.select("#node_properties");
+        node_properties_div.selectAll("*").remove();
+
+        for (var i in data["nodes"][d.id]) {
+            node_properties_div.append("label")
+                .attr("for", i + "-" + d.id)
+                .attr("class", "form-check-label")
+                .html(i);
+            node_properties_div.append("input")
+                .attr("type", "text")
+                .attr("id", i + "-" + d.id)
+                .attr("class", "form-control")
+                .attr("value", d[i]);
+        }
+        node_properties_div.append("label")
+            .attr("for", "color-" + d.id)
+            .attr("class", "form-check-label")
+            .html("node color");
+        node_properties_div.append("input")
+            .attr("type", "color")
+            .attr("id", "color-" + d.id);
+
+    }
+
+    function colorChange(d) {
+        d.color = "#BBBBBB";
+        node.style("fill", function (e) {
+            return e.color;
+        });
     }
 
     

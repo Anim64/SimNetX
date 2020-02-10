@@ -25,7 +25,6 @@ namespace DataUtility
 
         public string ToD3Json()
         {
-            
             JObject root = new JObject();
 
             JArray jNodes = new JArray();
@@ -35,6 +34,10 @@ namespace DataUtility
             {
                 JObject jNode = new JObject();
                 jNode["id"] = node.Key;
+                foreach(string column in VectorData.Columns())
+                {
+                    jNode[column] = VectorData[column, int.Parse(node.Key)].ToString();
+                }
                 jNodes.Add(jNode);
 
                 foreach(string target in node.Value)
