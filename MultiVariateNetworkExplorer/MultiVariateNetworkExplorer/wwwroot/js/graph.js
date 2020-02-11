@@ -1,4 +1,6 @@
 ﻿var graph = null;
+var store = null;
+var filterNodeList = [];
 
 var node = null;
 
@@ -21,7 +23,7 @@ var simulation = d3.forceSimulation()
 var forceProperties = {
     center: {
         x: 0.5,
-        y: 0.5
+        y: 0.30
     },
 
     charge: {
@@ -34,7 +36,7 @@ var forceProperties = {
     collide: {
         enabled: true,
         strength: 0.7,
-        radius: 5,
+        radius: 7,
         iterations: 1
     },
 
@@ -62,8 +64,8 @@ function drawNetwork(data) {
 
     graph = data;
 
-    for (var node in graph["nodes"]) {
-        graph["nodes"][node].color = nodeColor;
+    for (var node1 in graph["nodes"]) {
+        node1.color = nodeColor;
     }
 
 
@@ -72,6 +74,11 @@ function drawNetwork(data) {
         .selectAll("line")
         .data(graph.links)
         .enter().append("line");
+
+    link.append("title")
+        .text(function (l) {
+            return l.id;
+        });
     
     node = svg.append("g")
         .attr("class", "nodes")
@@ -84,7 +91,7 @@ function drawNetwork(data) {
                 .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
             return d.color;
         })
-        .attr("r", 5)
+        .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
@@ -95,6 +102,9 @@ function drawNetwork(data) {
     node.append("title")
         .text(function (d) { return d.id; });
 
+
+    store = $.extend(true, {}, data);
+
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked);
@@ -103,69 +113,151 @@ function drawNetwork(data) {
     simulation.force("link")
         .links(graph.links);
 
-    function ticked() {
-        link
-            .attr("x1", function (d) { return d.source.x; })
-            .attr("y1", function (d) { return d.source.y; })
-            .attr("x2", function (d) { return d.target.x; })
-            .attr("y2", function (d) { return d.target.y; });
+}
 
-        node
-            .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
-            .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
-    }
+function ticked() {
+    link
+        .attr("x1", function (d) { return d.source.x; })
+        .attr("y1", function (d) { return d.source.y; })
+        .attr("x2", function (d) { return d.target.x; })
+        .attr("y2", function (d) { return d.target.y; });
 
-    function dragstarted(d) {
-        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-    }
+    node
+        .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
+        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
+}
 
-    function dragged(d) {
-        d.fx = d3.event.x;
-        d.fy = d3.event.y;
-    }
+function dragstarted(d) {
+    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
 
-    function dragended(d) {
-        if (!d3.event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-    }
+function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+}
 
-    function displayNodeProperties(d) {
-        node_properties_div = d3.select("#node_properties");
-        node_properties_div.selectAll("*").remove();
+function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+}
 
-        for (var i in data["nodes"][d.id]) {
-            node_properties_div.append("label")
-                .attr("for", i + "-" + d.id)
-                .attr("class", "form-check-label")
-                .html(i);
-            node_properties_div.append("input")
-                .attr("type", "text")
-                .attr("id", i + "-" + d.id)
-                .attr("class", "form-control")
-                .attr("value", d[i]);
-        }
+function displayNodeProperties(d) {
+    node_properties_div = d3.select("#node_properties");
+    node_properties_div.selectAll("*").remove();
+
+    node_properties_div.append("h2")
+        .html("Node " + d.id + " properties");
+
+    for (var i in store["nodes"][d.id]) {
         node_properties_div.append("label")
-            .attr("for", "color-" + d.id)
+            .attr("for", i + "-" + d.id)
             .attr("class", "form-check-label")
-            .html("node color");
+            .html(i);
         node_properties_div.append("input")
-            .attr("type", "color")
-            .attr("id", "color-" + d.id);
-
+            .attr("type", "text")
+            .attr("id", i + "-" + d.id)
+            .attr("class", "form-control")
+            .attr("value", d[i])
+            .attr("readonly", true);
     }
+    node_properties_div.append("label")
+        .attr("for", "color-" + d.id)
+        .attr("class", "form-check-label")
+        .html("node color");
+    node_properties_div.append("input")
+        .attr("type", "color")
+        .attr("id", "color-" + d.id);
 
-    function colorChange(d) {
-        d.color = "#BBBBBB";
-        node.style("fill", function (e) {
-            return e.color;
-        });
-    }
+}
 
-    
-   
+function colorChange(d) {
+    d.color = "#BBBBBB";
+    node.style("fill", function (e) {
+        return e.color;
+    });
+}
+
+function filterByMinValue(event, attributeName) {
+    var value = event.currentTarget.value;
+
+    store.nodes.forEach(function (n) {
+        if (n[attributeName] < value && !n.filtered) {
+            n.filtered = true;
+            graph.nodes.forEach(function (d, i) {
+                if (n.id === d.id) {
+                    graph.nodes.splice(i, 1);
+                }
+            });
+            filterNodeList.push(n.id);
+
+        }
+
+        else if (n[attributeName] >= value && n.filtered) {
+            n.filtered = false;
+            graph.nodes.push($.extend(true, {}, n));
+            filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+        }
+    });
+
+    store.links.forEach(function (l) {
+        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
+            l.filtered = false;
+            graph.links.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
+            l.filtered = true;
+            graph.links.forEach(function (d, i) {
+                if (l.id === d.id) {
+                    graph.links.splice(i, 1);
+                }
+            });
+        }
+    });		
+
+    updateNodesAndLinks();
+
+
+}
+
+function filterByMaxValue(event, attributeName) {
+    var value = event.currentTarget.value;
+
+    store.nodes.forEach(function (n) {
+        if (n[attributeName] > value && !n.filtered) {
+            n.filtered = true;
+            graph.nodes.forEach(function (d, i) {
+                if (n.id === d.id) {
+                    graph.nodes.splice(i, 1);
+                }
+            });
+            filterNodeList.push(n.id);
+
+        }
+
+        else if (n[attributeName] >= value && n.filtered) {
+            n.filtered = false;
+            graph.nodes.push($.extend(true, {}, n));
+            filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+        }
+    });
+
+    store.links.forEach(function (l) {
+        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
+            l.filtered = false;
+            graph.links.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
+            l.filtered = true;
+            graph.links.forEach(function (d, i) {
+                if (l.id === d.id) {
+                    graph.links.splice(i, 1);
+                }
+            });
+        }
+    });
+
+    updateNodesAndLinks();
 }
 
 function updateForces() {
@@ -194,6 +286,48 @@ function updateForces() {
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
+    simulation.alpha(1).restart();
+}
+
+function updateNodesAndLinks() {
+    node = node.data(graph.nodes, function (d) { return d.id; });
+    //	EXIT
+    node.exit().remove();
+
+    var newNode = node.enter().append("circle")
+        .style("fill", function (d) {
+            /*const scale = d3.scaleSequential()
+                .domain([0, 100])
+                .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
+            return d.color;
+        })
+        .attr("r", 5)
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("click", displayNodeProperties);
+
+    newNode.append("title")
+        .text(function (d) { return d.id; });
+
+    node = node.merge(newNode);
+
+    link = link.data(graph.links, function (d) { d.source });
+    //	EXIT
+    link.exit().remove();
+
+    var newLink = link.enter().append("line");
+
+    link = link.merge(newLink);
+
+    simulation
+        .nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(graph.links);
+
     simulation.alpha(1).restart();
 }
 

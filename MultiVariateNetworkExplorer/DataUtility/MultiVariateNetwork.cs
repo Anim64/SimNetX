@@ -25,6 +25,7 @@ namespace DataUtility
 
         public string ToD3Json()
         {
+            int edgeId = -1;
             JObject root = new JObject();
 
             JArray jNodes = new JArray();
@@ -45,6 +46,7 @@ namespace DataUtility
                     JObject newLink = new JObject();
                     newLink["source"] = node.Key;
                     newLink["target"] = target;
+                    newLink["id"] = ++edgeId;
                     jLinks.Add(newLink);
                 }
             }
