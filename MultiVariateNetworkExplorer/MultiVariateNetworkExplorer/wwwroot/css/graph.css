@@ -7,20 +7,14 @@ html {
     width: 100%;
 }
 
-body {
-    width: 100%;
-    padding: 0;
-    display: flex;
-    font-family: sans-serif;
-}
-
 .links line {
-    stroke: gray;
+    stroke: lightgray;
     stroke-width: 2px;
 }
 
 .nodes circle {
     pointer-events: all;
-    stroke: white;
+    stroke: black;
     stroke-width: 2px;
+    fill: red;
 }

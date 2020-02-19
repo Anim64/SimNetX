@@ -51,6 +51,13 @@ function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue
         slide: function (event, ui) {
             $("#" + minValueId).val(ui.values[0]);
             $("#" + maxValueId).val(ui.values[1]);
+
+            if (ui.handleIndex === 0) {
+                filterByMinValue(ui.value, minValueId.split("-")[0])
+            }
+            else if (ui.handleIndex === 1) {
+                filterByMaxValue(ui.value, maxValueId.split("-")[0])
+            }
         }
     });
     //$("#" + minValueId).val($("#" + sliderId).slider("values", 0));

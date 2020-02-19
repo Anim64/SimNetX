@@ -3,4 +3,8 @@
     padding: 6px 12px;
     border: 1px solid #ccc;
     border-top: none;
+    max-height: 800px;
+    overflow-y: scroll;
 }
+
+

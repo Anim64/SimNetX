@@ -18,7 +18,8 @@ var simulation = d3.forceSimulation()
     .force("collide", d3.forceCollide())
     .force("center", d3.forceCenter())
     .force("forceX", d3.forceX())
-    .force("forceY", d3.forceY());
+    .force("forceY", d3.forceY())
+    .force("radial", d3.forceRadial());
 
 var forceProperties = {
     center: {
@@ -28,7 +29,7 @@ var forceProperties = {
 
     charge: {
         enabled: true,
-        strength: -30,
+        strength: -80,
         distanceMin: 1,
         distanceMax: 2000
     },
@@ -36,7 +37,7 @@ var forceProperties = {
     collide: {
         enabled: true,
         strength: 0.7,
-        radius: 7,
+        radius: 4,
         iterations: 1
     },
 
@@ -56,7 +57,16 @@ var forceProperties = {
         enabled: true,
         distance: 50,
         iterations: 1
+    },
+
+    radial: {
+        enabled: false,
+        x: 0.5,
+        y: 0.5,
+        strength: 0.1,
+        radius: 1
     }
+
 
 };
 
@@ -85,12 +95,12 @@ function drawNetwork(data) {
         .selectAll("circle")
         .data(graph.nodes)
         .enter().append("circle")
-        .style("fill", function (d) {
-            /*const scale = d3.scaleSequential()
+        /*.style("fill", function (d) {
+            const scale = d3.scaleSequential()
                 .domain([0, 100])
-                .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
+                .interpolator(d3.interpolateRainbow);//d3.scaleOrdinal(d3.schemeCategory10);
             return d.color;
-        })
+        })*/
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
@@ -180,8 +190,10 @@ function colorChange(d) {
     });
 }
 
-function filterByMinValue(event, attributeName) {
-    var value = event.currentTarget.value;
+function filterByMinValue(value, attributeName) {
+    //var value = event.currentTarget.value;
+
+    $("#" + attributeName + "-slider").slider()
 
     store.nodes.forEach(function (n) {
         if (n[attributeName] < value && !n.filtered) {
@@ -221,8 +233,8 @@ function filterByMinValue(event, attributeName) {
 
 }
 
-function filterByMaxValue(event, attributeName) {
-    var value = event.currentTarget.value;
+function filterByMaxValue(value, attributeName) {
+    //var value = event.currentTarget.value;
 
     store.nodes.forEach(function (n) {
         if (n[attributeName] > value && !n.filtered) {
@@ -283,6 +295,11 @@ function updateForces() {
         .distance(forceProperties.link.distance)
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? graph.links : []);
+    simulation.force("radial")
+        .x(forceProperties.radial.x * width)
+        .y(forceProperties.radial.y * height)
+        .strength(forceProperties.radial.strength)
+        .radius(forceProperties.radial.radius);
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
@@ -301,7 +318,7 @@ function updateNodesAndLinks() {
                 .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
             return d.color;
         })
-        .attr("r", 5)
+        .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
