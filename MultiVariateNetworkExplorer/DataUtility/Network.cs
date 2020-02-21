@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace DataUtility
@@ -16,73 +17,82 @@ namespace DataUtility
             
         }
 
-        public bool this[string vertice1, string vertice2]
+        public IEnumerable<string> this[string vertex]
+        {
+            get
+            {
+                return this.network[vertex];
+            }
+        }
+
+
+        public bool this[string vertex1, string vertex2]
         {
             get
             {   
-                return Utils.BinarySearch<string>(this.network[vertice1], vertice2);
+                return Utils.BinarySearch<string>(this.network[vertex1], vertex2);
             }
 
         }
 
 
 
-        public void AddDirectedEdge(string vertice1, string vertice2)
+        public void AddDirectedEdge(string vertex1, string vertex2)
         {
 
-            if(!this.network.TryGetValue(vertice1, out SortedSet<string> links_v1))
+            if(!this.network.TryGetValue(vertex1, out SortedSet<string> links_v1))
             {
                 if (links_v1 == null)
                 {
-                    this.network[vertice1] = links_v1;
+                    this.network[vertex1] = links_v1;
                     links_v1 = new SortedSet<string>();
                 }
                 
             }
 
-            if (!this.network.TryGetValue(vertice2, out SortedSet<string> links_v2))
+            if (!this.network.TryGetValue(vertex2, out SortedSet<string> links_v2))
             {
                 if (links_v2 == null)
                 {
-                    this.network[vertice1] = links_v2;
+                    this.network[vertex1] = links_v2;
                     links_v2 = new SortedSet<string>();
                 }
 
 
             }
 
-            this.network[vertice1].Add(vertice2);
+            this.network[vertex1].Add(vertex2);
 
 
 
 
         }
 
-        public void AddIndirectedEdge(string vertice1, string vertice2)
+        public void AddIndirectedEdge(string vertex1, string vertex2)
         {
-            if (!this.network.TryGetValue(vertice1, out SortedSet<string> links_v1))
+            if (!this.network.TryGetValue(vertex1, out SortedSet<string> links_v1))
             {
                 if (links_v1 == null)
                 {
-                    this.network[vertice1] = new SortedSet<string>();
+                    this.network[vertex1] = new SortedSet<string>();
                     
                 }
 
                 
             }
 
-            if (!this.network.TryGetValue(vertice2, out SortedSet<string> links_v2))
+            if (!this.network.TryGetValue(vertex2, out SortedSet<string> links_v2))
             {
                 if (links_v2 == null)
                 {
-                    this.network[vertice2] = new SortedSet<string>();
+                    this.network[vertex2] = new SortedSet<string>();
                 }
 
 
             }
 
-            this.network[vertice1].Add(vertice2);
-            this.network[vertice2].Add(vertice1);
+            this.network[vertex1].Add(vertex2);
+            this.network[vertex2].Add(vertex1);
         }
 
        

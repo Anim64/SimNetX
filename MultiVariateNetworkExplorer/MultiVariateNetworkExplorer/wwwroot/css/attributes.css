@@ -23,8 +23,14 @@
 }
 
 
-.attributes .categorial{
+.attributes .categorial {
+    display: inline-block;
+    width: 90%;
+}
 
+.attributes .categorial input[type="checkbox"] {
+    margin: 0 5% 1em;
+    width: 90%;
 }
 
 

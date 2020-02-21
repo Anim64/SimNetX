@@ -39,6 +39,8 @@ namespace DataUtility
                 {
                     jNode[column] = VectorData[column, int.Parse(node.Key)].ToString();
                 }
+
+                jNode["neighbours"] = JArray.FromObject(Network[node.Key]);
                 jNodes.Add(jNode);
 
                 foreach(string target in node.Value)

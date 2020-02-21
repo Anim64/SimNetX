@@ -21,6 +21,8 @@ var simulation = d3.forceSimulation()
     .force("forceY", d3.forceY())
     .force("radial", d3.forceRadial());
 
+var selectedNode = null;
+
 var forceProperties = {
     center: {
         x: 0.5,
@@ -112,6 +114,8 @@ function drawNetwork(data) {
     node.append("title")
         .text(function (d) { return d.id; });
 
+    //svg.on("click", resetSelection);
+
 
     store = $.extend(true, {}, data);
 
@@ -122,6 +126,8 @@ function drawNetwork(data) {
     updateForces();
     simulation.force("link")
         .links(graph.links);
+
+
 
 }
 
@@ -155,6 +161,8 @@ function dragended(d) {
 }
 
 function displayNodeProperties(d) {
+    d3.select(this).style("stroke", "#FFFF00");
+
     node_properties_div = d3.select("#node_properties");
     node_properties_div.selectAll("*").remove();
 
@@ -179,24 +187,24 @@ function displayNodeProperties(d) {
         .html("node color");
     node_properties_div.append("input")
         .attr("type", "color")
-        .attr("id", "color-" + d.id);
+        .attr("id", "color-" + d.id)
+        .attr("value", d.color);
+
+    
 
 }
 
-function colorChange(d) {
-    d.color = "#BBBBBB";
-    node.style("fill", function (e) {
-        return e.color;
-    });
+function resetSelection() {
+    selectedNode.style("stroke", "black");
+    selectedNode = null;
 }
 
-function filterByMinValue(value, attributeName) {
+
+function filterByMinValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
 
-    $("#" + attributeName + "-slider").slider()
-
     store.nodes.forEach(function (n) {
-        if (n[attributeName] < value && !n.filtered) {
+        if (n[filteredAttributeName] < value && !n.filtered) {
             n.filtered = true;
             graph.nodes.forEach(function (d, i) {
                 if (n.id === d.id) {
@@ -207,11 +215,30 @@ function filterByMinValue(value, attributeName) {
 
         }
 
-        else if (n[attributeName] >= value && n.filtered) {
-            n.filtered = false;
-            graph.nodes.push($.extend(true, {}, n));
-            filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+        else if (n.filtered) {
+            var isNotFilteredByAnyAtrribute = true;
+            var numericDivs = $(".numeric");
+            console.log(numericDivs);
+            for (var i = 0; i < numericDivs.length; i++) {
+                var attrName = numericDivs[i].querySelector("label").innerHTML;
+                var minValue = numericDivs[i].querySelector("[id$=sliderOutputMin]").value;
+
+                if (minValue > n[attrName]) {
+                    isNotFilteredByAnyAtrribute = false;
+                    break;
+                }
+            }
+
+            if (isNotFilteredByAnyAtrribute) {
+                delete n.filtered;
+                graph.nodes.push($.extend(true, {}, n));
+                filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+            }
+
+        
         }
+
+        
     });
 
     store.links.forEach(function (l) {
@@ -248,10 +275,27 @@ function filterByMaxValue(value, attributeName) {
 
         }
 
-        else if (n[attributeName] >= value && n.filtered) {
-            n.filtered = false;
-            graph.nodes.push($.extend(true, {}, n));
-            filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+        else if (n.filtered) {
+            var isNotFilteredByAnyAtrribute = true;
+            var numericDivs = $(".numeric");
+            console.log(numericDivs);
+            for (var i = 0; i < numericDivs.length; i++) {
+                var attrName = numericDivs[i].querySelector("label").innerHTML;
+                var maxValue = numericDivs[i].querySelector("[id$=sliderOutputMin]").value;
+
+                if (maxValue < n[attrName]) {
+                    isNotFilteredByAnyAtrribute = false;
+                    break;
+                }
+            }
+
+            if (isNotFilteredByAnyAtrribute) {
+                delete n.filtered;
+                graph.nodes.push($.extend(true, {}, n));
+                filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+            }
+
+
         }
     });
 
@@ -351,12 +395,12 @@ function updateNodesAndLinks() {
 function updateDisplay() {
     node
         .attr("r", forceProperties.collide.radius)
-        .attr("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
-        .attr("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
+        .style("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
+        .style("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
 
     link
-        .attr("stroke-width", forceProperties.link.enabled ? 1 : .5)
-        .attr("opacity", forceProperties.link.enabled ? 1 : 0);
+        .style("stroke-width", forceProperties.link.enabled ? 1 : .5)
+        .style("opacity", forceProperties.link.enabled ? 1 : 0);
 }
 
 function updateAll() {

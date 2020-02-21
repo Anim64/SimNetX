@@ -34,22 +34,36 @@
                 <a class="nav-link" href="#" onclick="openTab(event, 'settings')">Graph Settings</a>
             </li>
         </ul>
-        <div class="tabcontent attributes scrollbar-deep-purple bordered-deep-purple thin" id="attributes">
+        <div class="tabcontent attributes" id="attributes">
             @foreach (var pair in Model.VectorData.NumAtrrExtremes)
             {
-            <div class="numeric">
-                <p><label>@pair.Key</label></p>
-                <div id="@(pair.Key + "-slider")"></div>
-                <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutput1")', '@(pair.Key + "-sliderOutput2")', @pair.Value.minAttrValue, @pair.Value.maxAttrValue)</script>
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="number" id="@(pair.Key + "-sliderOutput1")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.minAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMinValue(this.value, @pair.Key);">
-                    </div>
-                    <div class="col-md-4 col-md-offset-4">
-                        <input type="number" id="@(pair.Key + "-sliderOutput2")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.maxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMaxValue(this.value, @pair.Key);">
+                <div class="numeric">
+                    <p><label>@pair.Key</label></p>
+                    <div id="@(pair.Key + "-slider")"></div>
+                    <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.minAttrValue, @pair.Value.maxAttrValue)</script>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.minAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMinValue(this.value, @pair.Key);">
+                        </div>
+                        <div class="col-md-4 col-md-offset-4">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.maxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMaxValue(this.value, @pair.Key);">
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
+
+            @foreach (var pair in Model.VectorData.CatAttrValues)
+            {
+                <div class="categorial">
+                    <p><label>@pair.Key</label></p>
+                    <div class="checkboxes">
+                        @foreach(string category in pair.Value)
+                        {
+                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" checked />
+                            <label for="@(category + "-checkbox")">@(category)</label>
+                        }
+                    </div>
+                </div>
             }
 
         </div>
