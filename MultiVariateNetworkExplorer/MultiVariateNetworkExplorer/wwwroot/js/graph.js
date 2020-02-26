@@ -115,6 +115,10 @@ function drawNetwork(data) {
         .text(function (d) { return d.id; });
 
     //svg.on("click", resetSelection);
+    svg.call(d3.zoom()
+        .extent([[0, 0], [width, height]])
+        .scaleExtent([0.5, 8])
+        .on("zoom", zoomed));
 
 
     store = $.extend(true, {}, data);
@@ -158,6 +162,11 @@ function dragended(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
     d.fx = null;
     d.fy = null;
+}
+
+function zoomed() {
+    node.attr("transform", d3.event.transform);
+    link.attr("transform", d3.event.transform);
 }
 
 function displayNodeProperties(d) {
@@ -204,18 +213,36 @@ function filterByMinValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
 
     store.nodes.forEach(function (n) {
-        if (n[filteredAttributeName] < value && !n.filtered) {
-            n.filtered = true;
-            graph.nodes.forEach(function (d, i) {
-                if (n.id === d.id) {
-                    graph.nodes.splice(i, 1);
-                }
-            });
-            filterNodeList.push(n.id);
+        if (n[filteredAttributeName] < value) {
+            if (!n.filters) {
+                n.filters = [];
+                graph.nodes.forEach(function (d, i) {
+                    if (n.id === d.id) {
+                        graph.nodes.splice(i, 1);
+                    }
+                });
+                filterNodeList.push(n.id);
+            }
+
+            if (!n.filters.includes(filteredAttributeName + "_min")) {
+                n.filters.push(filteredAttributeName + "_min");
+            }
 
         }
 
-        else if (n.filtered) {
+        else if (n[filteredAttributeName] >= value && n.filters) {
+            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_min")) {
+                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_min"), 1);
+                if (n.filters.length === 0) {
+                    graph.nodes.push($.extend(true, {}, n));
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    delete n.filters;
+                }
+            }
+        }
+        
+
+        /*else if (n.filtered) {
             var isNotFilteredByAnyAtrribute = true;
             var numericDivs = $(".numeric");
             console.log(numericDivs);
@@ -236,7 +263,7 @@ function filterByMinValue(value, filteredAttributeName) {
             }
 
         
-        }
+        }*/
 
         
     });
@@ -256,46 +283,41 @@ function filterByMinValue(value, filteredAttributeName) {
     });		
 
     updateNodesAndLinks();
+    updateForces();
 
 
 }
 
-function filterByMaxValue(value, attributeName) {
+function filterByMaxValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
 
     store.nodes.forEach(function (n) {
-        if (n[attributeName] > value && !n.filtered) {
-            n.filtered = true;
-            graph.nodes.forEach(function (d, i) {
-                if (n.id === d.id) {
-                    graph.nodes.splice(i, 1);
-                }
-            });
-            filterNodeList.push(n.id);
+        if (n[filteredAttributeName] > value) {
+            if (!n.filters) {
+                n.filters = [];
+                graph.nodes.forEach(function (d, i) {
+                    if (n.id === d.id) {
+                        graph.nodes.splice(i, 1);
+                    }
+                });
+                filterNodeList.push(n.id);
+            }
+
+            if (!n.filters.includes(filteredAttributeName + "_max")) {
+                n.filters.push(filteredAttributeName + "_max");
+            }
 
         }
 
-        else if (n.filtered) {
-            var isNotFilteredByAnyAtrribute = true;
-            var numericDivs = $(".numeric");
-            console.log(numericDivs);
-            for (var i = 0; i < numericDivs.length; i++) {
-                var attrName = numericDivs[i].querySelector("label").innerHTML;
-                var maxValue = numericDivs[i].querySelector("[id$=sliderOutputMin]").value;
-
-                if (maxValue < n[attrName]) {
-                    isNotFilteredByAnyAtrribute = false;
-                    break;
+        else if (n[filteredAttributeName] <= value && n.filters) {
+            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_max")) {
+                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_max"), 1);
+                if (n.filters.length === 0) {
+                    graph.nodes.push($.extend(true, {}, n));
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    delete n.filters;
                 }
             }
-
-            if (isNotFilteredByAnyAtrribute) {
-                delete n.filtered;
-                graph.nodes.push($.extend(true, {}, n));
-                filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
-            }
-
-
         }
     });
 
@@ -314,6 +336,56 @@ function filterByMaxValue(value, attributeName) {
     });
 
     updateNodesAndLinks();
+    updateForces();
+}
+
+function filterByCategory(category, filteredAttributeName) {
+    store.nodes.forEach(function (n) {
+        if (!this.checked && n.filteredAttributeName === category) {
+            if (!n.filters) {
+                n.filters = [];
+                graph.nodes.forEach(function (d, i) {
+                    if (n.id === d.id) {
+                        graph.nodes.splice(i, 1);
+                    }
+                });
+                filterNodeList.push(n.id);
+            }
+
+            if (!n.filters.includes(filteredAttributeName + "_" + category)) {
+                n.filters.push(filteredAttributeName + "_" + category);
+            }
+
+        }
+
+        else if (this.checked && n.filteredAttributeName === category && n.filters) {
+            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_" + category)) {
+                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
+                if (n.filters.length === 0) {
+                    graph.nodes.push($.extend(true, {}, n));
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    delete n.filters;
+                }
+            }
+        }
+    });
+
+    store.links.forEach(function (l) {
+        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
+            l.filtered = false;
+            graph.links.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
+            l.filtered = true;
+            graph.links.forEach(function (d, i) {
+                if (l.id === d.id) {
+                    graph.links.splice(i, 1);
+                }
+            });
+        }
+    });
+
+    updateNodesAndLinks();
+    updateForces();
 }
 
 function updateForces() {

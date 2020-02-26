@@ -24,8 +24,8 @@
 
 
 
-<div class="row">
-    <div class="col-sm-2">
+<div class="row display-flex">
+    <div class="col-md-2" style="padding-left: 7px; padding-right: 7px;">
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a class="nav-link active" href="#" onclick="openTab(event, 'attributes')" id="defaultTab">Atributes</a>
@@ -59,7 +59,7 @@
                     <div class="checkboxes">
                         @foreach(string category in pair.Value)
                         {
-                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" checked />
+                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory(@pair.Key, @category)" checked/>
                             <label for="@(category + "-checkbox")">@(category)</label>
                         }
                     </div>
@@ -195,15 +195,15 @@
             $('#defaultTab').click();
         </script>
     </div>
-    <div class="col-sm-8" style="">
-        <svg viewBox="0 0 1080 1080" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="col-md-8" style="height: 100%;">
+        <svg viewBox="0 0 1080 720" preserveAspectRatio="xMidYMid meet"></svg>
         <script src="https://d3js.org/d3.v4.min.js"></script>
         <script src="~/js/graph.js"></script>
         <script>
         drawNetwork(@Html.Raw(Model.ToD3Json()));
         </script>
     </div>
-    <div class="col-sm-2 form-group" id="node_properties">
+    <div class="col-md-2 form-group" id="node_properties">
 
 
 
