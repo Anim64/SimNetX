@@ -7,17 +7,38 @@ using System.Text;
 
 namespace DataUtility
 {
-    public class Network : IEnumerable<KeyValuePair<string, SortedSet<string>>>
+    public class Network : IEnumerable<KeyValuePair<string, Dictionary<string, double>>>
     {
-        private SortedDictionary<string, SortedSet<string>> network;
-
-        public Network()
+        /*public struct Edge
         {
-            network = new SortedDictionary<string, SortedSet<string>>();
-            
+            public int ToNode;
+            public double Weight;
+
+            /// <summary>
+            /// Constructs a weighted edge between two nodes.
+            /// </summary>
+            /// <param name="n1">The first node.</param>
+            /// <param name="n2">The second node.</param>
+            /// <param name="w">The edge's weight.</param>
+            public Edge(int n1, int n2, double w)
+            {
+                ToNode = n2;
+                Weight = w;
+            }
+        }*/
+        private Dictionary<string, Dictionary<string, double>> network;
+        public double CurrSize { get; private set; }
+
+        public Network(int initSize)
+        {
+            network = new Dictionary<string, Dictionary<string, double>>();
+            for (int i = 0; i < initSize; i++)
+            {
+                network[i.ToString()] = new Dictionary<string, double>();
+            }
         }
 
-        public IEnumerable<string> this[string vertex]
+        public Dictionary<string, double> this[string vertex]
         {
             get
             {
@@ -30,69 +51,26 @@ namespace DataUtility
         {
             get
             {   
-                return Utils.BinarySearch<string>(this.network[vertex1], vertex2);
+                return this.network[vertex1][vertex2] > 0;
             }
 
         }
 
 
 
-        public void AddDirectedEdge(string vertex1, string vertex2)
+        public void AddDirectedEdge(string vertex1, string vertex2, double weight)
         {
 
-            if(!this.network.TryGetValue(vertex1, out SortedSet<string> links_v1))
-            {
-                if (links_v1 == null)
-                {
-                    this.network[vertex1] = links_v1;
-                    links_v1 = new SortedSet<string>();
-                }
-                
-            }
-
-            if (!this.network.TryGetValue(vertex2, out SortedSet<string> links_v2))
-            {
-                if (links_v2 == null)
-                {
-                    this.network[vertex1] = links_v2;
-                    links_v2 = new SortedSet<string>();
-                }
-
-
-            }
-
-            this.network[vertex1].Add(vertex2);
-
-
-
+            this.network[vertex1][vertex2] = weight;
+            CurrSize += weight;
 
         }
 
-        public void AddIndirectedEdge(string vertex1, string vertex2)
+        public void AddIndirectedEdge(string vertex1, string vertex2, double weight)
         {
-            if (!this.network.TryGetValue(vertex1, out SortedSet<string> links_v1))
-            {
-                if (links_v1 == null)
-                {
-                    this.network[vertex1] = new SortedSet<string>();
-                    
-                }
-
-                
-            }
-
-            if (!this.network.TryGetValue(vertex2, out SortedSet<string> links_v2))
-            {
-                if (links_v2 == null)
-                {
-                    this.network[vertex2] = new SortedSet<string>();
-                }
-
-
-            }
-
-            this.network[vertex1].Add(vertex2);
-            this.network[vertex2].Add(vertex1);
+            this.network[vertex1][vertex2] = weight;
+            this.network[vertex2][vertex1] = weight;
+            CurrSize += weight;
         }
 
        
@@ -118,19 +96,20 @@ namespace DataUtility
                     string[] splitLine = line.Split(separator);
 
                     if (!this.network.ContainsKey(splitLine[0]))
-                        this.network[splitLine[0]] = new SortedSet<string>();
+                        this.network[splitLine[0]] = new Dictionary<string, double>();
 
-                    if (!this.network.ContainsKey(splitLine[1]))
-                        this.network[splitLine[1]] = new SortedSet<string>();
+                    
 
                     if(directed)
                     {
-                        AddDirectedEdge(splitLine[0], splitLine[1]);
+                        AddDirectedEdge(splitLine[0], splitLine[1], 1);
                     }
 
                     else
                     {
-                        AddIndirectedEdge(splitLine[0], splitLine[1]);
+                        if (!this.network.ContainsKey(splitLine[1]))
+                            this.network[splitLine[1]] = new Dictionary<string, double>();
+                        AddIndirectedEdge(splitLine[0], splitLine[1], 1);
                     }
 
 
@@ -138,9 +117,32 @@ namespace DataUtility
             }
         }
 
-        public IEnumerator<KeyValuePair<string, SortedSet<string>>> GetEnumerator()
+        public int GetDegree(string vertex)
         {
-            foreach(KeyValuePair<string, SortedSet<string>> pair in this.network)
+            return this.network[vertex].Keys.Count;
+        }
+
+        public double EdgeWeight(string node1, string node2, double defaultValue)
+        {
+            Dictionary<string, double> ilist;
+            if (!network.TryGetValue(node1, out ilist))
+            {
+                throw new IndexOutOfRangeException("No such node " + node1);
+            }
+            double value;
+            if (!ilist.TryGetValue(node2, out value))
+            {
+                return defaultValue;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        public IEnumerator<KeyValuePair<string, Dictionary<string, double>>> GetEnumerator()
+        {
+            foreach(KeyValuePair<string, Dictionary<string, double>> pair in this.network)
             {
                 yield return pair;
             }

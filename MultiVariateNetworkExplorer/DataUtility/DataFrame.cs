@@ -120,10 +120,10 @@ namespace DataUtility
         /// <param name="radius">Threshold under which every vertice will create an edge</param>
         /// <param name="N">Number of minimum edges per vertice</param>
         /// <returns>Returns a network representation of the DataFrame</returns>
-        public Network CreateNetwork(double radius, int N)
+        public Network ToNetwork(double radius, int N)
         {
-            Network result = new Network();
-            Matrix<double> kernelMatrix = KernelMatrix();
+            Network result = new Network(this.DataCount);
+            Matrix<double> kernelMatrix = EuclideanKernelMatrix();
 
      
 
@@ -149,12 +149,95 @@ namespace DataUtility
                     if (edgeCount >= N && pair.Value >= radius)
                         break;
 
-                    result.AddIndirectedEdge(i.ToString(), pair.Key.ToString());
+                    result.AddIndirectedEdge(i.ToString(), pair.Key.ToString(), 1);
                     edgeCount++;
                 }
             }
 
             return result;
+        }
+        public Network LRNet()
+        {
+            Network resultNet = new Network(this.DataCount);
+            Matrix<double> kernelMatrix = GaussKernelMatrix();
+            Dictionary<int, int> degrees = new Dictionary<int, int>();
+            Dictionary<int, int> significances = new Dictionary<int, int>();
+
+            Dictionary<int, double> representativeness = new Dictionary<int, double>();
+            Dictionary<int, int> representativeNeighboursCount = new Dictionary<int, int>();
+
+            for(int i = 0; i < kernelMatrix.Rows; i++)
+            {
+                int nearestNeighbour = -1;
+                double maxSimilarity = -1;
+                for (int j = 0; j < kernelMatrix.Cols; j++)
+                {
+                    if(i == j)
+                    {
+                        continue;
+                    }
+                     
+                    if(!degrees.ContainsKey(i))
+                    {
+                        degrees[i] = 0;
+                        significances[i] = 0;
+                    }
+
+                    if(kernelMatrix[i,j] > 0)
+                    {
+                        degrees[i]++;
+                    }
+
+                    if(kernelMatrix[i,j] > maxSimilarity)
+                    {
+                        maxSimilarity = kernelMatrix[i, j];
+                        nearestNeighbour = j;
+                    }
+                }
+
+                if(!significances.ContainsKey(nearestNeighbour))
+                {
+                    significances[nearestNeighbour] = 0;
+                }
+
+                significances[nearestNeighbour]++;
+
+
+            }
+
+            for(int i = 0; i < kernelMatrix.Rows; i++)
+            {
+                if(significances[i] > 0)
+                {
+                    representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
+                }
+
+                else
+                {
+                    representativeness[i] = 0;
+                }
+
+                int k = ((int)Math.Round(representativeness[i] * degrees[i]));
+
+                double[] vertexSimilarities = kernelMatrix.GetRow(i);
+                List<int> potentialNeighbours = Enumerable.Range(0, this.DataCount).ToList();
+                potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
+
+                if(k > 0)
+                {
+                    for(int n = 1; n < k + 1; n++)
+                    {
+                        resultNet.AddIndirectedEdge(i.ToString(), potentialNeighbours[n].ToString(), 1);
+                    }
+
+                }
+
+                else
+                {
+                    resultNet.AddIndirectedEdge(i.ToString(), potentialNeighbours[1].ToString(), 1);
+                } 
+            }
+            return resultNet;
         }
 
         public IEnumerable<string> Columns()
@@ -201,7 +284,7 @@ namespace DataUtility
 
         }
 
-        private Matrix<double> KernelMatrix()
+        private Matrix<double> EuclideanKernelMatrix()
         {
             int dataCount = dataFrame.First().Value.Count;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
@@ -222,6 +305,33 @@ namespace DataUtility
                     }
 
                     kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Sqrt(euclideanDistance);
+                }
+            }
+
+            return kernelMatrix;
+        }
+
+        private Matrix<double> GaussKernelMatrix(double sigma = 1)
+        {
+            int dataCount = dataFrame.First().Value.Count;
+            Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
+
+            for (int i = 0; i < dataCount; i++)
+            {
+                for (int j = i + 1; j < dataCount; j++)
+                {
+                    double euclideanDistance = 0;
+                    foreach (var pair in this.dataFrame)
+                    {
+
+                        if (!(pair.Value is List<string>))
+                        {
+                            euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
+                        }
+
+                    }
+                    kernelMatrix[i, i] = 1; 
+                    kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Exp(-(Math.Pow(euclideanDistance, 2) / (2 * Math.Pow(sigma,2))));
                 }
             }
 

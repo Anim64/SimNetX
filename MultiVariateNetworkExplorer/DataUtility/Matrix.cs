@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace DataUtility
 {
@@ -15,6 +16,7 @@ namespace DataUtility
             matrix = new T[rows * cols];
             this.Rows = rows;
             this.Cols = cols;
+            
         }
 
         public T this[int row, int col]
@@ -29,6 +31,18 @@ namespace DataUtility
 
                 matrix[row * Rows + col] = value;
             }
+        }
+
+
+        public T[] GetRow(int row)
+        {
+            // Return new array.
+            T[] res = new T[this.Cols];
+            for (int i = 0; i < Cols; i++)
+            {
+                res[i] = this.matrix[i + row * Rows];
+            }
+            return res;
         }
 
     }

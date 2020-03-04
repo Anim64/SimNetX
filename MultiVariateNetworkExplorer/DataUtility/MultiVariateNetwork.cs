@@ -13,14 +13,14 @@ namespace DataUtility
         public MultiVariateNetwork()
         {
             VectorData = new DataFrame();
-            Network = new Network();
+            Network = new Network(0);
         }
 
         public MultiVariateNetwork(string fileName, bool header = false, params char[] separator)
         {
             VectorData = new DataFrame(fileName, header, separator);
 
-            Network = VectorData.CreateNetwork(0.4, 2);
+            Network = VectorData.LRNet();
         }
 
         public string ToD3Json()
@@ -43,11 +43,11 @@ namespace DataUtility
                 jNode["neighbours"] = JArray.FromObject(Network[node.Key]);
                 jNodes.Add(jNode);
 
-                foreach(string target in node.Value)
+                foreach(var target in node.Value)
                 {
                     JObject newLink = new JObject();
                     newLink["source"] = node.Key;
-                    newLink["target"] = target;
+                    newLink["target"] = target.Key;
                     newLink["id"] = ++edgeId;
                     jLinks.Add(newLink);
                 }
