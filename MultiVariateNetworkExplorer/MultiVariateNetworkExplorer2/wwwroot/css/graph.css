@@ -1,0 +1,32 @@
+﻿svg {
+    flex-basis: 100%;
+    min-width: 200px;
+    border: solid;
+    border-color: white;
+    height: 85vh;
+}
+
+html {
+    width: 100%;
+}
+
+.links line {
+    stroke: lightgray;
+    stroke-width: 1px;
+}
+
+.nodes circle {
+    pointer-events: all;
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+.nodes .selected {
+    stroke: black;
+}
+
+.brush .extent {
+    fill-opacity: .1;
+    stroke: #fff;
+    shape-rendering: crispEdges;
+}

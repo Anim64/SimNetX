@@ -12,13 +12,14 @@
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" />
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="/resources/demos/style.css">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/node_properties.css" type="text/css" />
 }
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
-
 }
 
 
@@ -57,9 +58,9 @@
                 <div class="categorial">
                     <p><label>@pair.Key</label></p>
                     <div class="checkboxes">
-                        @foreach(string category in pair.Value)
+                        @foreach (string category in pair.Value)
                         {
-                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory(@pair.Key, @category)" checked/>
+                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory(@pair.Key, @category)" checked />
                             <label for="@(category + "-checkbox")">@(category)</label>
                         }
                     </div>
@@ -203,11 +204,42 @@
         drawNetwork(@Html.Raw(Model.ToD3Json()));
         </script>
     </div>
-    <div class="col-md-2 form-group" id="node_properties">
+    <div class="col-md-2 col-sm-2" id="nodes">
+
+        <div class="panel-group wrap tab-content" id="accordion" role="tablist" aria-multiselectable="true">
+
+            @for (int node = 0; node < Model.VectorData.DataCount; node++)
+            {
+                <div class="panel">
+                    <div class="panel-heading" role="tab" id="@("heading_" + node)">
+                        <h4 class="panel-title">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#@("node_" + node)" aria-expanded="true" aria-controls="@("node_" + node)">
+                                @("Node " + node)
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="@("node_" + node)" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + node)">
+                        <div class="panel-body form-group">
+                            @foreach (var attribute in Model.VectorData.Columns())
+                            {
+                                <label for="@(node + "-" + attribute)" class="form-check-label">@(attribute)</label>
+                                <input type="text" id="@(node + "-" + attribute)" class="form-control" value="@(Model.VectorData[attribute, node])" readonly />
+                            }
+                        </div>
+                    </div>
+
+                </div>
 
 
-
+            }
+        </div>
     </div>
+</div>
+<div class="row">
+    <label for="edgeCheckBox">Edges</label>
+    <input type="checkbox" id="edgeCheckBox" checked />
+    <label for="groupsCheckBox">Edges</label>
+    <input type="checkbox" id="groupsCheckBox" checked />
 </div>
 
 

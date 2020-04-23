@@ -1,0 +1,19 @@
+﻿.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 42.5vh;
+    overflow-y: scroll;
+
+}
+
+.selections {
+    padding: 6px 12px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    max-height: 42.5vh;
+    overflow-y: scroll;
+}
+
+

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -7,6 +6,8 @@ using System.Threading.Tasks;
 using DataUtility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MultiVariateNetworkExplorer.Models;
 
 namespace MultiVariateNetworkExplorer.Controllers
@@ -19,6 +20,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
+        [DisableFormValueModelBinding]
         public async Task<IActionResult> Graph(IFormFile file)
         {
             long size = file.Length;
@@ -38,7 +40,10 @@ namespace MultiVariateNetworkExplorer.Controllers
             {
                 MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePath, false, ',', ';');
 
-
+                /*if(detectCommunities)
+                {
+                    multiVariateNetwork.FindCommunities();
+                }*/
 
                 return View("Graph", multiVariateNetwork);
             }
@@ -75,4 +80,32 @@ namespace MultiVariateNetworkExplorer.Controllers
         
 
     }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public class DisableFormValueModelBindingAttribute : Attribute, IResourceFilter
+    {
+        public void OnResourceExecuting(ResourceExecutingContext context)
+        {
+            var formValueProviderFactory = context.ValueProviderFactories
+                    .OfType<FormValueProviderFactory>()
+                    .FirstOrDefault();
+            if (formValueProviderFactory != null)
+            {
+                context.ValueProviderFactories.Remove(formValueProviderFactory);
+            }
+
+            var jqueryFormValueProviderFactory = context.ValueProviderFactories
+                .OfType<JQueryFormValueProviderFactory>()
+                .FirstOrDefault();
+            if (jqueryFormValueProviderFactory != null)
+            {
+                context.ValueProviderFactories.Remove(jqueryFormValueProviderFactory);
+            }
+        }
+
+        public void OnResourceExecuted(ResourceExecutedContext context)
+        {
+        }
+    }
+
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -23,10 +25,10 @@ namespace DataUtility
         /// <param name="graph">The graph which is decomposed.</param>
         /// <param name="partition">The partition of the nodes in the graph (i.e., a dictionary where keys are nodes and values are communities).</param>
         /// <returns>The modularity.</returns>
-        public static double Modularity(Network graph, Dictionary<string, int> partition)
+        public static double Modularity(Network graph, Dictionary<string, string> partition)
         {
-            Dictionary<int, double> inc = new Dictionary<int, double>();
-            Dictionary<int, double> deg = new Dictionary<int, double>();
+            Dictionary<string, double> inc = new Dictionary<string, double>();
+            Dictionary<string, double> deg = new Dictionary<string, double>();
 
             double links = graph.CurrSize;
             if (links == 0)
@@ -36,9 +38,9 @@ namespace DataUtility
 
             foreach (var node in graph)
             {
-                int com = partition[node.Key];
+                string com = partition[node.Key];
                 deg[com] = DictGet(deg, com, 0) + graph.GetDegree(node.Key);
-                foreach (var edge in node.Value)
+                foreach (var edge in graph[node.Key])
                 {
                     string neighbor = edge.Key;
                     if (partition[neighbor] == com)
@@ -58,35 +60,77 @@ namespace DataUtility
             }
 
             double res = 0;
-            foreach (int component in partition.Values.Distinct())
+            foreach (string component in partition.Values.Distinct())
             {
                 res += DictGet(inc, component, 0) / links - Math.Pow(DictGet(deg, component, 0) / (2 * links), 2);
             }
             return res;
         }
-        public static Dictionary<int, int> BestPartition(Network graph, Dictionary<int, int> partition)
+        public static Dictionary<string, string> BestPartition(Network graph, Dictionary<string, string> partition)
         {
             Dendrogram dendro = GenerateDendrogram(graph, partition);
             return dendro.PartitionAtLevel(dendro.Length - 1);
         }
 
-        public static Dictionary<int, int> BestPartition(Network graph)
+        public static Dictionary<string, string> BestPartition(Network graph)
         {
             return BestPartition(graph, null);
         }
 
-        private static Dictionary<A, int> Renumber<A>(Dictionary<A, int> dict)
+        public static Dendrogram GenerateDendrogram(Network graph, Dictionary<string, string> part_init)
         {
-            var ret = new Dictionary<A, int>();
-            var new_values = new Dictionary<int, int>();
+            Dictionary<string, string> partition;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Restart();
 
-            foreach (A key in dict.Keys.OrderBy(a => a))
+            // Special case, when there is no link, the best partition is everyone in its own community.
+            if (graph.NumberOfEdges == 0)
             {
-                int value = dict[key];
-                int new_value;
-                if (!new_values.TryGetValue(value, out new_value))
+                partition = new Dictionary<string, string>();
+                int i = 0;
+                foreach (var node in graph.Nodes)
                 {
-                    new_value = new_values[value] = new_values.Count;
+                    partition[node] = (i++).ToString();
+                }
+                return new Dendrogram(partition);
+            }
+
+            Network current_graph = new Network(graph);
+            Status status = new Status(current_graph, part_init);
+            double mod = status.Modularity();
+            List<Dictionary<string, string>> status_list = new List<Dictionary<string, string>>();
+            status.OneLevel(current_graph);
+            double new_mod;
+            new_mod = status.Modularity();
+
+            int iterations = 1;
+            do
+            {
+                iterations++;
+                partition = Renumber(status.Node2Com);
+                status_list.Add(partition);
+                mod = new_mod;
+                current_graph = current_graph.Quotient(partition);
+                status = new Status(current_graph, null);
+                status.OneLevel(current_graph);
+                new_mod = status.Modularity();
+            } while (new_mod - mod >= MIN);
+            //Console.Out.WriteLine("(GenerateDendrogram: {0} iterations in {1})", iterations, stopwatch.Elapsed);
+
+            return new Dendrogram(status_list);
+        }
+
+        private static Dictionary<A, string> Renumber<A>(Dictionary<A, string> dict)
+        {
+            var ret = new Dictionary<A, string>();
+            var new_values = new Dictionary<string, string>();
+
+            foreach (A key in dict.Keys.OrderBy(a => int.Parse(a.ToString(), CultureInfo.InvariantCulture)))
+            {
+                string value = dict[key];
+                if (!new_values.TryGetValue(value, out string new_value))
+                {
+                    new_value = new_values[value] = new_values.Count.ToString();
                 }
                 ret[key] = new_value;
             }
@@ -111,24 +155,24 @@ namespace DataUtility
         /// </summary>
         private class Status
         {
-            public Dictionary<string, int> Node2Com;
-            public Double TotalWeight;
-            public Dictionary<int, double> Degrees;
+            public Dictionary<string, string> Node2Com;
+            public double TotalWeight;
+            public Dictionary<string, double> Degrees;
             public Dictionary<string, double> GDegrees;
             public Dictionary<string, double> Loops;
-            public Dictionary<int, double> Internals;
+            public Dictionary<string, double> Internals;
 
             public Status()
             {
-                Node2Com = new Dictionary<string, int>();
+                Node2Com = new Dictionary<string, string>();
                 TotalWeight = 0;
-                Degrees = new Dictionary<int, double>();
+                Degrees = new Dictionary<string, double>();
                 GDegrees = new Dictionary<string, double>();
                 Loops = new Dictionary<string, double>();
-                Internals = new Dictionary<int, double>();
+                Internals = new Dictionary<string, double>();
             }
 
-            public Status(Network graph, Dictionary<string, int> part)
+            public Status(Network graph, Dictionary<string, string> part)
                 : this()
             {
 
@@ -136,39 +180,39 @@ namespace DataUtility
                 this.TotalWeight = graph.CurrSize;
                 if (part == null)
                 {
-                    foreach (var node in graph)
+                    foreach (var node in graph.Nodes)
                     {
-                        Node2Com[node.Key] = count;
-                        double deg = graph.GetDegree(node.Key);
+                        Node2Com[node] = count.ToString();
+                        double deg = graph.GetDegree(node);
                         if (deg < 0)
                         {
                             throw new ArgumentException("Graph has negative weights.");
                         }
-                        Degrees[count] = GDegrees[node.Key] = deg;
-                        Internals[count] = Loops[node.Key] = graph.EdgeWeight(node.Key, node.Key, 0);
+                        Degrees[count.ToString()] = GDegrees[node] = deg;
+                        Internals[count.ToString()] = Loops[node] = graph.EdgeWeight(node, node, 0);
                         count += 1;
                     }
                 }
                 else
                 {
-                    foreach (var node in graph)
+                    foreach (var node in graph.Nodes)
                     {
-                        int com = part[node.Key];
-                        Node2Com[node.Key] = com;
-                        double deg = graph.GetDegree(node.Key);
+                        string com = part[node];
+                        Node2Com[node] = com;
+                        double deg = graph.GetDegree(node);
                         Degrees[com] = DictGet(Degrees, com, 0) + deg;
-                        GDegrees[node.Key] = deg;
+                        GDegrees[node] = deg;
                         double inc = 0;
-                        foreach (var edge in graph[node.Key])
+                        foreach (var edge in graph[node])
                         {
                             string neighbor = edge.Key;
                             if (edge.Value <= 0)
                             {
-                                throw new ArgumentException("Graph must have postive weights.");
+                                throw new ArgumentException("Graph must have positive weights.");
                             }
                             if (part[neighbor] == com)
                             {
-                                if (neighbor == node.Key)
+                                if (neighbor == node)
                                 {
                                     inc += edge.Value;
                                 }
@@ -182,5 +226,125 @@ namespace DataUtility
                     }
                 }
             }
+
+            /// <summary>
+            /// Compute the modularity of the partition of the graph fast using precomputed status.
+            /// </summary>
+            /// <returns></returns>
+            public double Modularity()
+            {
+                double links = TotalWeight;
+                double result = 0;
+                foreach (string community in Node2Com.Values.Distinct())
+                {
+                    double in_degree = DictGet(Internals, community, 0);
+                    double degree = DictGet(Degrees, community, 0);
+                    if (links > 0)
+                    {
+                        result += in_degree / links - Math.Pow(degree / (2 * links), 2);
+                    }
+                }
+                return result;
+            }
+
+            /// <summary>
+            /// Used in parallelized OneLevel
+            /// </summary>
+            private Tuple<double, string> EvaluateIncrease(string com, double dnc, double degc_totw)
+            {
+                double incr = dnc - DictGet(Degrees, com, 0) * degc_totw;
+                return Tuple.Create(incr, com);
+            }
+
+            /// <summary>
+            /// Compute one level of communities.
+            /// </summary>
+            /// <param name="graph">The graph to use.</param>
+            public void OneLevel(Network graph)
+            {
+                bool modif = true;
+                int nb_pass_done = 0;
+                double cur_mod = this.Modularity();
+                double new_mod = cur_mod;
+
+                while (modif && nb_pass_done != PASS_MAX)
+                {
+                    cur_mod = new_mod;
+                    modif = false;
+                    nb_pass_done += 1;
+
+                    foreach (var node in graph.Nodes)
+                    {
+                        string com_node = Node2Com[node];
+                        double degc_totw = DictGet(GDegrees, node, 0) / (TotalWeight * 2);
+                        Dictionary<string, double> neigh_communities = NeighCom(node, graph);
+                        Remove(node, com_node, DictGet(neigh_communities, com_node, 0));
+
+                        Tuple<double, string> best;
+                        best = (from entry in neigh_communities.AsParallel()
+                                select EvaluateIncrease(entry.Key, entry.Value, degc_totw))
+                               .Concat(new[] { Tuple.Create(0.0, com_node) }.AsParallel())
+                               .Max();
+                        string best_com = best.Item2;
+                        Insert(node, best_com, DictGet(neigh_communities, best_com, 0));
+                        if (best_com != com_node)
+                        {
+                            modif = true;
+                        }
+                    }
+                    new_mod = this.Modularity();
+                    if (new_mod - cur_mod < MIN)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Compute the communities in th eneighborhood of the node in the given graph.
+            /// </summary>
+            /// <param name="node"></param>
+            /// <param name="graph"></param>
+            /// <returns></returns>
+            private Dictionary<string, double> NeighCom(string node, Network graph)
+            {
+                Dictionary<string, double> weights = new Dictionary<string, double>();
+                foreach (var edge in graph[node])
+                {
+                    if (edge.Key != node)
+                    {
+                        string neighborcom = Node2Com[edge.Key];
+                        weights[neighborcom] = DictGet(weights, neighborcom, 0) + edge.Value;
+                    }
+                }
+                return weights;
+            }
+
+            /// <summary>
+            /// Remove node from community com and modify status.
+            /// </summary>
+            /// <param name="node"></param>
+            /// <param name="com"></param>
+            /// <param name="weight"></param>
+            private void Remove(string node, string com, double weight)
+            {
+                Degrees[com] = DictGet(Degrees, com, 0) - DictGet(GDegrees, node, 0);
+                Internals[com] = DictGet(Internals, com, 0) - weight - DictGet(Loops, node, 0);
+                Node2Com[node] = (-1).ToString();
+            }
+
+            /// <summary>
+            /// Insert node into community and modify status.
+            /// </summary>
+            /// <param name="node"></param>
+            /// <param name="com"></param>
+            /// <param name="weight"></param>
+            private void Insert(string node, string com, double weight)
+            {
+                Node2Com[node] = com;
+                Degrees[com] = DictGet(Degrees, com, 0) + DictGet(GDegrees, node, 0);
+                Internals[com] = DictGet(Internals, com, 0) + weight + DictGet(Loops, node, 0);
+            }
         }
+    }
 }

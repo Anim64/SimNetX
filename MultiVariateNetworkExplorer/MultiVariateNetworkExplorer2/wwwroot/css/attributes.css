@@ -1,0 +1,36 @@
+﻿.attributes {
+    flex-basis: 200px;
+    padding: 0 5px;
+    font-size: 90%;
+    color: black;
+}
+
+.attributes .numeric {
+    background-color: #eee;
+    border-radius: 3px;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+.attributes .numeric div[id$="slider"] {
+    margin: 0 5% 1em;
+    width: 90%;
+}
+
+.attributes .numeric input[type="number"] {
+    margin: 0 5% 1em;
+    width: 90%;
+}
+
+
+.attributes .categorial {
+    display: inline-block;
+    width: 90%;
+}
+
+.attributes .categorial input[type="checkbox"] {
+    margin: 0 5% 1em;
+    width: 90%;
+}
+
+

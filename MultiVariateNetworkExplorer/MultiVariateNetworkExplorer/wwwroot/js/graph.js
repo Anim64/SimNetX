@@ -6,7 +6,7 @@ var node = null;
 
 var link = null;
 
-var nodeColor = "#000000";
+//var nodeColor = "#000000";
 
 var svg = d3.select("svg"),
     width = svg.node().getClientRects()[0].width,
@@ -20,6 +20,9 @@ var simulation = d3.forceSimulation()
     .force("forceX", d3.forceX())
     .force("forceY", d3.forceY())
     .force("radial", d3.forceRadial());
+
+var groupColours = d3.scaleOrdinal(d3.schemeCategory10);
+var defaultColour = "#FF0000";
 
 var selectedNode = null;
 
@@ -76,9 +79,9 @@ function drawNetwork(data) {
 
     graph = data;
 
-    for (var node1 in graph["nodes"]) {
+    /*for (var node1 in graph["nodes"]) {
         node1.color = nodeColor;
-    }
+    }*/
 
 
     link = svg.append("g")
@@ -97,12 +100,15 @@ function drawNetwork(data) {
         .selectAll("circle")
         .data(graph.nodes)
         .enter().append("circle")
-        /*.style("fill", function (d) {
-            const scale = d3.scaleSequential()
-                .domain([0, 100])
-                .interpolator(d3.interpolateRainbow);//d3.scaleOrdinal(d3.schemeCategory10);
-            return d.color;
-        })*/
+        .style("fill", function (d) {
+            if (d.group) {
+                return color(d.group);
+            }
+            else {
+                return defaultColour;
+            }
+            
+        })
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
@@ -170,7 +176,7 @@ function zoomed() {
 }
 
 function displayNodeProperties(d) {
-    d3.select(this).style("stroke", "#FFFF00");
+    /*d3.select(this).style("stroke", "#FFFF00");
 
     node_properties_div = d3.select("#node_properties");
     node_properties_div.selectAll("*").remove();
@@ -197,10 +203,9 @@ function displayNodeProperties(d) {
     node_properties_div.append("input")
         .attr("type", "color")
         .attr("id", "color-" + d.id)
-        .attr("value", d.color);
-
-    
-
+        .attr("value", d.color);*/
+    //node_properties = d3.select("#node_" + d.id);
+    //node_properties.attr("class", "panel-collapse collapse in");
 }
 
 function resetSelection() {
@@ -429,10 +434,12 @@ function updateNodesAndLinks() {
 
     var newNode = node.enter().append("circle")
         .style("fill", function (d) {
-            /*const scale = d3.scaleSequential()
-                .domain([0, 100])
-                .interpolator(d3.interpolateRainbow);*///d3.scaleOrdinal(d3.schemeCategory10);
-            return d.color;
+            if (d.group) {
+                return color(d.color);
+            }
+            else {
+                return "FF0000";
+            }
         })
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
