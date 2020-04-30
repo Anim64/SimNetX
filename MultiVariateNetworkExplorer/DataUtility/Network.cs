@@ -158,7 +158,7 @@ namespace DataUtility
 
 
 
-        public void ReadFromFile(string filename, char separator, bool header = false, bool directed = false)
+        public void ReadFromFile(string filename, bool header = false, bool directed = false, params char[] separator)
         {
             using(StreamReader sr = new StreamReader(filename))
             {

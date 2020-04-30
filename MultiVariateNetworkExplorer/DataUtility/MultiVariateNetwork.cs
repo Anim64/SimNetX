@@ -12,35 +12,39 @@ namespace DataUtility
         public DataFrame VectorData { get; set; }
         public Network Network { get; set; }
 
-        public Dictionary<string, string> Partition { 
-            get {
-                if(Partition == null)
-                {
-                    FindCommunities();
-                }
+        public Dictionary<string, string> Partition { get; set; }
 
-                return Partition;
-            }
-            private set { this.Partition = value; }
-        }
+        public bool Directed { get; set; }
+
+        
 
 
         public MultiVariateNetwork()
         {
             VectorData = new DataFrame();
             Network = new Network(0);
+            Partition = null;
         }
 
-        public MultiVariateNetwork(string fileName, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, bool directed = false, bool header = false, params char[] separator)
         {
-            VectorData = new DataFrame(fileName, header, separator);
+            VectorData = new DataFrame(paths.ElementAt(0), header, separator);
+            Directed = directed;
 
-            Network = VectorData.LRNet();
+            if(paths.Count() > 1)
+            {
+                Network.ReadFromFile(paths.ElementAt(1), header, directed, separator);
+            }
+            else
+            {
+                Network = VectorData.LRNet();
+            }
+            Partition = null;
         }
         public void FindCommunities()
         {
-            Dictionary<string, string> partition = Community.BestPartition(g);
-            var communities = new Dictionary<string, List<string>>();
+            Dictionary<string, string> partition = Community.BestPartition(Network);
+            /*var communities = new Dictionary<string, List<string>>();
             foreach (var kvp in partition)
             {
                 List<string> nodeset;
@@ -49,8 +53,8 @@ namespace DataUtility
                     nodeset = communities[kvp.Value] = new List<string>();
                 }
                 nodeset.Add(kvp.Key);
-            }
-            this.Partition = communities;
+            }*/
+            this.Partition = partition;
         }
 
         public string ToD3Json()
@@ -99,21 +103,9 @@ namespace DataUtility
 
         public string PartitionsToD3Json()
         {
-            if(Partition == null)
-            {
-                return null;
-            }
+           
 
-            var communities = new Dictionary<string, List<string>>();
-            foreach (var kvp in Partition)
-            {
-                List<string> nodeset;
-                if (!communities.TryGetValue(kvp.Value, out nodeset))
-                {
-                    nodeset = communities[kvp.Value] = new List<string>();
-                }
-                nodeset.Add(kvp.Key);
-            }
+            
 
 
             JObject root = new JObject();
@@ -121,35 +113,49 @@ namespace DataUtility
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
 
-            foreach (var group in communities)
+            if (Partition != null)
             {
-                JObject jNode = new JObject();
-                jNode["id"] = group.Key;
-                jNode["Number of Nodes"] = group.Value.Count;
-                jNodes.Add(jNode);
-                //jNodes.Insert(Int32.Parse(node.Key, CultureInfo.InvariantCulture), jNode);
-                for(int i = int.Parse(group.Key, CultureInfo.InvariantCulture); i < communities.Count; i++)
+                var communities = new Dictionary<string, List<string>>();
+                foreach (var kvp in Partition)
                 {
-                    var item = communities.ElementAt(i);
-                    double countLinks = 0;
-                    foreach(var node1 in group.Value)
+                    List<string> nodeset;
+                    if (!communities.TryGetValue(kvp.Value, out nodeset))
                     {
-                        foreach (var node2 in item.Value)
-                        {
-                            Network[node1].TryGetValue(node2, out double value);
-                            countLinks += value;
-                        }
+                        nodeset = communities[kvp.Value] = new List<string>();
                     }
-                    JObject newLink = new JObject();
-                    newLink["source"] = group.Key;
-                    newLink["target"] = item.Key;
-                    newLink["value"] = countLinks;
-                    jLinks.Add(newLink);
+                    nodeset.Add(kvp.Key);
                 }
-                
+
+                foreach (var group in communities)
+                {
+                    JObject jNode = new JObject();
+                    jNode["id"] = group.Key;
+                    jNode["Number of Nodes"] = group.Value.Count;
+                    jNodes.Add(jNode);
+                    //jNodes.Insert(Int32.Parse(node.Key, CultureInfo.InvariantCulture), jNode);
+                    for (int i = int.Parse(group.Key, CultureInfo.InvariantCulture); i < communities.Count; i++)
+                    {
+                        var item = communities.ElementAt(i);
+                        double countLinks = 0;
+                        foreach (var node1 in group.Value)
+                        {
+                            foreach (var node2 in item.Value)
+                            {
+                                Network[node1].TryGetValue(node2, out double value);
+                                countLinks += value;
+                            }
+                        }
+                        JObject newLink = new JObject();
+                        newLink["source"] = group.Key;
+                        newLink["target"] = item.Key;
+                        newLink["value"] = countLinks;
+                        jLinks.Add(newLink);
+                    }
+
+                }
             }
 
-            root["groups"] = jNodes;
+            root["nodes"] = jNodes;
             root["links"] = jLinks;
 
 

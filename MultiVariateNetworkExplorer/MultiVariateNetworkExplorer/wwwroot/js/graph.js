@@ -3,16 +3,31 @@ var store = null;
 var filterNodeList = [];
 
 var node = null;
-
 var link = null;
+
+var selectionGraph = null;
+var selectionNode = null;
+var selectionLink = null;
+
 
 //var nodeColor = "#000000";
 
-var svg = d3.select("svg"),
+var svg = d3.select("#networkGraph svg"),
     width = svg.node().getClientRects()[0].width,
     height = svg.node().getClientRects()[0].height;
 
+var selectionSvg = d3.select("#selectionGraph svg");
+
 var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink())
+    .force("charge", d3.forceManyBody())
+    .force("collide", d3.forceCollide())
+    .force("center", d3.forceCenter())
+    .force("forceX", d3.forceX())
+    .force("forceY", d3.forceY())
+    .force("radial", d3.forceRadial());
+
+var selectionSimulation = d3.forceSimulation()
     .force("link", d3.forceLink())
     .force("charge", d3.forceManyBody())
     .force("collide", d3.forceCollide())
@@ -141,6 +156,8 @@ function drawNetwork(data) {
 
 }
 
+
+
 function ticked() {
     link
         .attr("x1", function (d) { return d.source.x; })
@@ -173,6 +190,11 @@ function dragended(d) {
 function zoomed() {
     node.attr("transform", d3.event.transform);
     link.attr("transform", d3.event.transform);
+}
+
+function selectionZoomed() {
+    selectionNode.attr("transform", d3.event.transform);
+    selectionLink.attr("transform", d3.event.transform);
 }
 
 function displayNodeProperties(d) {

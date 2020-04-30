@@ -3,7 +3,9 @@
     min-width: 200px;
     border: solid;
     border-color: white;
-    height: 85vh;
+    height: 80vh;
+    max-height: 80vh;
+    width: 100%;
 }
 
 html {

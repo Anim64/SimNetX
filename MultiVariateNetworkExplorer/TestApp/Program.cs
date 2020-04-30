@@ -19,10 +19,10 @@ namespace TestApp
             string json = mvn.ToD3Json();
             Console.WriteLine(json);
             Console.WriteLine();*/
-
+            Console.WriteLine(4.54);
             
 
-            Network g = new Network();
+            /*Network g = new Network();
             //test network
             int edgecounter = 0;
             using (StreamReader sr = new StreamReader("karate.csv"))
@@ -65,7 +65,7 @@ namespace TestApp
                 Console.WriteLine("community {0}: {1} people", counter, kvp.Value.Count);
                 counter++;
             }
-            Console.ReadLine();
+            Console.ReadLine();*/
 
 
 

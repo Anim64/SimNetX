@@ -72,11 +72,18 @@ namespace DataUtility
             }
         }
 
+        public IList this[string column]
+        {
+            get
+            {
+                return this.dataFrame[column];
+            }
+        }
         /// <summary>
         /// </summary>
         /// <param name="key"></param>
         /// <returns>Return columns from source DataFrame as a new DataFrame</returns>
-        public DataFrame this[params string[] columns]
+        /*public DataFrame this[params string[] columns]
         {
             
             get
@@ -91,7 +98,7 @@ namespace DataUtility
                 return selectedColumns;
             }
 
-        }
+        }*/
 
         public object this[string column, int row]
         {
@@ -408,7 +415,7 @@ namespace DataUtility
                             headers = new string[vector.Length];
                             for (int i = 0; i < vector.Length; i++)
                             {
-                                headers[i] = i.ToString();
+                                headers[i] = "Attribute" + (i + 1).ToString();
                             }
 
                             for (int i = 0; i < headers.Length; i++)
@@ -468,6 +475,11 @@ namespace DataUtility
             {
                 Console.WriteLine(fe.Message);
             }
+        }
+
+        public void RemoveColumn(string column)
+        {
+            this.dataFrame.Remove(column);
         }
 
         

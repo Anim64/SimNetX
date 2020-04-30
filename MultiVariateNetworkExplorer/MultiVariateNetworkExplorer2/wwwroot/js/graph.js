@@ -3,8 +3,13 @@ var store = null;
 var filterNodeList = [];
 
 var node = null;
-
 var link = null;
+
+var selectionGraph = null;
+var selectionNode = null;
+var selectionLink = null;
+var selectionDraw = null;
+
 
 var rect = null;
 var gBrushHolder = null;
@@ -13,17 +18,17 @@ var brushMode = false;
 var brushing = false;
 var brush = null;
 var gDraw = null;
+var gMain = null;
 
 
 
 //var nodeColor = "#000000";
 
 
-var svg = d3.select("svg")
-    
-
-var width = svg.node().getClientRects()[0].width,
-    height = svg.node().getClientRects()[0].height;
+var svg = d3.select("#networkGraph svg"),
+    width = svg.node().getClientRects()[0].width,
+    height = svg.node().getClientRects()[0].height,
+    selectionSvg = null;
 
 
 
@@ -36,6 +41,16 @@ var simulation = d3.forceSimulation()
     .force("forceX", d3.forceX())
     .force("forceY", d3.forceY())
     .force("radial", d3.forceRadial());
+
+var selectionSimulation = d3.forceSimulation()
+    .force("link", d3.forceLink())
+    .force("charge", d3.forceManyBody())
+    .force("collide", d3.forceCollide())
+    .force("center", d3.forceCenter())
+    .force("forceX", d3.forceX())
+    .force("forceY", d3.forceY())
+    .force("radial", d3.forceRadial());
+
 
 var groupColours = d3.scaleOrdinal(d3.schemeCategory10);
 var defaultColour = "#FF0000";
@@ -98,12 +113,13 @@ function drawNetwork(data) {
 
     graph = data;
 
+
     /*for (var node1 in graph["nodes"]) {
         node1.color = nodeColor;
     }*/
     svg.selectAll('.g-main').remove();
 
-    var gMain = svg.append('g')
+    gMain = svg.append('g')
         .classed('g-main', true);
 
     rect = gMain.append('rect')
@@ -119,6 +135,12 @@ function drawNetwork(data) {
     gMain.call(zoom);
 
     gBrushHolder = gDraw.append('g');
+    /*bgrect = gBrushHolder.append('rect')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', '#333333')
+        .style('visibility', 'hidden')*/
+        
     
 
     
@@ -150,7 +172,9 @@ function drawNetwork(data) {
         .enter().append("circle")
         .style("fill", function (d) {
             if (d.group) {
+                
                 return groupColours(d.group);
+                
             }
             else {
                 return defaultColour;
@@ -174,6 +198,7 @@ function drawNetwork(data) {
     brushing = false;
 
     brush = d3.brush()
+        .extent([[0, 0], [width, height]])
         .on("start", brushstarted)
         .on("brush", brushed)
         .on("end", brushended);
@@ -198,7 +223,6 @@ function drawNetwork(data) {
     d3.select('body').on('keyup', keyup);
 
     store = $.extend(true, {}, data);
-
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked);
@@ -211,6 +235,66 @@ function drawNetwork(data) {
 
 }
 
+function drawSelectionNetwork(data) {
+    selectionGraph = data;
+    
+
+    selectionSvg = d3.select("#selectionGraph svg");
+    selectionSvg.selectAll('.g-main').remove();
+
+    var selectionMain = selectionSvg.append('g')
+        .classed('g-main', true);
+
+    var zoom = d3.zoom()
+        .on('zoom', selectionZoomed)
+
+    selectionMain.call(zoom);
+
+    var selectionRect = selectionMain.append('rect')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', '#333333')
+
+    selectionDraw = selectionMain.append('g');
+    
+    selectionLink = selectionDraw.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(selectionGraph.links)
+        .enter().append("line");
+
+    selectionLink.append("title")
+        .text(function (l) {
+            return l.value;
+        });
+
+    selectionNode = selectionDraw.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(selectionGraph.nodes)
+        .enter().append("circle")
+        .style("fill", function (d) {   
+            return groupColours(d.id); 
+        })
+        .attr("r", forceProperties.collide.radius)
+        /*.call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))*/
+
+    
+    selectionNode.append("title")
+        .text(function (d) { return d.id; });
+
+    selectionSimulation
+        .nodes(selectionGraph.nodes)
+        .on("tick", selectionTicked);
+
+    updateSelectionForces();
+    selectionSimulation.force("link")
+        .links(selectionGraph.links);
+}
+
 function ticked() {
     link
         .attr("x1", function (d) { return d.source.x; })
@@ -219,6 +303,18 @@ function ticked() {
         .attr("y2", function (d) { return d.target.y; });
 
     node
+        .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
+        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
+}
+
+function selectionTicked() {
+    selectionLink
+        .attr("x1", function (d) { return d.source.x; })
+        .attr("y1", function (d) { return d.source.y; })
+        .attr("x2", function (d) { return d.target.x; })
+        .attr("y2", function (d) { return d.target.y; });
+
+    selectionNode
         .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
         .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
 }
@@ -304,6 +400,10 @@ function zoomed() {
     gDraw.attr('transform', d3.event.transform);
 }
 
+function selectionZoomed() {
+    selectionDraw.attr("transform", d3.event.transform);
+}
+
 function keydown() {
     shiftKey = d3.event.shiftKey;
 
@@ -315,8 +415,9 @@ function keydown() {
         brushMode = true;
 
         if (!gBrush) {
-            gBrush = gBrushHolder.append('g');
-            gBrush.call(brush);
+            gBrush = gMain.append('g')
+                .attr("class", "brush")
+                .call(brush);
         }
     }
 }
@@ -351,6 +452,12 @@ function resetSelection() {
 
 function filterByMinValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
+
+    var minValue = document.getElementById(filteredAttributeName + "-sliderOutputMin").min;
+    if (value < minValue) {
+        value = minValue;
+        document.getElementById(filteredAttributeName + "-sliderOutputMin").value = minValue;
+    }
 
     store.nodes.forEach(function (n) {
         if (n[filteredAttributeName] < value) {
@@ -430,6 +537,11 @@ function filterByMinValue(value, filteredAttributeName) {
 
 function filterByMaxValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
+    var maxValue = document.getElementById(filteredAttributeName + "-sliderOutputMax").max;
+    if (value > maxValue) {
+        value = maxValue;
+        document.getElementById(filteredAttributeName + "-sliderOutputMax").value = maxValue;
+    }
 
     store.nodes.forEach(function (n) {
         if (n[filteredAttributeName] > value) {
@@ -548,7 +660,17 @@ function updateForces() {
         .y(height * forceProperties.forceY.y);
     simulation.force("link")
         .id(function (d) { return d.id; })
-        .distance(forceProperties.link.distance)
+        .distance(function (l) {
+            var node1 = graph.nodes.find(node1 => node1 === l.source)
+            var node2 = graph.nodes.find(node1 => node1 === l.target)
+
+            if (node1.group === node2.group) {
+                return 10;
+            }
+            else {
+                return forceProperties.link.distance * 3;
+            }
+        })
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? graph.links : []);
     simulation.force("radial")
@@ -562,6 +684,46 @@ function updateForces() {
     simulation.alpha(1).restart();
 }
 
+function updateSelectionForces() {
+    selectionSimulation.force("center")
+        .x(width * forceProperties.center.x)
+        .y(height * forceProperties.center.y);
+    selectionSimulation.force("charge")
+        .strength(forceProperties.charge.strength * forceProperties.charge.enabled)
+        .distanceMin(forceProperties.charge.distanceMin)
+        .distanceMax(forceProperties.charge.distanceMax);
+    selectionSimulation.force("collide")
+        .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
+        .radius(forceProperties.collide.radius)
+        .iterations(forceProperties.collide.iterations);
+    selectionSimulation.force("forceX")
+        .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+        .x(width * forceProperties.forceX.x);
+    selectionSimulation.force("forceY")
+        .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+        .y(height * forceProperties.forceY.y);
+    selectionSimulation.force("link")
+        .id(function (d) { return d.id; })
+        .distance(forceProperties.link.distance)
+        .iterations(forceProperties.link.iterations)
+        .links(forceProperties.link.enabled ? selectionGraph.links : []);
+    selectionSimulation.force("radial")
+        .x(forceProperties.radial.x * width)
+        .y(forceProperties.radial.y * height)
+        .strength(forceProperties.radial.strength)
+        .radius(forceProperties.radial.radius);
+
+    // updates ignored until this is run
+    // restarts the simulation (important if simulation has already slowed down)
+    selectionSimulation.alpha(1).restart();
+}
+
+function updateNodeGroups() {
+    graph.nodes.forEach(function (d) {
+        document.getElementById("panel_" + d.id).style.borderColor = groupColours(d.group);
+    });
+}
+
 function updateNodesAndLinks() {
     node = node.data(graph.nodes, function (d) { return d.id; });
     //	EXIT
@@ -570,10 +732,10 @@ function updateNodesAndLinks() {
     var newNode = node.enter().append("circle")
         .style("fill", function (d) {
             if (d.group) {
-                return color(d.color);
+                return groupColours(d.group);
             }
             else {
-                return "FF0000";
+                return defaultColour;
             }
         })
         .attr("r", forceProperties.collide.radius)
@@ -626,6 +788,7 @@ d3.select(window).on("resize", function () {
     width = +svg.node().getBoundingClientRect().width;
     height = +svg.node().getBoundingClientRect().height;
     updateForces();
+    updateSelectionForces();
 });
 
 $(document).ready(function () {
@@ -637,6 +800,10 @@ $(document).ready(function () {
         .on('hide.bs.collapse', function (a) {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
+});
+
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
 });
 
 

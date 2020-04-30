@@ -24,15 +24,16 @@ Array.prototype.forEach.call(inputs, function (input) {
     });
 });
 
-function openTab(event, contentId) {
+function openTab(event, contentId, divId, contentClass) {
     var i, tabcontent, tablinks;
 
-    tabcontent = document.getElementsByClassName("tabcontent");
+    //tabcontent = document.getElementsByClassName("tabcontent");
+    tabcontent = document.getElementById(divId).querySelectorAll(contentClass);
     for (i = 0; i < tabcontent.length; i++) {
         tabcontent[i].style.display = "none";
     }
 
-    tablinks = document.getElementsByClassName("nav-link");
+    tablinks = document.getElementById(divId).querySelectorAll(".nav-link");
     for (i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
@@ -40,6 +41,8 @@ function openTab(event, contentId) {
     document.getElementById(contentId).style.display = "block";
     event.currentTarget.className += " active";
 }
+
+
 
 function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue) {
     $("#" + sliderId).slider({

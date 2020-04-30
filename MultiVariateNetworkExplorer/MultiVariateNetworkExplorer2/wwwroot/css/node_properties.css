@@ -1,6 +1,8 @@
 ﻿#nodes {
     overflow-y: scroll;
-    height: 85vh;
+    height: 80vh;
+    max-height: 80vh;
+    margin-top: 40px;
 }
 
 .wrap {
@@ -16,9 +18,9 @@
 }
 
 .panel {
-    border-width: 0 0 1px 0;
+    border-width: 2px;
     border-style: solid;
-    border-color: #fff;
+    border-color: #333333;
     background: none;
     box-shadow: none;
 }
@@ -40,10 +42,10 @@
 }
 
 .panel-heading {
-    background-color: #009688;
+    background-color: dimgrey;
     border-radius: 0;
     border: none;
-    color: #fff;
+    color: #333333;
     padding: 0;
 }
 

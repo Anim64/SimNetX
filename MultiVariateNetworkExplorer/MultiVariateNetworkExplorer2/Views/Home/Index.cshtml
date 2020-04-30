@@ -4,7 +4,7 @@
 
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/index.css" type="text/css" />
+    <link rel="stylesheet" href="~/css/index.css" type="text/css" asp-append-version="true" />
 }
 
 
@@ -68,15 +68,45 @@
 <section class="page-section bg-dark clearfix">
     <form method="post" asp-action="Graph" asp-controller="Home" enctype="multipart/form-data">
         <div class="form-group">
-            <input class="inputfile" type="file" id="file" name="file" data-caption="{filePath}">
-            <label for="file"><strong>Choose a file</strong></label>
+            <input class="inputfile" type="file" id="fileVector" name="files" data-caption="{filePath}">
+            <label for="fileVector"><strong>Choose a file with vector data</strong></label>
         </div>
-        <input type="checkbox" id="grouping" name="grouping" value="true"/>
-        <input type="submit" class="btn btn-primary" value="Upload" />
-        <p style="color:red;">
-            @ViewBag.Messsage
-        </p>
-    </form>
+        <div class="form-group">
+            <input class="inputfile" type="file" id="fileNetwork" name="files" data-caption="{filePath}">
+            <label for="fileNetwork"><strong>Choose a file with network</strong></label>
+        </div>
+        <div class="form-group">
+            <label for="directed">Is the network directed?</label>
+            <input type="checkbox" id="directed" name="directed" value="true" />
+
+            <label for="header">Headers?</label>
+            <input type="checkbox" id="header" name="header" value="true" />
+
+            <label for="separators">Enter the data separating characters (separated by SPACE):</label>
+            <input type="text" id="separators" name="separators" />
+
+            <label for="grouping">Initialize with groups</label>
+            <input type="checkbox" id="grouping" name="grouping" value="true" />
+
+            <label for="groupColumn">Enter the name of the column with groups (optional)</label>
+            <input type="text" id="groupColumn" name="groupColumn" />
+
+            <label for="convert">Choose a conversion algorithm:</label>
+            <input type="radio" value="LRNet" id="convert" name="convert" checked />LRNet<br />
+            <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN<br />
+
+            <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
+            <input type="number" id="epsilonRadius" name="epsilonRadius" />
+
+            <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
+            <input type="number" id="kNNmin" name="kNNmin" />
+
+        </div>
+            <input type="submit" class="btn btn-primary" value="Upload" />
+            <p style="color:red;">
+                @ViewBag.Messsage
+            </p>
+</form>
 </section>
 
 
