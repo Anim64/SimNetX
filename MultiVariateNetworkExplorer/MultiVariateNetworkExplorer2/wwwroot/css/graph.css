@@ -12,8 +12,15 @@ html {
     width: 100%;
 }
 
-.links line {
+.links path {
     stroke: lightgray;
+    stroke-width: 1px;
+    fill: none;
+}
+
+.arrow {
+    fill: lightgray;
+    stroke: black;
     stroke-width: 1px;
 }
 

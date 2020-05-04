@@ -189,39 +189,47 @@
                 </label>
 
             </div>
+            <div class="force">
+                <p><label>Project</label> Modify position of a node based on its attribute value</p>
+                <label>
+                    X Axis
+                    @Html.DropDownList("droplist_x", new SelectList(Model.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control" , onchange="projectAttribute('x', this.value);"})
+                </label>
+                <label>
+                    Y Axis
+                    @Html.DropDownList("droplist_y", new SelectList(Model.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('y', this.value);" })
+                </label>
+            </div>
         </div>
         <script>
             // Get the element with id="defaultOpen" and click on it
             $('#defaultTab').click();
         </script>
         <div class="selections attributes" id="selections">
-            <div class="panel-group wrap" id="accordion-selections" role="tablist" aria-multiselectable="true">
+            <div>
+                <input type="button" onclick="addNewSelection()" value="Add New Selection"/>
+                <input type="button" onclick="deleteAllSelections()" value="Delete All Selection"/>
+            </div>
+            <div class="panel-group wrap" id="list-selections" role="tablist" aria-multiselectable="true">
                 @if (Model.Partition != null)
                 {
                     foreach (var selection in Model.Partition.Values.Distinct())
                     {
                         <text>
-                            <div class="panel">
+                            <div class="panel" id="@("selection_panel_" + selection)">
                                 <div class="panel-heading" role="tab" id="@("heading_selection_" + selection)">
                                     <ul class="list-inline m-0" style="float: right;">
                                         <li class="list-inline-item">
-                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group"><i class="fa fa-plus-square"></i></button>
+                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(@selection.ToString())"><i class="fa fa-plus-square"></i></button>
                                         </li>
                                         <li class="list-inline-item">
-                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete"><i class="fa fa-trash"></i></button>
+                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(@selection.ToString())"><i class="fa fa-trash"></i></button>
                                         </li>
                                     </ul>
                                     <h4 class="panel-title">
-                                        <a role="button" id="@("btn_selection_" + selection)" data-toggle="collapse" data-parent="#accordion" href="#@("selection_" + selection)" aria-expanded="true" aria-controls="@("selection_" + selection)">
-                                            @("Selection " + selection)
-                                        </a>
+                                            @("Selection " + selection) 
                                     </h4>
                                 </div>
-                            <div id="@("selection_" + selection)" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_selection_" + selection)">
-                                <div class="panel-body form-group">
-
-                                </div>
-                            </div>
                         </div>
                         </text>
                     }

@@ -1,6 +1,7 @@
 ﻿var graph = null;
 var store = null;
 var filterNodeList = [];
+var linkedByIndex = {};
 
 var node = null;
 var link = null;
@@ -26,11 +27,11 @@ var gMain = null;
 
 
 var svg = d3.select("#networkGraph svg"),
-    width = svg.node().getClientRects()[0].width,
-    height = svg.node().getClientRects()[0].height,
+    width = svg.node().parentNode.clientWidth,
+    height = svg.node().parentNode.clientHeight,
     selectionSvg = null;
 
-
+console.log(width);
 
 
 var simulation = d3.forceSimulation()
@@ -40,7 +41,7 @@ var simulation = d3.forceSimulation()
     .force("center", d3.forceCenter())
     .force("forceX", d3.forceX())
     .force("forceY", d3.forceY())
-    .force("radial", d3.forceRadial());
+    //.force("radial", d3.forceRadial());
 
 var selectionSimulation = d3.forceSimulation()
     .force("link", d3.forceLink())
@@ -63,7 +64,7 @@ var shiftKey = null;
 var forceProperties = {
     center: {
         x: 0.5,
-        y: 0.30
+        y: 0.5
     },
 
     charge: {
@@ -95,6 +96,7 @@ var forceProperties = {
     link: {
         enabled: true,
         distance: 50,
+        strength: 0.1,
         iterations: 1
     },
 
@@ -122,6 +124,18 @@ function drawNetwork(data) {
     gMain = svg.append('g')
         .classed('g-main', true);
 
+    gMain.append("defs").append("marker")
+        .attr("id", "arrow")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .attr("class", "arrow")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
     rect = gMain.append('rect')
         .attr('width', width)
         .attr('height', height)
@@ -135,35 +149,23 @@ function drawNetwork(data) {
     gMain.call(zoom);
 
     gBrushHolder = gDraw.append('g');
-    /*bgrect = gBrushHolder.append('rect')
-        .attr('width', width)
-        .attr('height', height)
-        .style('fill', '#333333')
-        .style('visibility', 'hidden')*/
-        
     
-
-    
-
-    /*brush.call(brusher)
-        .on("mousedown.brush", null)
-        .on("touchstart.brush", null)
-        .on("touchmove.brush", null)
-        .on("touchend.brush", null);
-
-    brush.select('.background').style('cursor', 'auto');*/
-
-
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("line")
         .data(graph.links)
-        .enter().append("line");
+        .enter().append("path")
+            .attr("marker-end", "url(#arrow)");
 
     link.append("title")
         .text(function (l) {
             return l.id;
         });
+
+    
+    graph.links.forEach(function (d) {
+        linkedByIndex[d.source + "," + d.target] = 1;
+    });
     
     node = gDraw.append("g")
         .attr("class", "nodes")
@@ -186,7 +188,9 @@ function drawNetwork(data) {
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended))
-        .on("click", displayNodeProperties);
+        //.on("click", displayNodeProperties)
+        .on("mouseover", mouseOver(.2))
+        .on("mouseout", mouseOut);
 
         
 
@@ -245,6 +249,18 @@ function drawSelectionNetwork(data) {
     var selectionMain = selectionSvg.append('g')
         .classed('g-main', true);
 
+    selectionMain.append("defs").append("marker")
+        .attr("id", "selection_arrow")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .attr("class", "arrow")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
     var zoom = d3.zoom()
         .on('zoom', selectionZoomed)
 
@@ -261,7 +277,8 @@ function drawSelectionNetwork(data) {
         .attr("class", "links")
         .selectAll("line")
         .data(selectionGraph.links)
-        .enter().append("line");
+        .enter().append("path")
+            .attr("marker-end", "url(#selection_arrow)");
 
     selectionLink.append("title")
         .text(function (l) {
@@ -276,7 +293,12 @@ function drawSelectionNetwork(data) {
         .style("fill", function (d) {   
             return groupColours(d.id); 
         })
-        .attr("r", forceProperties.collide.radius)
+        .attr("r", function (d) {
+            return Math.sqrt(d.nonodes)
+        })
+        .attr("id", function (d) {
+            return "selection_node_" + d.id;
+        })
         /*.call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
@@ -284,7 +306,7 @@ function drawSelectionNetwork(data) {
 
     
     selectionNode.append("title")
-        .text(function (d) { return d.id; });
+        .text(function (d) { return "Number of Nodes: " + d.nonodes; });
 
     selectionSimulation
         .nodes(selectionGraph.nodes)
@@ -296,7 +318,7 @@ function drawSelectionNetwork(data) {
 }
 
 function ticked() {
-    link
+    /*link
         .attr("x1", function (d) { return d.source.x; })
         .attr("y1", function (d) { return d.source.y; })
         .attr("x2", function (d) { return d.target.x; })
@@ -304,11 +326,14 @@ function ticked() {
 
     node
         .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
-        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
+        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });*/
+
+    link.attr("d", positionLink);
+    node.attr("transform", positionNode);
 }
 
 function selectionTicked() {
-    selectionLink
+    /*selectionLink
         .attr("x1", function (d) { return d.source.x; })
         .attr("y1", function (d) { return d.source.y; })
         .attr("x2", function (d) { return d.target.x; })
@@ -316,7 +341,69 @@ function selectionTicked() {
 
     selectionNode
         .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
-        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });
+        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });*/
+
+    selectionLink.attr("d", positionLink);
+    selectionNode.attr("transform", positionNode);
+}
+
+function positionLink(d) {
+    var offset = 20;
+
+    var x1 = d.source.x,
+        y1 = d.source.y,
+        x2 = d.target.x,
+        y2 = d.target.y;
+
+    var midpoint_x = (x1 + x2) / 2;
+    var midpoint_y = (y1 + y2) / 2;
+
+    var dx = (x2 - x1);
+    var dy = (y2 - y1);
+
+    var normalise = Math.sqrt((dx * dx) + (dy * dy));
+
+
+    
+
+    // Self edge.
+    if (x1 === x2 && y1 === y2) {
+        // Fiddle with this angle to get loop oriented.
+        var xRotation = -45;
+
+        // Needs to be 1.
+        var largeArc = 1;
+
+        var sweep = 1; // 1 or 0
+
+        // Change sweep to change orientation of loop. 
+        //sweep = 0;
+
+        // Make drx and dry different to get an ellipse
+        // instead of a circle.
+        var drx = 20;
+        var dry = 20;
+
+        // For whatever reason the arc collapses to a point if the beginning
+        // and ending points of the arc are the same, so kludge it.
+        x2 = x2 + 1;
+        y2 = y2 + 1;
+
+        return "M" + d.source.x + "," + d.source.y + "A" + drx + "," + dry + " " + xRotation + "," + largeArc + "," + sweep + " " + x2 + "," + y2;
+    }
+
+    var offSetX = midpoint_x + offset * (dy / normalise);
+    var offSetY = midpoint_y - offset * (dx / normalise);
+
+    return "M" + d.source.x + "," + d.source.y +
+        "S" + offSetX + "," + offSetY +
+        " " + d.target.x + "," + d.target.y;
+
+
+}
+
+function positionNode(d) {
+    return "translate(" + d.x + "," + d.y + ")";
 }
 
 function dragstarted(d) {
@@ -334,6 +421,44 @@ function dragstarted(d) {
             d.fx = d.x;
             d.fy = d.y;
         })
+}
+
+
+
+// check the dictionary to see if nodes are linked
+function isConnected(a, b) {
+    return linkedByIndex[a.id + "," + b.id] || linkedByIndex[b.id + "," + a.id] || a.id == b.id;
+}
+
+// fade nodes on hover
+function mouseOver(opacity) {
+    return function (d) {
+        // check all other nodes to see if they're connected
+        // to this one. if so, keep the opacity at 1, otherwise
+        // fade
+        node.style("stroke-opacity", function (o) {
+            thisOpacity = isConnected(d, o) ? 1 : opacity;
+            return thisOpacity;
+        });
+        node.style("fill-opacity", function (o) {
+            thisOpacity = isConnected(d, o) ? 1 : opacity;
+            return thisOpacity;
+        });
+        // also style link accordingly
+        link.style("stroke-opacity", function (o) {
+            return o.source === d || o.target === d ? 1 : opacity;
+        });
+        link.style("stroke", function (o) {
+            return o.source === d || o.target === d ? o.source.colour : "lightgray";
+        });
+    };
+}
+
+function mouseOut() {
+    node.style("stroke-opacity", 1);
+    node.style("fill-opacity", 1);
+    link.style("stroke-opacity", 1);
+    link.style("stroke", "lightgray");
 }
 
 function dragged(d) {
@@ -415,9 +540,8 @@ function keydown() {
         brushMode = true;
 
         if (!gBrush) {
-            gBrush = gMain.append('g')
-                .attr("class", "brush")
-                .call(brush);
+            gBrush = gBrushHolder.append('g')
+            gBrush.call(brush);
         }
     }
 }
@@ -640,6 +764,200 @@ function filterByCategory(category, filteredAttributeName) {
     updateForces();
 }
 
+function addNewSelection() {
+    var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
+    newId = newId.toString();
+    var newSelection = {};
+    newSelection['id'] = newId;
+    newSelection['name'] = 'Selection ' + newId;
+    newSelection['nonodes'] = 0; 
+
+    selectionGraph.nodes.push(newSelection);
+
+    selectionGraph.nodes.forEach(function (d) {
+        var newLink = {};
+        newLink['source'] = newId;
+        newLink['target'] = d.id;
+        newLink['value'] = 0;
+
+        var newLink2 = {};
+        newLink2['source'] = d.id;
+        newLink2['target'] = newId;
+        newLink2['value'] = 0;
+
+        selectionGraph.links.push(newLink);
+        if (newId != d.id) {
+            selectionGraph.links.push(newLink2);
+        }
+        
+        
+    })
+
+    
+
+
+    var mainDiv = d3.select('#list-selections');
+
+    var panel = mainDiv
+        .append('div')
+        .classed('panel', true)
+        .attr('id', 'selection_panel_' + newId);
+
+    var panel_heading = panel.append('div')
+        .attr('class', 'panel-heading')
+        .attr('role', 'tab')
+        .attr('id', 'heading_selection_' + newId);
+
+    var panel_list = panel_heading
+        .append('ul')
+        .attr('class', 'list-inline m-0')
+        .style('float', 'right');
+
+    var panel_list_add = panel_list.append('li')
+        .attr('class', 'list-inline-item');
+
+    var panel_list_add_btn = panel_list_add.append('button')
+        .attr('class', 'btn btn-danger btn-sm rounded-0')
+        .attr('type', 'button')
+        .attr('data-toggle', 'tooltip')
+        .attr('data-placement', 'top')
+        .attr('title', 'Add Selected Nodes To This Group')
+        .attr('onclick', "addNodesToSelection(\"" + newId + "\")");
+
+    panel_list_add_btn.append('i')
+        .attr('class', 'fa fa-plus-square');
+
+    var panel_list_delete = panel_list.append('li')
+        .attr('class', 'list-inline-item');
+
+    var panel_list_delete_btn = panel_list_delete.append('button')
+        .attr('class', 'btn btn-danger btn-sm rounded-0')
+        .attr('type', 'button')
+        .attr('data-toggle', 'tooltip')
+        .attr('data-placement', 'top')
+        .attr('title', 'Delete')
+        .attr('onclick', 'deleteSelection(\"' + newId + '\")');
+
+    panel_list_delete_btn.append('i')
+        .attr('class', 'fa fa-trash');
+
+    panel_heading.append('h4')
+        .attr('class', 'panel-title')
+        .html(newSelection.name);
+
+    updateSelectionNodesAndLinks();
+    updateSelectionForces();
+        
+}
+
+function addNodesToSelection(selectionId) {
+
+    node.filter(function (d) { return d.selected })
+        .each(function (d) {
+            var previousGroup;
+            if (d.group) {
+                previousGroup = d.group;
+                link.filter(function (l) { return l.source.id == d.id || l.target.id == d.id })
+                    .each(function (l) {
+                        if (l.source.group && l.target.group) {
+                            var value = l.value;
+                            var previousSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == l.target.group);
+
+                            if (l.source.id == d.id) {
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == l.target.group)
+                                previousSelectionLink.value = previousSelectionLink.value - value;
+                                newSelectionLink.value = previousSelectionLink.value + value;
+                            }
+
+                            else if (l.target.id == d.id) {
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == selectionId)
+                                previousSelectionLink.value = previousSelectionLink.value - value;
+                                newSelectionLink.value = previousSelectionLink.value + value;
+                            }
+                        }
+                    });
+
+
+                selectionNode.filter(function (sl) { return sl.id == d.group })
+                    .each(function (sl) {
+                        sl.nonodes = sl.nonodes - 1;
+                    });
+
+                
+
+
+            }
+
+            else {
+                link.filter(function (l) { return l.source.id == d.id || l.target.id == d.id })
+                    .each(function (l) {
+                        if (l.source.group && l.target.group) {
+                            var value = l.value;
+
+                            if (l.source.id == d.id) {
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == l.target.group);
+                                newSelectionLink.value = previousSelectionLink.value + value;
+                            }
+
+                            else if (l.target.id == d.id) {
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == selectionId);
+                                newSelectionLink.value = previousSelectionLink.value + value;
+                            }
+                        }
+                    });
+
+                
+                
+            }
+
+            selectionNode.filter(function (sl) { return sl.id == selectionId })
+            .each(function (sl) {
+                sl.nonodes = sl.nonodes + 1;
+            });
+
+            d.group = selectionId;
+            
+            
+        })
+        .style('fill', function (d) {
+            return groupColours(selectionId)
+        })
+
+    updateSelectionNodesAndLinks();
+
+}
+
+function deleteAllSelections() {
+
+}
+
+function deleteSelection(selectionId) {
+    var selectionPanel = document.querySelector('#selection_panel_' + selectionId);
+    selectionPanel.parentNode.removeChild(selectionPanel);
+
+    node.filter(function (d) { return d.group == selectionId; })
+        .style("fill", defaultColour)
+        .each(function (d) {
+            delete (d.group);
+        })
+
+    d3.select('#' + 'selection_node_' + selectionId)
+        .each(function (d, i) {
+            selectionGraph.nodes.splice(i, 1);
+        })
+        
+   
+
+    selectionLink.filter(function (d) { return d.source.id == selectionId || d.target.id == selectionId })
+        .each(function (l, i) {
+            selectionGraph.links.splice(i, 1);
+        })
+
+    updateSelectionNodesAndLinks();
+    updateSelectionForces()
+    
+}
+
 function updateForces() {
     simulation.force("center")
         .x(width * forceProperties.center.x)
@@ -652,12 +970,12 @@ function updateForces() {
         .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
         .radius(forceProperties.collide.radius)
         .iterations(forceProperties.collide.iterations);
-    simulation.force("forceX")
+    /*simulation.force("forceX")
         .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
         .x(width * forceProperties.forceX.x);
     simulation.force("forceY")
         .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
-        .y(height * forceProperties.forceY.y);
+        .y(height * forceProperties.forceY.y);*/
     simulation.force("link")
         .id(function (d) { return d.id; })
         .distance(function (l) {
@@ -665,19 +983,19 @@ function updateForces() {
             var node2 = graph.nodes.find(node1 => node1 === l.target)
 
             if (node1.group === node2.group) {
-                return 10;
+                return forceProperties.link.distance;
             }
             else {
-                return forceProperties.link.distance * 3;
+                return forceProperties.link.distance * 5;
             }
         })
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? graph.links : []);
-    simulation.force("radial")
+    /*simulation.force("radial")
         .x(forceProperties.radial.x * width)
         .y(forceProperties.radial.y * height)
         .strength(forceProperties.radial.strength)
-        .radius(forceProperties.radial.radius);
+        .radius(forceProperties.radial.radius);*/
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
@@ -707,15 +1025,74 @@ function updateSelectionForces() {
         .distance(forceProperties.link.distance)
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? selectionGraph.links : []);
-    selectionSimulation.force("radial")
+    /*selectionSimulation.force("radial")
         .x(forceProperties.radial.x * width)
         .y(forceProperties.radial.y * height)
         .strength(forceProperties.radial.strength)
-        .radius(forceProperties.radial.radius);
+        .radius(forceProperties.radial.radius);*/
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
     selectionSimulation.alpha(1).restart();
+}
+
+function projectAttribute(axis, attributeName) {
+    var x_projection = $("#droplist_x").val();
+    var y_projection = $("#droplist_y").val();
+
+    var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
+    var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+
+    if (x_projection === "" && y_projection === "") {
+        forceProperties.charge.enabled = true;
+        /*simulation.force("link").strength(function (link) {
+            return 1 / Math.min(count(link.source), count(link.target));
+        });*/
+
+    }
+
+    if (axis === 'x') {
+        if (attributeName === "") {
+            simulation.force("forceX")
+                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+                .x(width * forceProperties.forceX.x);
+        }
+
+        else {
+            forceProperties.forceX.enabled = true;
+            forceProperties.charge.enabled = false;
+            //simulation.force("link").strength(0);
+            simulation.force("forceX")
+                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+                .x(function (d) {
+                    var value = width * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
+                    return value;
+                });
+        }
+    }
+
+    else if (axis === 'y') {
+        if (attributeName === "") {
+            simulation.force("forceY")
+                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+                .y(height * forceProperties.forceY.y);
+        }
+
+        else {
+            forceProperties.forceY.enabled = true;
+            forceProperties.charge.enabled = false;
+            //simulation.force("link").strength(0);
+            simulation.force("forceY")
+                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+                .y(function (d) {
+                    var value = height * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
+                    return value;
+                    
+                });
+        }
+    }
+
+    updateForces();
 }
 
 function updateNodeGroups() {
@@ -768,11 +1145,58 @@ function updateNodesAndLinks() {
     simulation.alpha(1).restart();
 }
 
+function updateSelectionNodesAndLinks() {
+    selectionNode = selectionNode.data(selectionGraph.nodes, function (d) { return d.id; });
+    //	EXIT
+    selectionNode.exit().remove();
+
+    var newNode = selectionNode.enter().append("circle")
+        .style("fill", function (d) {  
+             return groupColours(d.id);
+        })
+        .attr("r", forceProperties.collide.radius)
+        .attr('id', function (d) {
+            return 'selection_node_' + d.id;
+        })
+        /*.call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("click", displayNodeProperties);*/
+
+    newNode.append("title")
+        .text(function (d) { return "Number of Nodes: " + d.nonodes; });
+
+    selectionNode = selectionNode.merge(newNode);
+
+    selectionLink = selectionLink.data(selectionGraph.links, function (d) { d.source });
+    //	EXIT
+    selectionLink.exit().remove();
+
+    var newLink = selectionLink.enter().append("line");
+
+    newLink.append("title")
+        .text(function (l) {
+            return l.value;
+        });
+
+    selectionLink = selectionLink.merge(newLink);
+
+    selectionSimulation
+        .nodes(selectionGraph.nodes)
+        .on("tick", selectionTicked);
+
+    selectionSimulation.force("link")
+        .links(selectionGraph.links);
+
+    selectionSimulation.alpha(1).restart();
+}
+
 function updateDisplay() {
     node
         .attr("r", forceProperties.collide.radius)
-        .style("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
-        .style("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
+        //.style("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
+        //.style("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
 
     link
         .style("stroke-width", forceProperties.link.enabled ? 1 : .5)

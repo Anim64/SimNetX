@@ -130,7 +130,7 @@ namespace DataUtility
                 {
                     JObject jNode = new JObject();
                     jNode["id"] = group.Key;
-                    jNode["Number of Nodes"] = group.Value.Count;
+                    jNode["nonodes"] = group.Value.Count;
                     jNodes.Add(jNode);
                     //jNodes.Insert(Int32.Parse(node.Key, CultureInfo.InvariantCulture), jNode);
                     for (int i = int.Parse(group.Key, CultureInfo.InvariantCulture); i < communities.Count; i++)
