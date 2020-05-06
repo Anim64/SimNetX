@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +9,7 @@ using System.Text;
 
 namespace DataUtility
 {
-    public class Network : IEnumerable<KeyValuePair<string, Dictionary<string, double>>>
+    public class Network : ICollection<KeyValuePair<string, Dictionary<string, double>>>
     {
         public struct Edge
         {
@@ -29,34 +30,53 @@ namespace DataUtility
                 Weight = w;
             }
         }
-        private Dictionary<string, Dictionary<string, double>> network;
-        public double CurrSize { get; private set; }
-        public int NumberOfEdges { get; private set; }
-        public int NumberOfVertices { get; private set; }
+        public Dictionary<string, Dictionary<string, double>> Data { get; set; }
+        public double CurrSize { get; set; }
+        public int NumberOfEdges { get;  set; }
+        public int NumberOfVertices { get; set; }
 
         public Network()
         {
-            network = new Dictionary<string, Dictionary<string, double>>();
+            Data = new Dictionary<string, Dictionary<string, double>>();
         }
         public Network(int initSize)
         {
-            network = new Dictionary<string, Dictionary<string, double>>();
+            Data = new Dictionary<string, Dictionary<string, double>>();
             for (int i = 0; i < initSize; i++)
             {
-                network[i.ToString()] = new Dictionary<string, double>();
+                Data[i.ToString()] = new Dictionary<string, double>();
             }
             this.NumberOfVertices = initSize;
         }
 
+        public Network(JObject json) 
+        {
+            this.Data = new Dictionary<string, Dictionary<string, double>>();
+            this.NumberOfVertices = json["nodes"].Count();
+            this.NumberOfEdges = 0;
+            this.CurrSize = 0;
+            foreach(var link in json["links"])
+            {
+                this.AddDirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
+                NumberOfEdges++;
+                CurrSize += (double)link["value"];
+
+            }
+
+            CurrSize = CurrSize / 2;
+            NumberOfEdges = NumberOfEdges / 2;
+
+        }
+
         public Network(Network net)
         {
-            network = new Dictionary<string, Dictionary<string, double>>();
+            Data = new Dictionary<string, Dictionary<string, double>>();
             this.NumberOfEdges = net.NumberOfEdges;
             this.CurrSize = net.CurrSize;
             this.NumberOfVertices = net.NumberOfVertices;
-            foreach(var pair in net.network)
+            foreach(var pair in net.Data)
             {
-                this.network[pair.Key] = new Dictionary<string, double>(pair.Value);
+                this.Data[pair.Key] = new Dictionary<string, double>(pair.Value);
             }
 
         }
@@ -65,7 +85,7 @@ namespace DataUtility
         {
             get
             {
-                return this.network[vertex];
+                return this.Data[vertex];
             }
         }
 
@@ -74,12 +94,12 @@ namespace DataUtility
         {
             get
             {   
-                return this.network[vertex1][vertex2];
+                return this.Data[vertex1][vertex2];
             }
 
         }
 
-        public IEnumerable<string> Nodes { get { return network.Keys; } }
+        public IEnumerable<string> Nodes { get { return Data.Keys; } }
 
         /// <summary>
         /// An iterator for the edges in the graph.
@@ -88,7 +108,7 @@ namespace DataUtility
         {
             get
             {
-                foreach (var entry1 in network)
+                foreach (var entry1 in Data)
                 {
                     foreach (var entry2 in entry1.Value)
                     {
@@ -101,21 +121,38 @@ namespace DataUtility
                 }
             }
         }
+
+        public int Count
+        {
+            get
+            {
+                return this.NumberOfVertices;
+            }
+        }
+
+        public bool IsReadOnly 
+        { 
+            get 
+            {
+                return false;
+            } 
+        }
+
         public Dictionary<string, double> EnsureIncidenceList(string node)
         {   
             Dictionary<string, double> outdict;
-            if(!this.network.TryGetValue(node, out outdict))
+            if(!this.Data.TryGetValue(node, out outdict))
             {
-                outdict = this.network[node] = new Dictionary<string, double>();
+                outdict = this.Data[node] = new Dictionary<string, double>();
             }
             return outdict;
         }
         public void AddNode(string node)
         {
             Dictionary<string, double> edges;
-            if(!this.network.TryGetValue(node, out edges))
+            if(!this.Data.TryGetValue(node, out edges))
             {
-                this.network[node] = new Dictionary<string, double>();
+                this.Data[node] = new Dictionary<string, double>();
             }
         }
 
@@ -196,14 +233,14 @@ namespace DataUtility
 
         public double GetDegree(string vertex)
         {
-            this.network[vertex].TryGetValue(vertex, out double loop);
-            return this.network[vertex].Values.Sum() + loop;
+            this.Data[vertex].TryGetValue(vertex, out double loop);
+            return this.Data[vertex].Values.Sum() + loop;
         }
 
         public double EdgeWeight(string node1, string node2, double defaultValue)
         {
             Dictionary<string, double> ilist;
-            if (!network.TryGetValue(node1, out ilist))
+            if (!Data.TryGetValue(node1, out ilist))
             {
                 throw new IndexOutOfRangeException("No such node " + node1);
             }
@@ -237,7 +274,7 @@ namespace DataUtility
 
         public IEnumerator<KeyValuePair<string, Dictionary<string, double>>> GetEnumerator()
         {
-            foreach(KeyValuePair<string, Dictionary<string, double>> pair in this.network)
+            foreach(KeyValuePair<string, Dictionary<string, double>> pair in this.Data)
             {
                 yield return pair;
             }
@@ -246,6 +283,31 @@ namespace DataUtility
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void Add(KeyValuePair<string, Dictionary<string, double>> item)
+        {
+            this.Data.Add(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            this.Data.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, Dictionary<string, double>> item)
+        {
+            return this.Data.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<string, Dictionary<string, double>>[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(KeyValuePair<string, Dictionary<string, double>> item)
+        {
+            return this.Data.Remove(item.Key);
         }
     }
 }

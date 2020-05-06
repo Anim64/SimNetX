@@ -9,7 +9,7 @@ namespace DataUtility
 {
     public class DataFrame
     {
-        private readonly SortedDictionary<string, IList> dataFrame;
+        public SortedDictionary<string, IList> Data { get; set; }
         public int DataCount { get; set; }
 
         public class MinMaxStruct{
@@ -23,19 +23,19 @@ namespace DataUtility
             }
         }
 
-        public Dictionary<string, MinMaxStruct> NumAtrrExtremes { get; }
-        public Dictionary<string, List<string>> CatAttrValues { get; }
+        public Dictionary<string, MinMaxStruct> NumAtrrExtremes { get; set; }
+        public Dictionary<string, List<string>> CatAttrValues { get; set; }
         
         public DataFrame()
         {
-            dataFrame = new SortedDictionary<string, IList>();
+            Data = new SortedDictionary<string, IList>();
             DataCount = 0;
             
         }
 
         public DataFrame(string fileName, bool header = false, params char[] separator)
         {
-            dataFrame = new SortedDictionary<string, IList>();
+            Data = new SortedDictionary<string, IList>();
             DataCount = 0;
 
             NumAtrrExtremes = new Dictionary<string, MinMaxStruct>();
@@ -57,13 +57,13 @@ namespace DataUtility
             get
             {
                 DataFrame selectedRows = new DataFrame();
-                foreach(var pair in dataFrame)
+                foreach(var pair in Data)
                 {
-                    selectedRows.dataFrame.Add(pair.Key, (IList)Activator.CreateInstance(pair.Value.GetType()));
+                    selectedRows.Data.Add(pair.Key, (IList)Activator.CreateInstance(pair.Value.GetType()));
 
                     foreach(int row in rows)
                     {
-                        selectedRows.dataFrame[pair.Key].Add(this.dataFrame[pair.Key][row]);
+                        selectedRows.Data[pair.Key].Add(this.Data[pair.Key][row]);
                     }
 
                      
@@ -76,7 +76,7 @@ namespace DataUtility
         {
             get
             {
-                return this.dataFrame[column];
+                return this.Data[column];
             }
         }
         /// <summary>
@@ -104,16 +104,16 @@ namespace DataUtility
         {
             get
             {
-                return this.dataFrame[column][row];
+                return this.Data[column][row];
             }
 
             set
             {
                 try
                 {
-                    var type = this.dataFrame[column][row].GetType();
+                    var type = this.Data[column][row].GetType();
                     var convertedValue = Convert.ChangeType(value, type);
-                    this.dataFrame[column][row] = convertedValue;
+                    this.Data[column][row] = convertedValue;
                 }
                 catch(Exception e)
                 {
@@ -249,14 +249,14 @@ namespace DataUtility
 
         public IEnumerable<string> Columns()
         {
-            return this.dataFrame.Keys;
+            return this.Data.Keys;
         }
 
         private void FindAttributeExtremesAndValues()
         {
             
 
-            foreach (var column in this.dataFrame)
+            foreach (var column in this.Data)
             {
                 if (column.Value is List<int> || column.Value is List<double>)
                 {
@@ -293,7 +293,7 @@ namespace DataUtility
 
         private Matrix<double> EuclideanKernelMatrix()
         {
-            int dataCount = dataFrame.First().Value.Count;
+            int dataCount = Data.First().Value.Count;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
 
             for(int i = 0; i < dataCount; i++)
@@ -301,7 +301,7 @@ namespace DataUtility
                 for(int j = i + 1; j < dataCount; j++)
                 {
                     double euclideanDistance = 0;
-                    foreach (var pair in this.dataFrame)
+                    foreach (var pair in this.Data)
                     {
                         
                         if(!(pair.Value is List<string>))
@@ -320,7 +320,7 @@ namespace DataUtility
 
         private Matrix<double> GaussKernelMatrix(double sigma = 1)
         {
-            int dataCount = dataFrame.First().Value.Count;
+            int dataCount = Data.First().Value.Count;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
 
             for (int i = 0; i < dataCount; i++)
@@ -328,7 +328,7 @@ namespace DataUtility
                 for (int j = i + 1; j < dataCount; j++)
                 {
                     double euclideanDistance = 0;
-                    foreach (var pair in this.dataFrame)
+                    foreach (var pair in this.Data)
                     {
 
                         if (!(pair.Value is List<string>))
@@ -381,19 +381,19 @@ namespace DataUtility
                                     //Check if value is number or string
                                     if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
                                     {
-                                        this.dataFrame[headers[i]] = new List<int>();
-                                        this.dataFrame[headers[i]].Add(resultInt);
+                                        this.Data[headers[i]] = new List<int>();
+                                        this.Data[headers[i]].Add(resultInt);
 
                                     }
                                     else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                     {
-                                        this.dataFrame[headers[i]] = new List<double>();
-                                        this.dataFrame[headers[i]].Add(resultFloat);
+                                        this.Data[headers[i]] = new List<double>();
+                                        this.Data[headers[i]].Add(resultFloat);
                                     }
                                     else
                                     {
-                                        this.dataFrame[headers[i]] = new List<string>();
-                                        this.dataFrame[headers[i]].Add(vector[i]);
+                                        this.Data[headers[i]] = new List<string>();
+                                        this.Data[headers[i]].Add(vector[i]);
 
                                     }
 
@@ -423,19 +423,19 @@ namespace DataUtility
                                 //Check if value is number or string
                                 if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
                                 {
-                                    this.dataFrame[headers[i]] = new List<int>();
-                                    this.dataFrame[headers[i]].Add(resultInt);
+                                    this.Data[headers[i]] = new List<int>();
+                                    this.Data[headers[i]].Add(resultInt);
 
                                 }
                                 else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                 {
-                                    this.dataFrame[headers[i]] = new List<double>();
-                                    this.dataFrame[headers[i]].Add(resultFloat);
+                                    this.Data[headers[i]] = new List<double>();
+                                    this.Data[headers[i]].Add(resultFloat);
                                 }
                                 else
                                 {
-                                    this.dataFrame[headers[i]] = new List<string>();
-                                    this.dataFrame[headers[i]].Add(vector[i]);
+                                    this.Data[headers[i]] = new List<string>();
+                                    this.Data[headers[i]].Add(vector[i]);
 
                                 }
 
@@ -454,18 +454,18 @@ namespace DataUtility
                         }
 
                         vector = line.Split(separator);
-                        var keys = this.dataFrame.Keys.GetEnumerator();
+                        var keys = this.Data.Keys.GetEnumerator();
                         
 
-                        for (int i = 0; i < this.dataFrame.Count; i++)
+                        for (int i = 0; i < this.Data.Count; i++)
                         {
                             keys.MoveNext();
-                            if (this.dataFrame[keys.Current] is List<int>)
-                                this.dataFrame[keys.Current].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
-                            else if (this.dataFrame[keys.Current] is List<double>)
-                                this.dataFrame[keys.Current].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
-                            else if (this.dataFrame[keys.Current] is List<string>)
-                                this.dataFrame[keys.Current].Add(vector[i]);
+                            if (this.Data[keys.Current] is List<int>)
+                                this.Data[keys.Current].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            else if (this.Data[keys.Current] is List<double>)
+                                this.Data[keys.Current].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            else if (this.Data[keys.Current] is List<string>)
+                                this.Data[keys.Current].Add(vector[i]);
                             
                         }
                     }
@@ -479,7 +479,7 @@ namespace DataUtility
 
         public void RemoveColumn(string column)
         {
-            this.dataFrame.Remove(column);
+            this.Data.Remove(column);
         }
 
         

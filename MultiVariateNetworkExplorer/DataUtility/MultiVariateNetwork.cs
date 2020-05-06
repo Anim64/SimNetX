@@ -43,17 +43,13 @@ namespace DataUtility
         }
         public void FindCommunities()
         {
-            Dictionary<string, string> partition = Community.BestPartition(Network);
-            /*var communities = new Dictionary<string, List<string>>();
-            foreach (var kvp in partition)
-            {
-                List<string> nodeset;
-                if (!communities.TryGetValue(kvp.Value, out nodeset))
-                {
-                    nodeset = communities[kvp.Value] = new List<string>();
-                }
-                nodeset.Add(kvp.Key);
-            }*/
+            Dictionary<string, string> partition = Community.BestPartition(this.Network);
+            this.Partition = partition;
+        }
+
+        public void FindCommunities(Network network)
+        {
+            Dictionary<string, string> partition = Community.BestPartition(network);
             this.Partition = partition;
         }
 
@@ -87,6 +83,7 @@ namespace DataUtility
                     JObject newLink = new JObject();
                     newLink["source"] = node.Key;
                     newLink["target"] = target.Key;
+                    newLink["value"] = target.Value;
                     newLink["id"] = ++edgeId;
                     jLinks.Add(newLink);
                     //jLinks.Insert(Int32.Parse(node.Key + target.Key, CultureInfo.InvariantCulture), newLink);
@@ -101,13 +98,23 @@ namespace DataUtility
             return json;
         }
 
+        public string EmptyD3Json()
+        {
+            JObject root = new JObject();
+
+            JArray jNodes = new JArray();
+            JArray jLinks = new JArray();
+
+            root["nodes"] = jNodes;
+            root["links"] = jLinks;
+
+            string json = root.ToString();
+            return json;
+        }
+
         public string PartitionsToD3Json()
         {
            
-
-            
-
-
             JObject root = new JObject();
 
             JArray jNodes = new JArray();

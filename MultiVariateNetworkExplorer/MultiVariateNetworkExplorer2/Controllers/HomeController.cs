@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,6 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MultiVariateNetworkExplorer.Models;
+using MultiVariateNetworkExplorer2;
+using MultiVariateNetworkExplorer2.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MultiVariateNetworkExplorer.Controllers
 {
@@ -70,11 +75,67 @@ namespace MultiVariateNetworkExplorer.Controllers
                         multiVariateNetwork.FindCommunities();
                     }
                 }
+                GraphModel gm = new GraphModel();
+                gm.Graph = multiVariateNetwork.ToD3Json();
+                gm.Selection = multiVariateNetwork.PartitionsToD3Json();
+                gm.Store = multiVariateNetwork.EmptyD3Json();
+                gm.Filter = new JObject().ToString();
+                gm.Mvn = multiVariateNetwork;
 
-                return View("Graph", multiVariateNetwork);
+                HttpContext.Session.SetObject("network-data", multiVariateNetwork.Network.Data);
+                HttpContext.Session.SetObject("dataframe", multiVariateNetwork.VectorData.Data);
+                HttpContext.Session.SetObject("numattr", multiVariateNetwork.VectorData.NumAtrrExtremes);
+                HttpContext.Session.SetObject("catattr", multiVariateNetwork.VectorData.CatAttrValues);
+                HttpContext.Session.SetObject("datacount", multiVariateNetwork.VectorData.DataCount);
+
+
+                
+                return View("Graph", gm);
             }
             
             return View();
+        }
+
+        [HttpPost]
+        public JsonResult GraphCommunityDetection(string graphFilt)
+        {
+            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork();
+            multiVariateNetwork.VectorData.Data = HttpContext.Session.GetObject<SortedDictionary<string, IList>>("dataframe");
+            multiVariateNetwork.VectorData.DataCount = multiVariateNetwork.Network.NumberOfVertices =  HttpContext.Session.GetObject<int>("datacount");
+            multiVariateNetwork.VectorData.NumAtrrExtremes = HttpContext.Session.GetObject<Dictionary<string, DataFrame.MinMaxStruct>>("numattr");
+            multiVariateNetwork.VectorData.CatAttrValues = HttpContext.Session.GetObject<Dictionary<string, List<string>>>("catattr");
+            multiVariateNetwork.Network.Data = HttpContext.Session.GetObject<Dictionary<string, Dictionary<string, double>>>("network-data");
+
+
+            JObject root = JObject.Parse(graphFilt);
+            Network filteredNetwork = new Network(root);
+
+            MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
+            mvnTemp.FindCommunities(filteredNetwork);
+            mvnTemp.Network = filteredNetwork;
+
+            foreach(var node in root["nodes"])
+            {
+                node["group"] = mvnTemp.Partition[(string)node["id"]];
+            }
+
+            JArray newLinks = new JArray();
+            foreach(var link in root["links"])
+            {
+                JObject newLink = new JObject();
+                newLink["source"] = (string)link["source"]["id"];
+                newLink["target"] = (string)link["target"]["id"];
+                newLink["value"] = (string)link["value"];
+                newLinks.Add(newLink);
+            }
+            root["links"] = newLinks;
+
+            /*GraphModel gm = new GraphModel();
+            gm.Mvn = multiVariateNetwork;
+            gm.Store = storeFilt;
+            gm.Filter = attrFilt;*/
+
+            return Json(new { newGraph = root.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
         }
 
         public IActionResult About()

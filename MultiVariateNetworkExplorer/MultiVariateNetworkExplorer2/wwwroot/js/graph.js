@@ -2,6 +2,7 @@
 var store = null;
 var filterNodeList = [];
 var linkedByIndex = {};
+var attributefilter = {};
 
 var node = null;
 var link = null;
@@ -583,6 +584,11 @@ function filterByMinValue(value, filteredAttributeName) {
         document.getElementById(filteredAttributeName + "-sliderOutputMin").value = minValue;
     }
 
+    if (!attributefilter[filteredAttributeName]) {
+        attributefilter[filteredAttributeName] = {};
+    }
+    attributefilter[filteredAttributeName].low = value;
+
     store.nodes.forEach(function (n) {
         if (n[filteredAttributeName] < value) {
             if (!n.filters) {
@@ -667,6 +673,12 @@ function filterByMaxValue(value, filteredAttributeName) {
         document.getElementById(filteredAttributeName + "-sliderOutputMax").value = maxValue;
     }
 
+    if (!attributefilter[filteredAttributeName]) {
+        attributefilter[filteredAttributeName] = {};
+    }
+    attributefilter[filteredAttributeName].high = value;
+    
+
     store.nodes.forEach(function (n) {
         if (n[filteredAttributeName] > value) {
             if (!n.filters) {
@@ -718,6 +730,10 @@ function filterByMaxValue(value, filteredAttributeName) {
 function filterByCategory(category, filteredAttributeName) {
     store.nodes.forEach(function (n) {
         if (!this.checked && n.filteredAttributeName === category) {
+            if (!attributefilter[filteredAttributeName]) {
+                attributefilter[filteredAttributeName] = {};
+            }
+            attributefilter[filteredAttributeName].cat = category;
             if (!n.filters) {
                 n.filters = [];
                 graph.nodes.forEach(function (d, i) {
@@ -735,6 +751,7 @@ function filterByCategory(category, filteredAttributeName) {
         }
 
         else if (this.checked && n.filteredAttributeName === category && n.filters) {
+            delete (attributefilter[filteredAttributeName]);
             if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_" + category)) {
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
                 if (n.filters.length === 0) {
@@ -978,9 +995,10 @@ function updateForces() {
         .y(height * forceProperties.forceY.y);*/
     simulation.force("link")
         .id(function (d) { return d.id; })
+        .links(forceProperties.link.enabled ? graph.links : [])
         .distance(function (l) {
-            var node1 = graph.nodes.find(node1 => node1 === l.source)
-            var node2 = graph.nodes.find(node1 => node1 === l.target)
+            var node1 = graph.nodes.find(node1 => node1.id === l.source.id)
+            var node2 = graph.nodes.find(node2 => node2.id === l.target.id)
 
             if (node1.group === node2.group) {
                 return forceProperties.link.distance;
@@ -989,8 +1007,7 @@ function updateForces() {
                 return forceProperties.link.distance * 5;
             }
         })
-        .iterations(forceProperties.link.iterations)
-        .links(forceProperties.link.enabled ? graph.links : []);
+        .iterations(forceProperties.link.iterations);
     /*simulation.force("radial")
         .x(forceProperties.radial.x * width)
         .y(forceProperties.radial.y * height)
@@ -1131,7 +1148,8 @@ function updateNodesAndLinks() {
     //	EXIT
     link.exit().remove();
 
-    var newLink = link.enter().append("line");
+    var newLink = link.enter().append("path")
+        .attr("marker-end", "url(#arrow)");
 
     link = link.merge(newLink);
 
@@ -1173,7 +1191,8 @@ function updateSelectionNodesAndLinks() {
     //	EXIT
     selectionLink.exit().remove();
 
-    var newLink = selectionLink.enter().append("line");
+    var newLink = selectionLink.enter().append("path")
+        .attr("marker-end", "url(#arrow)");
 
     newLink.append("title")
         .text(function (l) {
@@ -1206,6 +1225,37 @@ function updateDisplay() {
 function updateAll() {
     updateForces();
     updateDisplay();
+}
+
+function requestCommunityDetection() {
+    store.nodes.forEach(function (d) {
+        delete (d.group);
+    });
+
+    var model = { graphFilt: JSON.stringify(graph), storeFilt: JSON.stringify(store), attrFilt: JSON.stringify(attributefilter) };
+
+    $.ajax({
+        url: 'GraphCommunityDetection',
+        type: 'POST',
+        dataType: 'json',
+        // It is important to set the content type
+        // request header to application/json because
+        // that's how the client will send the request
+        //contentType: 'application/json',
+        data: { graphFilt: JSON.stringify(graph)},
+        //cache: false,
+        success: function (result) {
+            deleteAllSelections();
+            graph = JSON.parse(result.newGraph);
+            selectionGraph = JSON.parse(result.newSelections);
+            updateNodesAndLinks();
+            //updateNodeGroups();
+
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(thrownError);
+        }
+    });
 }
 
 d3.select(window).on("resize", function () {

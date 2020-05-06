@@ -1,9 +1,9 @@
-﻿
+﻿@model MultiVariateNetworkExplorer2.Models.GraphModel
 @{
     ViewData["Title"] = "Graph";
 }
 
-@model DataUtility.MultiVariateNetwork
+
 
 @section Styles {
     <link rel="stylesheet" href="~/css/controls.css" type="text/css" asp-append-version="true" />
@@ -25,7 +25,7 @@
 
 
 <div class="" style="height: 80vh; max-height:80vh">
-    <div class="col-md-2" id="leftpanel" style="padding-left: 7px; padding-right: 7px;" >
+    <div class="col-md-2" id="leftpanel" style="padding-left: 7px; padding-right: 7px;">
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a class="nav-link active" href="#" onclick="openTab(event, 'attributes', 'leftpanel', '.tabcontent')" id="defaultTab">Atributes</a>
@@ -35,7 +35,7 @@
             </li>
         </ul>
         <div class="tabcontent attributes" id="attributes">
-            @foreach (var pair in Model.VectorData.NumAtrrExtremes)
+            @foreach (var pair in Model.Mvn.VectorData.NumAtrrExtremes)
             {
                 <div class="numeric">
                     <p><label>@pair.Key</label></p>
@@ -52,7 +52,7 @@
                 </div>
             }
 
-            @foreach (var pair in Model.VectorData.CatAttrValues)
+            @foreach (var pair in Model.Mvn.VectorData.CatAttrValues)
             {
                 <div class="categorial">
                     <p><label>@pair.Key</label></p>
@@ -193,11 +193,11 @@
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
                 <label>
                     X Axis
-                    @Html.DropDownList("droplist_x", new SelectList(Model.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control" , onchange="projectAttribute('x', this.value);"})
+                    @Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('x', this.value);" })
                 </label>
                 <label>
                     Y Axis
-                    @Html.DropDownList("droplist_y", new SelectList(Model.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('y', this.value);" })
+                    @Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('y', this.value);" })
                 </label>
             </div>
         </div>
@@ -207,13 +207,13 @@
         </script>
         <div class="selections attributes" id="selections">
             <div>
-                <input type="button" onclick="addNewSelection()" value="Add New Selection"/>
-                <input type="button" onclick="deleteAllSelections()" value="Delete All Selection"/>
+                <input type="button" onclick="addNewSelection()" value="Add New Selection" />
+                <input type="button" onclick="deleteAllSelections()" value="Delete All Selection" />
             </div>
             <div class="panel-group wrap" id="list-selections" role="tablist" aria-multiselectable="true">
-                @if (Model.Partition != null)
+                @if (Model.Mvn.Partition != null)
                 {
-                    foreach (var selection in Model.Partition.Values.Distinct())
+                    foreach (var selection in Model.Mvn.Partition.Values.Distinct())
                     {
                         <text>
                             <div class="panel" id="@("selection_panel_" + selection)">
@@ -227,14 +227,14 @@
                                         </li>
                                     </ul>
                                     <h4 class="panel-title">
-                                            @("Selection " + selection) 
+                                        @("Selection " + selection)
                                     </h4>
                                 </div>
-                        </div>
+                            </div>
                         </text>
                     }
                 }
-                
+
             </div>
         </div>
     </div>
@@ -253,29 +253,29 @@
             <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
             <script src="~/js/graph.js" asp-append-version="true"></script>
             <script>
-                drawNetwork(@Html.Raw(Model.ToD3Json()));
-                
+                drawNetwork(@Html.Raw(Model.Graph));
+
             </script>
         </div>
         <div id="selectionGraph" class="graphcontent">
             <svg viewBox="0 0 1080 720" preserveAspectRatio="xMidYMid meet"></svg>
-            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>   
+            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
             <script>
-                drawSelectionNetwork(@Html.Raw(Model.PartitionsToD3Json()));
+                drawSelectionNetwork(@Html.Raw(Model.Selection));
             </script>
         </div>
         <script>
             // Get the element with id="defaultOpen" and click on it
-            
+
             $('#defaultGraphTab').click();
         </script>
     </div>
-    
+
     <div class="col-md-2 col-sm-2" id="nodes">
 
         <div class="panel-group wrap" id="accordion" role="tablist" aria-multiselectable="true">
 
-            @for (int node = 0; node < Model.VectorData.DataCount; node++)
+            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
             {
                 <div class="panel" id="@("panel_" + node)">
                     <div class="panel-heading" role="tab" id="@("heading_" + node)">
@@ -287,15 +287,15 @@
                     </div>
                     <div id="@("node_" + node)" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + node)">
                         <div class="panel-body form-group">
-                            @foreach (var attribute in Model.VectorData.Columns())
+                            @foreach (var attribute in Model.Mvn.VectorData.Columns())
                             {
                                 <label for="@(node + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
-                                <input type="text" id="@(node + "-" + attribute)" class="form-control" value="@(Model.VectorData[attribute, node])" readonly />
+                                <input type="text" id="@(node + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
                             }
-                            @if(Model.Partition != null)
+                            @if (Model.Mvn.Partition != null)
                             {
                                 <label for="@(node + "-group")" class="form-check-label">Group:</label>
-                                <input type="text" id="@(node + "-group")" class="form-control" value="@(Model.Partition[node.ToString()])" readonly />
+                                <input type="text" id="@(node + "-group")" class="form-control" value="@(Model.Mvn.Partition[node.ToString()])" readonly />
                             }
                         </div>
                     </div>
@@ -315,7 +315,9 @@
     <input type="checkbox" id="edgeCheckBox" checked />
     <label for="groupsCheckBox">Edges</label>
     <input type="checkbox" id="groupsCheckBox" checked />
+    <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities"/>
 </div>
+@Url.Action()
 
 
 
