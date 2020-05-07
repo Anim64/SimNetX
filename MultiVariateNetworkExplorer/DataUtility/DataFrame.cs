@@ -127,13 +127,12 @@ namespace DataUtility
         /// <param name="radius">Threshold under which every vertice will create an edge</param>
         /// <param name="N">Number of minimum edges per vertice</param>
         /// <returns>Returns a network representation of the DataFrame</returns>
-        public Network ToNetwork(double radius, int N)
+        public Network ToNetwork(double radius, int N, IList idColumn)
         {
             Network result = new Network(this.DataCount);
             Matrix<double> kernelMatrix = EuclideanKernelMatrix();
 
-     
-
+           
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
                 Dictionary<int, double> dict = new Dictionary<int, double>();
@@ -156,14 +155,14 @@ namespace DataUtility
                     if (edgeCount >= N && pair.Value >= radius)
                         break;
 
-                    result.AddIndirectedEdge(i.ToString(), pair.Key.ToString(), 1);
+                    result.AddIndirectedEdge(idColumn[i].ToString(), idColumn[pair.Key].ToString(), 1);
                     edgeCount++;
                 }
             }
 
             return result;
         }
-        public Network LRNet()
+        public Network LRNet(IList idColumn)
         {
             Network resultNet = new Network(this.DataCount);
             Matrix<double> kernelMatrix = GaussKernelMatrix();
@@ -230,19 +229,27 @@ namespace DataUtility
                 List<int> potentialNeighbours = Enumerable.Range(0, this.DataCount).ToList();
                 potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
 
-                if(k > 0)
+
+
+
+
+
+                resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[1]].ToString(), 1);
+
+                if (k > 0)
                 {
-                    for(int n = 1; n < k + 1; n++)
+                    for(int n = 2; n < k + 1; n++)
                     {
-                        resultNet.AddIndirectedEdge(i.ToString(), potentialNeighbours[n].ToString(), 1);
+
+                        
+                        resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+
+                       
                     }
 
                 }
 
-                else
-                {
-                    resultNet.AddIndirectedEdge(i.ToString(), potentialNeighbours[1].ToString(), 1);
-                } 
+                
             }
             return resultNet;
         }

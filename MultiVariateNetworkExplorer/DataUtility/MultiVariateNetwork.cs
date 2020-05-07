@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace DataUtility
 
         public bool Directed { get; set; }
 
+        public IList IdColumn { get; set; }
+
         
 
 
@@ -26,20 +29,57 @@ namespace DataUtility
             Partition = null;
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, string idColumn, string groupColumn, bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
             VectorData = new DataFrame(paths.ElementAt(0), header, separator);
             Directed = directed;
+            Partition = null;
+            IdColumn = null;
 
-            if(paths.Count() > 1)
+            if (!String.IsNullOrEmpty(idColumn))
+            {
+
+                bool isParsable = int.TryParse(idColumn, out int result);
+                IdColumn = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
+                this.VectorData.RemoveColumn(isParsable ? "Attribute" + groupColumn : groupColumn);
+
+            }
+
+            else
+            {
+                IdColumn = Enumerable.Range(0, this.VectorData.DataCount).ToList();
+            }
+
+            if (!String.IsNullOrEmpty(groupColumn))
+            {
+                Dictionary<string, string> groups = new Dictionary<string, string>();
+                bool isParsable = int.TryParse(groupColumn, out int result);
+                var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
+                this.VectorData.RemoveColumn(isParsable ? "Attribute" + groupColumn : groupColumn);
+
+                for (int i = 0; i < columnList.Count; i++)
+                {
+                    groups[i.ToString()] = columnList[i].ToString();
+                }
+
+                this.Partition = groups;
+            }
+
+
+            if (paths.Count() > 1)
             {
                 Network.ReadFromFile(paths.ElementAt(1), header, directed, separator);
             }
             else
             {
-                Network = VectorData.LRNet();
+                Network = VectorData.LRNet(IdColumn);
             }
-            Partition = null;
+
+            if(grouping && Partition == null)
+            {
+                this.FindCommunities();
+            }
+            
         }
         public void FindCommunities()
         {
@@ -60,6 +100,7 @@ namespace DataUtility
 
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
+            JObject jPartition = new JObject();
 
             foreach(var node in Network)
             {
@@ -71,7 +112,12 @@ namespace DataUtility
                 }
                 if(Partition != null)
                 {
-                    jNode["group"] = Partition[node.Key];
+                    //jNode["group"] = Partition[node.Key];
+                    jPartition[node.Key] = Partition[node.Key];
+                }
+                else
+                {
+                    jPartition[node.Key] = "";
                 }
                 jNode["neighbours"] = JArray.FromObject(Network[node.Key].Keys);
                 jNodes.Add(jNode);
@@ -92,6 +138,7 @@ namespace DataUtility
 
             root["nodes"] = jNodes;
             root["links"] = jLinks;
+            root["partitions"] = jPartition;
 
             
             string json = root.ToString();
@@ -119,6 +166,8 @@ namespace DataUtility
 
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
+
+            int edgeId = -1;
 
             if (Partition != null)
             {
@@ -156,6 +205,7 @@ namespace DataUtility
                         newLink["source"] = group.Key;
                         newLink["target"] = item.Key;
                         newLink["value"] = countLinks;
+                        newLink["id"] = ++edgeId;
                         jLinks.Add(newLink);
                     }
 

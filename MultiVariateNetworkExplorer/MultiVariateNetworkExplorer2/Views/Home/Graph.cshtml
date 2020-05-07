@@ -277,25 +277,25 @@
 
             @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
             {
-                <div class="panel" id="@("panel_" + node)">
-                    <div class="panel-heading" role="tab" id="@("heading_" + node)">
+                <div class="panel" id="@("panel_" + Model.Mvn.IdColumn[node])">
+                    <div class="panel-heading" role="tab" id="@("heading_" + Model.Mvn.IdColumn[node])">
                         <h4 class="panel-title">
-                            <a role="button" id="@("btn_node_" + node)" data-toggle="collapse" data-parent="#accordion" href="#@("node_" + node)" aria-expanded="true" aria-controls="@("node_" + node)">
-                                @("Node " + node)
+                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
+                                @("Node " + Model.Mvn.IdColumn[node])
                             </a>
                         </h4>
                     </div>
-                    <div id="@("node_" + node)" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + node)">
+                    <div id="@("node_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
                         <div class="panel-body form-group">
                             @foreach (var attribute in Model.Mvn.VectorData.Columns())
                             {
-                                <label for="@(node + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
-                                <input type="text" id="@(node + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
+                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
                             }
                             @if (Model.Mvn.Partition != null)
                             {
-                                <label for="@(node + "-group")" class="form-check-label">Group:</label>
-                                <input type="text" id="@(node + "-group")" class="form-control" value="@(Model.Mvn.Partition[node.ToString()])" readonly />
+                                <label for="@(Model.Mvn.IdColumn[node] + "-group")" class="form-check-label">Group:</label>
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-group")" class="form-control" value="@(Model.Mvn.Partition[Model.Mvn.IdColumn[node].ToString()])" readonly />
                             }
                         </div>
                     </div>

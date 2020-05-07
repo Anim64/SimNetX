@@ -27,7 +27,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Graph(List<IFormFile> files, string separators, 
-            string convert, string groupColumn, decimal epsilonRadius, decimal kNNmin, bool directed = false, 
+            string convert, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, bool directed = false, 
             bool header = false, bool grouping = false)
         {
             
@@ -51,44 +51,12 @@ namespace MultiVariateNetworkExplorer.Controllers
             if (Path.GetExtension(files[0].FileName) == ".csv")
             {
                 
-                MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, directed, header, separators.Trim().ToCharArray());
+                MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, grouping, directed, header, separators.Trim().ToCharArray());
 
-                
-                if (grouping)
-                {
-                    if (!String.IsNullOrEmpty(groupColumn))
-                    {
-                        Dictionary<string, string> groups = new Dictionary<string, string>();
-                        bool isParsable = int.TryParse(groupColumn, out int result);
-                        var columnList = isParsable ? multiVariateNetwork.VectorData["Attribute" + groupColumn] : multiVariateNetwork.VectorData[groupColumn];
-                        multiVariateNetwork.VectorData.RemoveColumn(isParsable ? "Attribute" + groupColumn : groupColumn);
-
-                        for (int i = 0; i < columnList.Count; i++)
-                        {
-                            groups[i.ToString()] = columnList[i].ToString();
-                        }
-
-                        multiVariateNetwork.Partition = groups;
-                    }
-                    else
-                    {
-                        multiVariateNetwork.FindCommunities();
-                    }
-                }
                 GraphModel gm = new GraphModel();
                 gm.Graph = multiVariateNetwork.ToD3Json();
                 gm.Selection = multiVariateNetwork.PartitionsToD3Json();
-                gm.Store = multiVariateNetwork.EmptyD3Json();
-                gm.Filter = new JObject().ToString();
                 gm.Mvn = multiVariateNetwork;
-
-                HttpContext.Session.SetObject("network-data", multiVariateNetwork.Network.Data);
-                HttpContext.Session.SetObject("dataframe", multiVariateNetwork.VectorData.Data);
-                HttpContext.Session.SetObject("numattr", multiVariateNetwork.VectorData.NumAtrrExtremes);
-                HttpContext.Session.SetObject("catattr", multiVariateNetwork.VectorData.CatAttrValues);
-                HttpContext.Session.SetObject("datacount", multiVariateNetwork.VectorData.DataCount);
-
-
                 
                 return View("Graph", gm);
             }
@@ -99,43 +67,30 @@ namespace MultiVariateNetworkExplorer.Controllers
         [HttpPost]
         public JsonResult GraphCommunityDetection(string graphFilt)
         {
-            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork();
+            /*MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork();
             multiVariateNetwork.VectorData.Data = HttpContext.Session.GetObject<SortedDictionary<string, IList>>("dataframe");
             multiVariateNetwork.VectorData.DataCount = multiVariateNetwork.Network.NumberOfVertices =  HttpContext.Session.GetObject<int>("datacount");
             multiVariateNetwork.VectorData.NumAtrrExtremes = HttpContext.Session.GetObject<Dictionary<string, DataFrame.MinMaxStruct>>("numattr");
             multiVariateNetwork.VectorData.CatAttrValues = HttpContext.Session.GetObject<Dictionary<string, List<string>>>("catattr");
-            multiVariateNetwork.Network.Data = HttpContext.Session.GetObject<Dictionary<string, Dictionary<string, double>>>("network-data");
+            multiVariateNetwork.Network.Data = HttpContext.Session.GetObject<Dictionary<string, Dictionary<string, double>>>("network-data");*/
 
 
             JObject root = JObject.Parse(graphFilt);
             Network filteredNetwork = new Network(root);
+            JToken partitions = root["partitions"];
+            
 
             MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
 
-            foreach(var node in root["nodes"])
-            {
-                node["group"] = mvnTemp.Partition[(string)node["id"]];
-            }
+            Parallel.ForEach(mvnTemp.Partition, node => {
+                partitions[node.Key] = node.Value;
+            });
 
-            JArray newLinks = new JArray();
-            foreach(var link in root["links"])
-            {
-                JObject newLink = new JObject();
-                newLink["source"] = (string)link["source"]["id"];
-                newLink["target"] = (string)link["target"]["id"];
-                newLink["value"] = (string)link["value"];
-                newLinks.Add(newLink);
-            }
-            root["links"] = newLinks;
+        
 
-            /*GraphModel gm = new GraphModel();
-            gm.Mvn = multiVariateNetwork;
-            gm.Store = storeFilt;
-            gm.Filter = attrFilt;*/
-
-            return Json(new { newGraph = root.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
+            return Json(new { newPartitions = partitions.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
         }
 
         public IActionResult About()

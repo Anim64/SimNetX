@@ -51,11 +51,11 @@ var selectionSimulation = d3.forceSimulation()
     .force("center", d3.forceCenter())
     .force("forceX", d3.forceX())
     .force("forceY", d3.forceY())
-    .force("radial", d3.forceRadial());
+    //.force("radial", d3.forceRadial());
 
 
 var groupColours = d3.scaleOrdinal(d3.schemeCategory10);
-var defaultColour = "#FF0000";
+var defaultColour = "#FFFFFF";
 
 var selectedNode = null;
 var shiftKey = null;
@@ -153,7 +153,7 @@ function drawNetwork(data) {
     
     link = gDraw.append("g")
         .attr("class", "links")
-        .selectAll("line")
+        .selectAll("path")
         .data(graph.links)
         .enter().append("path")
             .attr("marker-end", "url(#arrow)");
@@ -174,9 +174,9 @@ function drawNetwork(data) {
         .data(graph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
-            if (d.group) {
+            if (graph.partitions[d.id] != "") {
                 
-                return groupColours(d.group);
+                return groupColours(graph.partitions[d.id]);
                 
             }
             else {
@@ -233,8 +233,8 @@ function drawNetwork(data) {
         .on("tick", ticked);
 
     updateForces();
-    simulation.force("link")
-        .links(graph.links);
+    /*simulation.force("link")
+        .links(graph.links);*/
 
 
 
@@ -276,10 +276,10 @@ function drawSelectionNetwork(data) {
     
     selectionLink = selectionDraw.append("g")
         .attr("class", "links")
-        .selectAll("line")
+        .selectAll("path")
         .data(selectionGraph.links)
         .enter().append("path")
-            .attr("marker-end", "url(#selection_arrow)");
+            //.attr("marker-end", "url(#selection_arrow)");
 
     selectionLink.append("title")
         .text(function (l) {
@@ -291,23 +291,23 @@ function drawSelectionNetwork(data) {
         .selectAll("circle")
         .data(selectionGraph.nodes)
         .enter().append("circle")
-        .style("fill", function (d) {   
-            return groupColours(d.id); 
+        .style("fill", function (d) {
+            return groupColours(d.id);
         })
         .attr("r", function (d) {
-            return Math.sqrt(d.nonodes)
+            return forceProperties.collide.radius;
         })
         .attr("id", function (d) {
             return "selection_node_" + d.id;
         })
-        /*.call(d3.drag()
-            .on("start", dragstarted)
+        .call(d3.drag()
+            /*.on("start", dragstarted)
             .on("drag", dragged)
-            .on("end", dragended))*/
+            .on("end", dragended));*/
 
     
-    selectionNode.append("title")
-        .text(function (d) { return "Number of Nodes: " + d.nonodes; });
+    /*selectionNode.append("title")
+        .text(function (d) { return "Number of Nodes: " + d.nonodes; });*/
 
     selectionSimulation
         .nodes(selectionGraph.nodes)
@@ -334,16 +334,6 @@ function ticked() {
 }
 
 function selectionTicked() {
-    /*selectionLink
-        .attr("x1", function (d) { return d.source.x; })
-        .attr("y1", function (d) { return d.source.y; })
-        .attr("x2", function (d) { return d.target.x; })
-        .attr("y2", function (d) { return d.target.y; });
-
-    selectionNode
-        .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
-        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });*/
-
     selectionLink.attr("d", positionLink);
     selectionNode.attr("transform", positionNode);
 }
@@ -382,8 +372,8 @@ function positionLink(d) {
 
         // Make drx and dry different to get an ellipse
         // instead of a circle.
-        var drx = 20;
-        var dry = 20;
+        var drx = 10;
+        var dry = 10;
 
         // For whatever reason the arc collapses to a point if the beginning
         // and ending points of the arc are the same, so kludge it.
@@ -399,8 +389,6 @@ function positionLink(d) {
     return "M" + d.source.x + "," + d.source.y +
         "S" + offSetX + "," + offSetY +
         " " + d.target.x + "," + d.target.y;
-
-
 }
 
 function positionNode(d) {
@@ -872,22 +860,22 @@ function addNodesToSelection(selectionId) {
     node.filter(function (d) { return d.selected })
         .each(function (d) {
             var previousGroup;
-            if (d.group) {
-                previousGroup = d.group;
+            if (graph.partitions[d.id] != "") {
+                previousGroup = graph.partitions[d.id];
                 link.filter(function (l) { return l.source.id == d.id || l.target.id == d.id })
                     .each(function (l) {
-                        if (l.source.group && l.target.group) {
+                        if (graph.partitions[l.source.id] != "" && graph.partitions[l.target.id] != "") {
                             var value = l.value;
-                            var previousSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == l.target.group);
+                            var previousSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] && sl.target.id == graph.partitions[l.target.id]);
 
                             if (l.source.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == l.target.group)
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id])
                                 previousSelectionLink.value = previousSelectionLink.value - value;
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
 
                             else if (l.target.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == selectionId)
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] && sl.target.id == selectionId)
                                 previousSelectionLink.value = previousSelectionLink.value - value;
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
@@ -895,7 +883,7 @@ function addNodesToSelection(selectionId) {
                     });
 
 
-                selectionNode.filter(function (sl) { return sl.id == d.group })
+                selectionNode.filter(function (sl) { return sl.id == graph.partitions[d.id] })
                     .each(function (sl) {
                         sl.nonodes = sl.nonodes - 1;
                     });
@@ -908,16 +896,16 @@ function addNodesToSelection(selectionId) {
             else {
                 link.filter(function (l) { return l.source.id == d.id || l.target.id == d.id })
                     .each(function (l) {
-                        if (l.source.group && l.target.group) {
+                        if (graph.partitions[l.source.id] != "" && graph.partitions[l.target.id] != "") {
                             var value = l.value;
 
                             if (l.source.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == l.target.group);
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id] != "");
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
 
                             else if (l.target.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == l.source.group && sl.target.id == selectionId);
+                                var newSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] != "" && sl.target.id == selectionId);
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
                         }
@@ -932,7 +920,7 @@ function addNodesToSelection(selectionId) {
                 sl.nonodes = sl.nonodes + 1;
             });
 
-            d.group = selectionId;
+            graph.partitions[d.id] = selectionId;
             
             
         })
@@ -946,16 +934,17 @@ function addNodesToSelection(selectionId) {
 
 function deleteAllSelections() {
 
+
 }
 
 function deleteSelection(selectionId) {
     var selectionPanel = document.querySelector('#selection_panel_' + selectionId);
     selectionPanel.parentNode.removeChild(selectionPanel);
 
-    node.filter(function (d) { return d.group == selectionId; })
+    node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
         .style("fill", defaultColour)
         .each(function (d) {
-            delete (d.group);
+            delete (graph.partitions[d.id]);
         })
 
     d3.select('#' + 'selection_node_' + selectionId)
@@ -997,10 +986,7 @@ function updateForces() {
         .id(function (d) { return d.id; })
         .links(forceProperties.link.enabled ? graph.links : [])
         .distance(function (l) {
-            var node1 = graph.nodes.find(node1 => node1.id === l.source.id)
-            var node2 = graph.nodes.find(node2 => node2.id === l.target.id)
-
-            if (node1.group === node2.group) {
+            if (graph.partitions[l.source.id] === graph.partitions[l.target.id]) {
                 return forceProperties.link.distance;
             }
             else {
@@ -1008,11 +994,7 @@ function updateForces() {
             }
         })
         .iterations(forceProperties.link.iterations);
-    /*simulation.force("radial")
-        .x(forceProperties.radial.x * width)
-        .y(forceProperties.radial.y * height)
-        .strength(forceProperties.radial.strength)
-        .radius(forceProperties.radial.radius);*/
+    
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
@@ -1042,11 +1024,7 @@ function updateSelectionForces() {
         .distance(forceProperties.link.distance)
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? selectionGraph.links : []);
-    /*selectionSimulation.force("radial")
-        .x(forceProperties.radial.x * width)
-        .y(forceProperties.radial.y * height)
-        .strength(forceProperties.radial.strength)
-        .radius(forceProperties.radial.radius);*/
+    
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
@@ -1113,9 +1091,20 @@ function projectAttribute(axis, attributeName) {
 }
 
 function updateNodeGroups() {
-    graph.nodes.forEach(function (d) {
-        document.getElementById("panel_" + d.id).style.borderColor = groupColours(d.group);
-    });
+    node.style("fill", function (d) {
+        document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
+        if (graph.partitions[d.id] != "") {
+
+            return groupColours(graph.partitions[d.id]);
+
+        }
+        else {
+            return defaultColour;
+        }
+    })
+    /*graph.nodes.forEach(function (d) {
+        document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
+    });*/
 }
 
 function updateNodesAndLinks() {
@@ -1124,14 +1113,6 @@ function updateNodesAndLinks() {
     node.exit().remove();
 
     var newNode = node.enter().append("circle")
-        .style("fill", function (d) {
-            if (d.group) {
-                return groupColours(d.group);
-            }
-            else {
-                return defaultColour;
-            }
-        })
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
@@ -1143,6 +1124,7 @@ function updateNodesAndLinks() {
         .text(function (d) { return d.id; });
 
     node = node.merge(newNode);
+    updateNodeGroups();
 
     link = link.data(graph.links, function (d) { d.source });
     //	EXIT
@@ -1172,9 +1154,11 @@ function updateSelectionNodesAndLinks() {
         .style("fill", function (d) {  
              return groupColours(d.id);
         })
-        .attr("r", forceProperties.collide.radius)
-        .attr('id', function (d) {
-            return 'selection_node_' + d.id;
+        .attr("r", function (d) {
+            return Math.sqrt(d.nonodes)
+        })
+        .attr("id", function (d) {
+            return "selection_node_" + d.id;
         })
         /*.call(d3.drag()
             .on("start", dragstarted)
@@ -1192,7 +1176,7 @@ function updateSelectionNodesAndLinks() {
     selectionLink.exit().remove();
 
     var newLink = selectionLink.enter().append("path")
-        .attr("marker-end", "url(#arrow)");
+        .attr("marker-end", "url(#selection_arrow)");
 
     newLink.append("title")
         .text(function (l) {
@@ -1229,10 +1213,9 @@ function updateAll() {
 
 function requestCommunityDetection() {
     store.nodes.forEach(function (d) {
-        delete (d.group);
+        graph.partitions[d.id] = "";
     });
 
-    var model = { graphFilt: JSON.stringify(graph), storeFilt: JSON.stringify(store), attrFilt: JSON.stringify(attributefilter) };
 
     $.ajax({
         url: 'GraphCommunityDetection',
@@ -1246,10 +1229,12 @@ function requestCommunityDetection() {
         //cache: false,
         success: function (result) {
             deleteAllSelections();
-            graph = JSON.parse(result.newGraph);
+            graph.partitions = JSON.parse(result.newPartitions);
             selectionGraph = JSON.parse(result.newSelections);
+
             updateNodesAndLinks();
-            //updateNodeGroups();
+            updateSelectionNodesAndLinks();
+            //updateSelectionForces();
 
         },
         error: function (xhr, ajaxOptions, thrownError) {

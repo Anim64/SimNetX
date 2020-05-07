@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataUtility
 {
@@ -55,12 +56,15 @@ namespace DataUtility
             this.NumberOfVertices = json["nodes"].Count();
             this.NumberOfEdges = 0;
             this.CurrSize = 0;
+            foreach(var node in json["nodes"])
+            {
+                this.Data[(string)node["id"]] = new Dictionary<string, double>();
+            }
             foreach(var link in json["links"])
             {
-                this.AddDirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
-                NumberOfEdges++;
+                this.SetDirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
                 CurrSize += (double)link["value"];
-
+                NumberOfEdges++; 
             }
 
             CurrSize = CurrSize / 2;
