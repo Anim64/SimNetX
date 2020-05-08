@@ -21,16 +21,20 @@ var brushing = false;
 var brush = null;
 var gDraw = null;
 var gMain = null;
+var grads = null;
 
 
 
 //var nodeColor = "#000000";
 
+let width = d3.select("#networkGraph svg").node().parentNode.clientWidth;
+let height = d3.select("#networkGraph svg").node().parentNode.clientHeight;
 
-var svg = d3.select("#networkGraph svg"),
-    width = svg.node().parentNode.clientWidth,
-    height = svg.node().parentNode.clientHeight,
-    selectionSvg = null;
+
+var svg = d3.select("#networkGraph svg")
+    .attr('width', width)
+    .attr('height', height)
+var selectionSvg = null;
 
 console.log(width);
 
@@ -56,6 +60,11 @@ var selectionSimulation = d3.forceSimulation()
 
 var groupColours = d3.scaleOrdinal(d3.schemeCategory10);
 var defaultColour = "#FFFFFF";
+
+var xScale = d3.scaleLinear()
+    .domain([0, width]).range([0, width]);
+var yScale = d3.scaleLinear()
+    .domain([0, height]).range([0, height]);
 
 var selectedNode = null;
 var shiftKey = null;
@@ -116,16 +125,13 @@ function drawNetwork(data) {
 
     graph = data;
 
-
-    /*for (var node1 in graph["nodes"]) {
-        node1.color = nodeColor;
-    }*/
     svg.selectAll('.g-main').remove();
 
     gMain = svg.append('g')
         .classed('g-main', true);
 
-    gMain.append("defs").append("marker")
+    var defs = svg.append("defs");
+    defs.append("marker")
         .attr("id", "arrow")
         .attr("viewBox", "0 -5 10 10")
         .attr("refX", 15)
@@ -137,7 +143,10 @@ function drawNetwork(data) {
         .append("svg:path")
         .attr("d", "M0,-5L10,0L0,5");
 
+    
+
     rect = gMain.append('rect')
+        .attr("class", "background")
         .attr('width', width)
         .attr('height', height)
         .style('fill', '#333333')
@@ -151,12 +160,15 @@ function drawNetwork(data) {
 
     gBrushHolder = gDraw.append('g');
     
+
+    
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
         .data(graph.links)
         .enter().append("path")
-            .attr("marker-end", "url(#arrow)");
+        .attr("marker-end", "url(#arrow)")
+        
 
     link.append("title")
         .text(function (l) {
@@ -203,18 +215,11 @@ function drawNetwork(data) {
     brushing = false;
 
     brush = d3.brush()
-        .extent([[0, 0], [width, height]])
         .on("start", brushstarted)
         .on("brush", brushed)
         .on("end", brushended);
 
-    //svg.on("click", resetSelection);
-    //svg.call(zoomer);
-
-    /*d3.zoom()
-        .extent([[0, 0], [width, height]])
-        .scaleExtent([0.5, 8])
-        .on("zoom", zoomed)*/
+    
 
     rect.on('click', () => {
         node.each(function (d) {
@@ -237,6 +242,41 @@ function drawNetwork(data) {
         .links(graph.links);*/
 
 
+    grads = defs.selectAll("linearGradient")
+        .data(graph.links, getGradID)
+        .enter().append("linearGradient")
+        .attr("id", getGradID)
+        .attr("gradientUnits", "userSpaceOnUse");
+        
+        
+
+    /*grads.html("") //erase any existing <stop> elements on update
+        .append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", function (d) {
+            return nodeColor((d.source.x <= d.target.x) ?
+                d.source : d.target);
+        });*/
+
+    grads.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", function (d) {
+            return nodeColor((d.source.x <= d.target.x) ?
+                d.source : d.target);
+        })
+
+    grads.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", function (d) {
+            return nodeColor((d.source.x > d.target.x) ?
+                d.source : d.target);
+        });
+
+    link.style("stroke", function (d) {
+        return "url(#" + getGradID(d) + ")";
+    });
+
+
 
 }
 
@@ -250,7 +290,9 @@ function drawSelectionNetwork(data) {
     var selectionMain = selectionSvg.append('g')
         .classed('g-main', true);
 
-    selectionMain.append("defs").append("marker")
+    var defs = selectionMain.append("defs");
+
+    defs.append("marker")
         .attr("id", "selection_arrow")
         .attr("viewBox", "0 -5 10 10")
         .attr("refX", 15)
@@ -261,6 +303,29 @@ function drawSelectionNetwork(data) {
         .attr("class", "arrow")
         .append("svg:path")
         .attr("d", "M0,-5L10,0L0,5");
+
+    
+    /*var grads = defs.selectAll("linearGradient")
+        .data(selectionGraph.links, getGradID);
+
+    grads.enter().append("linearGradient")
+        .attr("id", getGradID)
+        .attr("gradientUnits", "userSpaceOnUse");
+
+    grads.html("") //erase any existing <stop> elements on update
+        .append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", function (d) {
+            return nodeColor((+d.source.x <= +d.target.x) ?
+                d.source : d.target);
+        });
+
+    grads.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", function (d) {
+            return nodeColor((+d.source.x > +d.target.x) ?
+                d.source : d.target)
+        });*/
 
     var zoom = d3.zoom()
         .on('zoom', selectionZoomed)
@@ -292,6 +357,7 @@ function drawSelectionNetwork(data) {
         .data(selectionGraph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
+            setGroupColour(d);
             return groupColours(d.id);
         })
         .attr("r", function (d) {
@@ -300,8 +366,8 @@ function drawSelectionNetwork(data) {
         .attr("id", function (d) {
             return "selection_node_" + d.id;
         })
-        .call(d3.drag()
-            /*.on("start", dragstarted)
+        /*.call(d3.drag()
+            .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended));*/
 
@@ -331,7 +397,8 @@ function ticked() {
 
     link.attr("d", positionLink);
     node.attr("transform", positionNode);
-}
+    positionGrads();
+ }
 
 function selectionTicked() {
     selectionLink.attr("d", positionLink);
@@ -395,6 +462,38 @@ function positionNode(d) {
     return "translate(" + d.x + "," + d.y + ")";
 }
 
+function positionGrads() {
+    grads.attr("x1", function (d) { return d.source.x; })
+        .attr("y1", function (d) { return d.source.y; })
+        .attr("x2", function (d) { return d.target.x; })
+        .attr("y2", function (d) { return d.target.y; });
+}
+
+function getGradID(d) {
+    return "linkGrad-" + d.source.id + "-" + d.target.id;
+}
+
+
+function nodeColor(d) {
+    if (graph.partitions[d.id] != "") {
+
+        return groupColours(graph.partitions[d.id]);
+
+    }
+    else {
+        return defaultColour;
+    }
+    //return d.color = color(d.name.replace(/ .*/, ""));
+}
+
+function setGroupColour(d) {
+    document.getElementById("selection_color_" + d.id).value = groupColours(d.id);
+}
+
+function getGroupColour(d) {
+    return document.getElementById("selection_color_" + d.id).value;
+}
+
 function dragstarted(d) {
     if (!d3.event.active) simulation.alphaTarget(0.9).restart();
 
@@ -438,7 +537,7 @@ function mouseOver(opacity) {
             return o.source === d || o.target === d ? 1 : opacity;
         });
         link.style("stroke", function (o) {
-            return o.source === d || o.target === d ? o.source.colour : "lightgray";
+            return o.source === d || o.target === d ? o.source.colour : "url(#" + getGradID(o) + ")";
         });
     };
 }
@@ -447,7 +546,10 @@ function mouseOut() {
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
-    link.style("stroke", "lightgray");
+    link//.style("stroke", "lightgray");
+    .style("stroke", function (d) {
+        return "url(#" + getGradID(d) + ")";
+    });
 }
 
 function dragged(d) {
@@ -512,6 +614,7 @@ function brushended() {
 
 function zoomed() {
     gDraw.attr('transform', d3.event.transform);
+    
 }
 
 function selectionZoomed() {
@@ -554,7 +657,7 @@ function keyup() {
 
 function displayNodeProperties(d) {
     console.log(d.id);
-    $("#accordion").accordion('activate', d.id);
+    //$("#accordion").accordion('activate', d.id);
 }
 
 function resetSelection() {
@@ -715,9 +818,9 @@ function filterByMaxValue(value, filteredAttributeName) {
     updateForces();
 }
 
-function filterByCategory(category, filteredAttributeName) {
+function filterByCategory(filteredAttributeName, category, checked) {
     store.nodes.forEach(function (n) {
-        if (!this.checked && n.filteredAttributeName === category) {
+        if (!checked && n[filteredAttributeName] === category) {
             if (!attributefilter[filteredAttributeName]) {
                 attributefilter[filteredAttributeName] = {};
             }
@@ -738,7 +841,7 @@ function filterByCategory(category, filteredAttributeName) {
 
         }
 
-        else if (this.checked && n.filteredAttributeName === category && n.filters) {
+        else if (checked && n[filteredAttributeName] === category && n.filters) {
             delete (attributefilter[filteredAttributeName]);
             if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_" + category)) {
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
@@ -1131,9 +1234,17 @@ function updateNodesAndLinks() {
     link.exit().remove();
 
     var newLink = link.enter().append("path")
-        .attr("marker-end", "url(#arrow)");
+        .attr("marker-end", "url(#arrow)")
+        
 
     link = link.merge(newLink);
+
+    grads.each(function (g) {
+        d3.select(this).select("stop[offset='0%']")
+            .attr("stop-color", nodeColor((g.source.x <= g.target.x) ? g.source : g.target));
+        d3.select(this).select("stop[offset='100%']")
+            .attr("stop-color", nodeColor((g.source.x > g.target.x) ? g.source : g.target));
+    });
 
     simulation
         .nodes(graph.nodes)
@@ -1141,6 +1252,10 @@ function updateNodesAndLinks() {
 
     simulation.force("link")
         .links(graph.links);
+
+    link.style("stroke", function (d) {
+        return "url(#" + getGradID(d) + ")";
+    });
 
     simulation.alpha(1).restart();
 }
@@ -1229,8 +1344,11 @@ function requestCommunityDetection() {
         //cache: false,
         success: function (result) {
             deleteAllSelections();
+            
             graph.partitions = JSON.parse(result.newPartitions);
             selectionGraph = JSON.parse(result.newSelections);
+
+            
 
             updateNodesAndLinks();
             updateSelectionNodesAndLinks();
@@ -1244,10 +1362,10 @@ function requestCommunityDetection() {
 }
 
 d3.select(window).on("resize", function () {
-    width = +svg.node().getBoundingClientRect().width;
+    /*width = +svg.node().getBoundingClientRect().width;
     height = +svg.node().getBoundingClientRect().height;
     updateForces();
-    updateSelectionForces();
+    updateSelectionForces();*/
 });
 
 $(document).ready(function () {

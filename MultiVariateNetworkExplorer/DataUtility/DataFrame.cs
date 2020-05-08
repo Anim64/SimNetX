@@ -369,7 +369,7 @@ namespace DataUtility
                 using (StreamReader sr = new StreamReader(filename))
                 {
 
-                    string[] headers;
+                    string[] headers = null;
                     string[] vector;
                     string line;
                     //Load headers
@@ -450,6 +450,8 @@ namespace DataUtility
                         }
                     }
 
+                    DataCount++;
+
                     //Load Data to Frame
                     while ((line = sr.ReadLine()) != null)
                     {
@@ -461,18 +463,18 @@ namespace DataUtility
                         }
 
                         vector = line.Split(separator);
-                        var keys = this.Data.Keys.GetEnumerator();
+                        //var keys = this.Data.Keys.GetEnumerator();
                         
 
-                        for (int i = 0; i < this.Data.Count; i++)
+                        for(int i = 0; i < headers.Length; i++)
                         {
-                            keys.MoveNext();
-                            if (this.Data[keys.Current] is List<int>)
-                                this.Data[keys.Current].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
-                            else if (this.Data[keys.Current] is List<double>)
-                                this.Data[keys.Current].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
-                            else if (this.Data[keys.Current] is List<string>)
-                                this.Data[keys.Current].Add(vector[i]);
+                            //keys.MoveNext();
+                            if (this.Data[headers[i]] is List<int>)
+                                this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            else if (this.Data[headers[i]] is List<double>)
+                                this.Data[headers[i]].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+                            else if (this.Data[headers[i]] is List<string>)
+                                this.Data[headers[i]].Add(vector[i]);
                             
                         }
                     }

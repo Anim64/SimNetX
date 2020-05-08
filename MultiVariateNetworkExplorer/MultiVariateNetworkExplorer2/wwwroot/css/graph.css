@@ -3,6 +3,9 @@
     min-width: 200px;
     border: solid;
     border-color: white;
+    
+}
+#networkGraph {
     height: 80vh;
     max-height: 80vh;
     width: 100%;

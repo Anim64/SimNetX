@@ -47,21 +47,34 @@ namespace MultiVariateNetworkExplorer.Controllers
                 }
             }
 
-            
-            if (Path.GetExtension(files[0].FileName) == ".csv")
-            {
-                
-                MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, grouping, directed, header, separators.Trim().ToCharArray());
+            char[] separatorArray;
 
-                GraphModel gm = new GraphModel();
-                gm.Graph = multiVariateNetwork.ToD3Json();
-                gm.Selection = multiVariateNetwork.PartitionsToD3Json();
-                gm.Mvn = multiVariateNetwork;
-                
-                return View("Graph", gm);
+
+            if (String.IsNullOrEmpty(separators))
+            {
+                separatorArray = " ".ToCharArray();
             }
+
+            else
+            {
+                separatorArray = separators.Trim().ToCharArray();
+            }
+
             
-            return View();
+        /*if (Path.GetExtension(files[0].FileName) == ".csv")
+        {*/
+                
+            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, grouping, directed, header, separatorArray);
+
+            GraphModel gm = new GraphModel();
+            gm.Graph = multiVariateNetwork.ToD3Json();
+            gm.Selection = multiVariateNetwork.PartitionsToD3Json();
+            gm.Mvn = multiVariateNetwork;
+                
+            return View("Graph", gm);
+            //}
+            
+            //return View();
         }
 
         [HttpPost]

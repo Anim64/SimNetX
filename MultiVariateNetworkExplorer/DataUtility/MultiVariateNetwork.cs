@@ -182,28 +182,28 @@ namespace DataUtility
                     nodeset.Add(kvp.Key);
                 }
 
-                foreach (var group in communities)
+                foreach (var group1 in communities)
                 {
                     JObject jNode = new JObject();
-                    jNode["id"] = group.Key;
-                    jNode["nonodes"] = group.Value.Count;
+                    jNode["id"] = group1.Key;
+                    jNode["nonodes"] = group1.Value.Count;
                     jNodes.Add(jNode);
                     //jNodes.Insert(Int32.Parse(node.Key, CultureInfo.InvariantCulture), jNode);
-                    for (int i = int.Parse(group.Key, CultureInfo.InvariantCulture); i < communities.Count; i++)
+                    foreach (var group2 in communities)
                     {
-                        var item = communities.ElementAt(i);
+                        
                         double countLinks = 0;
-                        foreach (var node1 in group.Value)
+                        foreach (var node1 in group1.Value)
                         {
-                            foreach (var node2 in item.Value)
+                            foreach (var node2 in group2.Value)
                             {
                                 Network[node1].TryGetValue(node2, out double value);
                                 countLinks += value;
                             }
                         }
                         JObject newLink = new JObject();
-                        newLink["source"] = group.Key;
-                        newLink["target"] = item.Key;
+                        newLink["source"] = group1.Key;
+                        newLink["target"] = group2.Key;
                         newLink["value"] = countLinks;
                         newLink["id"] = ++edgeId;
                         jLinks.Add(newLink);
