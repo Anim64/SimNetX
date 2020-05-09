@@ -1,12 +1,41 @@
 ﻿body {
     background-image: none;
-    color: white;
     text-align: center;
+    color: white;
 }
 
 h1 {
     font-size: 50px;
 }
+
+
+
+#parameters labels {
+    color: white;
+}
+
+.parameterRow {
+    margin: 30px 0;
+}
+
+.parameterRow label {
+    margin-left: 20px;
+}
+
+.parameterRow h4{
+
+}
+
+.parameterRow input {
+    display: inline-block;
+    color: #000000;
+}
+
+.parameterRow label:first-child {
+    margin-left: 0px;
+}
+
+
 
 .inputfile {
     height: 0;
@@ -40,5 +69,7 @@ h1 {
 .inputfile:focus + label {
     outline: 1px dotted #000;
 }
+
+
 
 

@@ -168,6 +168,16 @@ function drawNetwork(data) {
         .data(graph.links)
         .enter().append("path")
         .attr("marker-end", "url(#arrow)")
+        .style("stroke", function (d) {
+            if (graph.partitions[d.id] != "") {
+
+                return groupColours(graph.partitions[d.id]);
+
+            }
+            else {
+                return defaultColour;
+            }
+        });
         
 
     link.append("title")
@@ -235,14 +245,15 @@ function drawNetwork(data) {
     store = $.extend(true, {}, data);
     simulation
         .nodes(graph.nodes)
-        .on("tick", ticked);
+        .on("tick", ticked)
+        //.on("end", redrawGradient);
 
     updateForces();
     /*simulation.force("link")
         .links(graph.links);*/
 
 
-    grads = defs.selectAll("linearGradient")
+    /*grads = defs.selectAll("linearGradient")
         .data(graph.links, getGradID)
         .enter().append("linearGradient")
         .attr("id", getGradID)
@@ -258,25 +269,21 @@ function drawNetwork(data) {
                 d.source : d.target);
         });*/
 
-    grads.append("stop")
+    /*grads.append("stop")
         .attr("offset", "0%")
         .attr("stop-color", function (d) {
-            return nodeColor((d.source.x <= d.target.x) ?
+            return nodeColor((+d.source.x <= +d.target.x) ?
                 d.source : d.target);
         })
 
     grads.append("stop")
         .attr("offset", "100%")
         .attr("stop-color", function (d) {
-            return nodeColor((d.source.x > d.target.x) ?
+            return nodeColor((+d.source.x > +d.target.x) ?
                 d.source : d.target);
-        });
+        });*/
 
-    link.style("stroke", function (d) {
-        return "url(#" + getGradID(d) + ")";
-    });
-
-
+   
 
 }
 
@@ -344,7 +351,10 @@ function drawSelectionNetwork(data) {
         .selectAll("path")
         .data(selectionGraph.links)
         .enter().append("path")
-            //.attr("marker-end", "url(#selection_arrow)");
+        .attr("marker-end", "url(#selection_arrow)")
+        .attr("id", function (l) {
+            return "selection_link_" + l.source + "-" + l.target;
+        });
 
     selectionLink.append("title")
         .text(function (l) {
@@ -361,7 +371,7 @@ function drawSelectionNetwork(data) {
             return groupColours(d.id);
         })
         .attr("r", function (d) {
-            return forceProperties.collide.radius;
+            return forceProperties.collide.radius + Math.sqrt(d.nonodes);
         })
         .attr("id", function (d) {
             return "selection_node_" + d.id;
@@ -372,8 +382,8 @@ function drawSelectionNetwork(data) {
             .on("end", dragended));*/
 
     
-    /*selectionNode.append("title")
-        .text(function (d) { return "Number of Nodes: " + d.nonodes; });*/
+    selectionNode.append("title")
+        .text(function (d) { return "Number of Nodes: " + d.nonodes; });
 
     selectionSimulation
         .nodes(selectionGraph.nodes)
@@ -397,8 +407,22 @@ function ticked() {
 
     link.attr("d", positionLink);
     node.attr("transform", positionNode);
-    positionGrads();
- }
+    //positionGrads();
+
+}
+
+function redrawGradient() {
+    link.style("stroke", function (l) {
+        /*var gradient = d3.select("#" + getGradID(l));
+        gradient.select("stop[offset='0%']")
+            .attr("stop-color", nodeColor((l.source.x <= l.target.x) ?
+                l.source : l.target));
+        gradient.select("stop[offset='100%']")
+            .attr("stop-color", nodeColor((l.source.x > l.target.x) ?
+                l.source : l.target));*/
+        return nodeColor(l.source);
+    });
+}
 
 function selectionTicked() {
     selectionLink.attr("d", positionLink);
@@ -421,9 +445,7 @@ function positionLink(d) {
 
     var normalise = Math.sqrt((dx * dx) + (dy * dy));
 
-
     
-
     // Self edge.
     if (x1 === x2 && y1 === y2) {
         // Fiddle with this angle to get loop oriented.
@@ -462,7 +484,7 @@ function positionNode(d) {
     return "translate(" + d.x + "," + d.y + ")";
 }
 
-function positionGrads() {
+/*function positionGrads() {
     grads.attr("x1", function (d) { return d.source.x; })
         .attr("y1", function (d) { return d.source.y; })
         .attr("x2", function (d) { return d.target.x; })
@@ -471,13 +493,13 @@ function positionGrads() {
 
 function getGradID(d) {
     return "linkGrad-" + d.source.id + "-" + d.target.id;
-}
+}*/
 
 
 function nodeColor(d) {
     if (graph.partitions[d.id] != "") {
 
-        return groupColours(graph.partitions[d.id]);
+        return document.getElementById("selection_color_" + graph.partitions[d.id]).value;
 
     }
     else {
@@ -537,7 +559,7 @@ function mouseOver(opacity) {
             return o.source === d || o.target === d ? 1 : opacity;
         });
         link.style("stroke", function (o) {
-            return o.source === d || o.target === d ? o.source.colour : "url(#" + getGradID(o) + ")";
+            return o.source === d || o.target === d ? o.source.colour : nodeColor(o.source);
         });
     };
 }
@@ -546,9 +568,8 @@ function mouseOut() {
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
-    link//.style("stroke", "lightgray");
-    .style("stroke", function (d) {
-        return "url(#" + getGradID(d) + ")";
+    link.style("stroke", function (d) {
+        return nodeColor(d.source);
     });
 }
 
@@ -969,69 +990,74 @@ function addNodesToSelection(selectionId) {
                     .each(function (l) {
                         if (graph.partitions[l.source.id] != "" && graph.partitions[l.target.id] != "") {
                             var value = l.value;
-                            var previousSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] && sl.target.id == graph.partitions[l.target.id]);
-
-                            if (l.source.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id])
+                            
+                            if (l.source.id == d.id && graph.partitions[l.target.id] != "") {
+                                //var previousSelectionLink = d3.select("#selection_link_" + previousGroup + "-" + graph.partitions[l.target.id]);
+                                var newSelectionLink = selectionGraph.links.find(x => x.source.id == selectionId && x.target.id == graph.partitions[l.target.id]);
+                                var previousSelectionLink = selectionGraph.links.find(x => x.source.id == previousGroup && x.target.id == graph.partitions[l.target.id]);
                                 previousSelectionLink.value = previousSelectionLink.value - value;
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
 
-                            else if (l.target.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] && sl.target.id == selectionId)
+                            else if (l.target.id == d.id && graph.partitions[l.source.id] != "") {
+                                var previousSelectionLink = selectionGraph.links.find(x => x.source.id == graph.partitions[l.source.id] && x.target.id == previousGroup);
+                                var newSelectionLink = selectionGraph.links.find(x => x.source.id == graph.partitions[l.source.id] && x.target.id == selectionId);
                                 previousSelectionLink.value = previousSelectionLink.value - value;
                                 newSelectionLink.value = previousSelectionLink.value + value;
                             }
                         }
                     });
 
-
-                selectionNode.filter(function (sl) { return sl.id == graph.partitions[d.id] })
-                    .each(function (sl) {
-                        sl.nonodes = sl.nonodes - 1;
-                    });
-
-                
-
+                var previousSelectionNode = selectionGraph.nodes.find(x => x.id == previousGroup);
+                previousSelectionNode.nonodes = previousSelectionNode.nonodes - 1;
 
             }
 
             else {
                 link.filter(function (l) { return l.source.id == d.id || l.target.id == d.id })
                     .each(function (l) {
-                        if (graph.partitions[l.source.id] != "" && graph.partitions[l.target.id] != "") {
-                            var value = l.value;
+                        var value = l.value;
 
-                            if (l.source.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id] != "");
-                                newSelectionLink.value = previousSelectionLink.value + value;
-                            }
-
-                            else if (l.target.id == d.id) {
-                                var newSelectionLink = selectionLink.find(sl => sl.source.id == graph.partitions[l.source.id] != "" && sl.target.id == selectionId);
-                                newSelectionLink.value = previousSelectionLink.value + value;
-                            }
+                        if (l.source.id == d.id &&  graph.partitions[l.target.id] != "") {
+                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id] != "");
+                            newSelectionLink.value = newSelectionLink.value + value;
                         }
+
+                        else if (l.target.id == d.id && graph.partitions[l.source.id] != "") {
+                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == graph.partitions[l.source.id] != "" && sl.target.id == selectionId);
+                            newSelectionLink.value = newSelectionLink.value + value;
+                        }
+                        
                     });
 
                 
                 
             }
 
-            selectionNode.filter(function (sl) { return sl.id == selectionId })
-            .each(function (sl) {
-                sl.nonodes = sl.nonodes + 1;
-            });
+            var newSelectionNode = selectionGraph.nodes.find(x => x.id == selectionId);
+            newSelectionNode.nonodes = newSelectionNode.nonodes + 1;
+                    
+               
 
             graph.partitions[d.id] = selectionId;
             
             
         })
         .style('fill', function (d) {
-            return groupColours(selectionId)
+            return document.getElementById("selection_color_" + selectionId).value;
         })
 
-    updateSelectionNodesAndLinks();
+    //updateSelectionNodesAndLinks();
+
+    selectionNode.select("title")
+        .text(function (d) {
+            return "Number of Nodes: " + d.nonodes;
+        })
+
+    selectionLink.select("title")
+        .text(function (d) {
+            return d.value;
+        })
 
 }
 
@@ -1047,20 +1073,20 @@ function deleteSelection(selectionId) {
     node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
         .style("fill", defaultColour)
         .each(function (d) {
-            delete (graph.partitions[d.id]);
+            graph.partitions[d.id] = "";
         })
 
-    d3.select('#' + 'selection_node_' + selectionId)
+    /*d3.select('#' + 'selection_node_' + selectionId)
         .each(function (d, i) {
             selectionGraph.nodes.splice(i, 1);
-        })
+        })*/
+    selectionGraph.nodes = selectionGraph.nodes.filter(function (n) { return n.id != selectionId });
         
-   
 
-    selectionLink.filter(function (d) { return d.source.id == selectionId || d.target.id == selectionId })
-        .each(function (l, i) {
-            selectionGraph.links.splice(i, 1);
-        })
+    //_.remove(selectionGraph.nodes, function (d) { return d.id == selectionId });
+
+    selectionGraph.links = selectionGraph.links.filter(function (d) { return d.source.id != selectionId && d.target.id != selectionId });
+        
 
     updateSelectionNodesAndLinks();
     updateSelectionForces()
@@ -1124,7 +1150,7 @@ function updateSelectionForces() {
         .y(height * forceProperties.forceY.y);
     selectionSimulation.force("link")
         .id(function (d) { return d.id; })
-        .distance(forceProperties.link.distance)
+        .distance(forceProperties.link.distance * 5)
         .iterations(forceProperties.link.iterations)
         .links(forceProperties.link.enabled ? selectionGraph.links : []);
     
@@ -1205,9 +1231,7 @@ function updateNodeGroups() {
             return defaultColour;
         }
     })
-    /*graph.nodes.forEach(function (d) {
-        document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
-    });*/
+    
 }
 
 function updateNodesAndLinks() {
@@ -1239,25 +1263,42 @@ function updateNodesAndLinks() {
 
     link = link.merge(newLink);
 
-    grads.each(function (g) {
+    
+    
+    /*grads.each(function (g) {
         d3.select(this).select("stop[offset='0%']")
             .attr("stop-color", nodeColor((g.source.x <= g.target.x) ? g.source : g.target));
         d3.select(this).select("stop[offset='100%']")
             .attr("stop-color", nodeColor((g.source.x > g.target.x) ? g.source : g.target));
-    });
+    });*/
 
     simulation
         .nodes(graph.nodes)
-        .on("tick", ticked);
+        .on("tick", ticked)
+        .on("end", redrawGradient);
 
     simulation.force("link")
         .links(graph.links);
 
-    link.style("stroke", function (d) {
-        return "url(#" + getGradID(d) + ")";
-    });
+    
 
     simulation.alpha(1).restart();
+
+    link.style("stroke", function (l) {
+        /*var gradient = d3.select("#" + getGradID(l));
+        gradient.select("stop[offset='0%']")
+            .attr("stop-color", nodeColor((d.source.x <= d.target.x) ?
+                d.source : d.target));
+        gradient.select("stop[offset='100%']")
+            .attr("stop-color", nodeColor((d.source.x > d.target.x) ?
+                d.source : d.target));*/
+
+        return nodeColor(l.source);
+    });
+
+    
+
+    
 }
 
 function updateSelectionNodesAndLinks() {
@@ -1270,7 +1311,7 @@ function updateSelectionNodesAndLinks() {
              return groupColours(d.id);
         })
         .attr("r", function (d) {
-            return Math.sqrt(d.nonodes)
+            return Math.sqrt(d.nonodes);
         })
         .attr("id", function (d) {
             return "selection_node_" + d.id;
@@ -1282,7 +1323,9 @@ function updateSelectionNodesAndLinks() {
         .on("click", displayNodeProperties);*/
 
     newNode.append("title")
-        .text(function (d) { return "Number of Nodes: " + d.nonodes; });
+        .text(function (d) {
+            return "Number of Nodes: " + d.nonodes;
+        });
 
     selectionNode = selectionNode.merge(newNode);
 
@@ -1291,7 +1334,10 @@ function updateSelectionNodesAndLinks() {
     selectionLink.exit().remove();
 
     var newLink = selectionLink.enter().append("path")
-        .attr("marker-end", "url(#selection_arrow)");
+        .attr("marker-end", "url(#selection_arrow)")
+        .attr("id", function (l) {
+            return "selection_link_" + l.source + "-" + l.target;
+        });
 
     newLink.append("title")
         .text(function (l) {

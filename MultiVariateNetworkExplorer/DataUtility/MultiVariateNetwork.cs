@@ -29,7 +29,7 @@ namespace DataUtility
             Partition = null;
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, string idColumn, string groupColumn, bool grouping, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, string idColumn, string groupColumn, string convert, double simThresh, int k,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
             VectorData = new DataFrame(paths.ElementAt(0), header, separator);
             Directed = directed;
@@ -72,7 +72,14 @@ namespace DataUtility
             }
             else
             {
-                Network = VectorData.LRNet(IdColumn);
+                if (convert.Equals("LRNet"))
+                {
+                    Network = VectorData.LRNet(IdColumn);
+                }
+                else
+                {
+                    Network = VectorData.ToNetwork(simThresh, k, IdColumn);
+                }
             }
 
             if(grouping && Partition == null)

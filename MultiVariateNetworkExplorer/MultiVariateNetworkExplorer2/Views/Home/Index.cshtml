@@ -74,40 +74,54 @@
             <input class="inputfile" type="file" id="fileNetwork" name="files" data-caption="{filePath}">
             <label for="fileNetwork"><strong>Choose a file with network</strong></label>
         </div>
-        <div class="form-group">
-            <label for="directed">Is the network directed?</label>
-            <input type="checkbox" id="directed" name="directed" value="true" />
+        <div class="form-group" id="parameters">
+            <div class="parameterRow">
+                <h4>Data parameters</h4>
+                <label for="directed">Is the network directed?</label>
+                <input type="checkbox" id="directed" name="directed" value="true" />
 
-            <label for="header">Headers?</label>
-            <input type="checkbox" id="header" name="header" value="true" />
+                <label for="header">Headers?</label>
+                <input type="checkbox" id="header" name="header" value="true" />
+            </div>
 
-            <label for="separators">Enter the data separating characters (separated by SPACE):</label>
-            <input type="text" id="separators" name="separators" />
+            <div class="parameterRow">
+                <h4>Separators</h4>
+                <label for="separators">Enter the data separating characters (separated by SPACE):</label>
+                <input type="text" id="separators" name="separators" />
+            </div>
+            <div class="parameterRow">
+                <h4>Group and Id Parameters</h4>
+                <label for="grouping">Initialize with community detection</label>
+                <input type="checkbox" id="grouping" name="grouping" value="true" />
 
-            <label for="grouping">Initialize with groups</label>
-            <input type="checkbox" id="grouping" name="grouping" value="true" />
+                <label for="groupColumn">Enter the column name or number with groups (optional)</label>
+                <input type="text" id="idColumn" name="groupColumn" />
 
-            <label for="groupColumn">Enter the column name or number with groups (optional)</label>
-            <input type="text" id="groupColumn" name="groupColumn" />
+                <label for="idColumn">Enter the column name or number with ids (optional)</label>
+                <input type="text" id="idColumn" name="idColumn" />
+            </div>
+            <div class="parameterRow">
+                <h4>Conversion Parameters</h4>
+                <label for="convert">Choose a conversion algorithm:</label>
 
-            <label for="groupColumn">Enter the column name or number with ids (optional)</label>
-            <input type="text" id="groupColumn" name="idColumn" />
+            <label class="radio-inline">
+                <input type="radio" value="LRNet" id="convert" name="convert" checked />LRNet
+            </label>
 
-            <label for="convert">Choose a conversion algorithm:</label>
-            <input type="radio" value="LRNet" id="convert" name="convert" checked />LRNet<br />
-            <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN<br />
+            <label class="radio-inline">
+                <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN
+            </label>
+                <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
+                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.001" />
 
-            <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
-            <input type="number" id="epsilonRadius" name="epsilonRadius" />
-
-            <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
-            <input type="number" id="kNNmin" name="kNNmin" />
-
-        </div>
-            <input type="submit" class="btn btn-primary" value="Upload" />
-            <p style="color:red;">
-                @ViewBag.Messsage
-            </p>
+                <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
+                <input type="number" id="kNNmin" name="kNNmin" />
+            </div>
+            </div>
+                <input type="submit" class="btn btn-primary" value="Upload" />
+                <p style="color:red;">
+                    @ViewBag.Messsage
+                </p>
 </form>
 </section>
 

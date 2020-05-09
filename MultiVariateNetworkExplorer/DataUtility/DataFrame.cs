@@ -130,14 +130,14 @@ namespace DataUtility
         public Network ToNetwork(double radius, int N, IList idColumn)
         {
             Network result = new Network(this.DataCount);
-            Matrix<double> kernelMatrix = EuclideanKernelMatrix();
+            Matrix<double> kernelMatrix = GaussKernelMatrix();
 
            
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
                 Dictionary<int, double> dict = new Dictionary<int, double>();
 
-                for (int j = 0; j < kernelMatrix.Cols; j++)
+                for (int j = i; j < kernelMatrix.Cols; j++)
                 {
                     if (i != j)
                     {
@@ -146,13 +146,13 @@ namespace DataUtility
 
                 }
 
-                var orderedDict = dict.OrderBy(key => key.Value);
+                var orderedDict = dict.OrderByDescending(key => key.Value);
 
                 int edgeCount = 0;
 
                 foreach (KeyValuePair<int, double> pair in orderedDict)
                 {
-                    if (edgeCount >= N && pair.Value >= radius)
+                    if (edgeCount >= N && pair.Value < radius)
                         break;
 
                     result.AddIndirectedEdge(idColumn[i].ToString(), idColumn[pair.Key].ToString(), 1);

@@ -64,7 +64,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         /*if (Path.GetExtension(files[0].FileName) == ".csv")
         {*/
                 
-            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, grouping, directed, header, separatorArray);
+            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
 
             GraphModel gm = new GraphModel();
             gm.Graph = multiVariateNetwork.ToD3Json();

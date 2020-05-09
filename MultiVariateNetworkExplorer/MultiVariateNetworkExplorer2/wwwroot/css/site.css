@@ -8,7 +8,7 @@ body {
     background-color: #333333;
     padding-top: 50px;
     padding-bottom: 20px;
-    color: lightgray;
+    color: #000000;
     overflow: hidden;
     display: flex;
 }
