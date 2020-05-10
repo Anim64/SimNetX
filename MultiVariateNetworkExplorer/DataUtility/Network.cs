@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DataUtility
 {
-    public class Network : ICollection<KeyValuePair<string, Dictionary<string, double>>>
+    public class Network : IEnumerable<KeyValuePair<string, ConcurrentDictionary<string, double>>>
     {
         public struct Edge
         {
@@ -31,34 +32,34 @@ namespace DataUtility
                 Weight = w;
             }
         }
-        public Dictionary<string, Dictionary<string, double>> Data { get; set; }
+        public ConcurrentDictionary<string, ConcurrentDictionary<string, double>> Data { get; set; }
         public double CurrSize { get; set; }
         public int NumberOfEdges { get;  set; }
         public int NumberOfVertices { get; set; }
 
         public Network()
         {
-            Data = new Dictionary<string, Dictionary<string, double>>();
+            Data = new ConcurrentDictionary<string, ConcurrentDictionary<string, double>>();
         }
         public Network(int initSize)
         {
-            Data = new Dictionary<string, Dictionary<string, double>>();
+            Data = new ConcurrentDictionary<string, ConcurrentDictionary<string, double>>();
             for (int i = 0; i < initSize; i++)
             {
-                Data[i.ToString()] = new Dictionary<string, double>();
+                Data[i.ToString()] = new ConcurrentDictionary<string, double>();
             }
             this.NumberOfVertices = initSize;
         }
 
         public Network(JObject json) 
         {
-            this.Data = new Dictionary<string, Dictionary<string, double>>();
+            this.Data = new ConcurrentDictionary<string, ConcurrentDictionary<string, double>>();
             this.NumberOfVertices = json["nodes"].Count();
             this.NumberOfEdges = 0;
             this.CurrSize = 0;
             foreach(var node in json["nodes"])
             {
-                this.Data[(string)node["id"]] = new Dictionary<string, double>();
+                this.Data[(string)node["id"]] = new ConcurrentDictionary<string, double>();
             }
             foreach(var link in json["links"])
             {
@@ -74,18 +75,18 @@ namespace DataUtility
 
         public Network(Network net)
         {
-            Data = new Dictionary<string, Dictionary<string, double>>();
+            Data = new ConcurrentDictionary<string, ConcurrentDictionary<string, double>>();
             this.NumberOfEdges = net.NumberOfEdges;
             this.CurrSize = net.CurrSize;
             this.NumberOfVertices = net.NumberOfVertices;
             foreach(var pair in net.Data)
             {
-                this.Data[pair.Key] = new Dictionary<string, double>(pair.Value);
+                this.Data[pair.Key] = new ConcurrentDictionary<string, double>(pair.Value);
             }
 
         }
 
-        public Dictionary<string, double> this[string vertex]
+        public ConcurrentDictionary<string, double> this[string vertex]
         {
             get
             {
@@ -142,21 +143,21 @@ namespace DataUtility
             } 
         }
 
-        public Dictionary<string, double> EnsureIncidenceList(string node)
-        {   
-            Dictionary<string, double> outdict;
+        public ConcurrentDictionary<string, double> EnsureIncidenceList(string node)
+        {
+            ConcurrentDictionary<string, double> outdict;
             if(!this.Data.TryGetValue(node, out outdict))
             {
-                outdict = this.Data[node] = new Dictionary<string, double>();
+                outdict = this.Data[node] = new ConcurrentDictionary<string, double>();
             }
             return outdict;
         }
         public void AddNode(string node)
         {
-            Dictionary<string, double> edges;
+            ConcurrentDictionary<string, double> edges;
             if(!this.Data.TryGetValue(node, out edges))
             {
-                this.Data[node] = new Dictionary<string, double>();
+                this.Data[node] = new ConcurrentDictionary<string, double>();
             }
         }
 
@@ -243,7 +244,7 @@ namespace DataUtility
 
         public double EdgeWeight(string node1, string node2, double defaultValue)
         {
-            Dictionary<string, double> ilist;
+            ConcurrentDictionary<string, double> ilist;
             if (!Data.TryGetValue(node1, out ilist))
             {
                 throw new IndexOutOfRangeException("No such node " + node1);
@@ -276,9 +277,9 @@ namespace DataUtility
             return ret;
         }
 
-        public IEnumerator<KeyValuePair<string, Dictionary<string, double>>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, ConcurrentDictionary<string, double>>> GetEnumerator()
         {
-            foreach(KeyValuePair<string, Dictionary<string, double>> pair in this.Data)
+            foreach(KeyValuePair<string, ConcurrentDictionary<string, double>> pair in this.Data)
             {
                 yield return pair;
             }
@@ -288,7 +289,7 @@ namespace DataUtility
         {
             return GetEnumerator();
         }
-
+        /*
         public void Add(KeyValuePair<string, Dictionary<string, double>> item)
         {
             this.Data.Add(item.Key, item.Value);
@@ -313,5 +314,6 @@ namespace DataUtility
         {
             return this.Data.Remove(item.Key);
         }
+        */
     }
 }

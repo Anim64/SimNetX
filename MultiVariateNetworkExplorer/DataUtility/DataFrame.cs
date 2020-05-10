@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataUtility
 {
@@ -166,54 +168,57 @@ namespace DataUtility
         {
             Network resultNet = new Network(this.DataCount);
             Matrix<double> kernelMatrix = GaussKernelMatrix();
-            Dictionary<int, int> degrees = new Dictionary<int, int>();
-            Dictionary<int, int> significances = new Dictionary<int, int>();
+            ConcurrentDictionary<int, int> degrees = new ConcurrentDictionary<int, int>();
+            ConcurrentDictionary<int, int> significances = new ConcurrentDictionary<int, int>();
 
-            Dictionary<int, double> representativeness = new Dictionary<int, double>();
-            Dictionary<int, int> representativeNeighboursCount = new Dictionary<int, int>();
+            ConcurrentDictionary<int, double> representativeness = new ConcurrentDictionary<int, double>();
+            ConcurrentDictionary<int, int> representativeNeighboursCount = new ConcurrentDictionary<int, int>();
 
-            for(int i = 0; i < kernelMatrix.Rows; i++)
+            Parallel.For(0, kernelMatrix.Rows, i =>
             {
                 int nearestNeighbour = -1;
                 double maxSimilarity = -1;
+                object lockingObject = new object();
                 for (int j = 0; j < kernelMatrix.Cols; j++)
                 {
-                    if(i == j)
+                    if (i == j)
                     {
                         continue;
                     }
-                     
-                    if(!degrees.ContainsKey(i))
+
+                    if (!degrees.ContainsKey(i))
                     {
                         degrees[i] = 0;
                         significances[i] = 0;
                     }
 
-                    if(kernelMatrix[i,j] > 0)
+                    if (kernelMatrix[i, j] > 0)
                     {
-                        degrees[i]++;
+                        
+                            degrees[i]++;
+                        
                     }
 
-                    if(kernelMatrix[i,j] > maxSimilarity)
+                    if (kernelMatrix[i, j] > maxSimilarity)
                     {
                         maxSimilarity = kernelMatrix[i, j];
                         nearestNeighbour = j;
                     }
                 }
 
-                if(!significances.ContainsKey(nearestNeighbour))
+                if (!significances.ContainsKey(nearestNeighbour))
                 {
                     significances[nearestNeighbour] = 0;
                 }
 
                 significances[nearestNeighbour]++;
+                
 
+            });
 
-            }
-
-            for(int i = 0; i < kernelMatrix.Rows; i++)
+            Parallel.For(0, kernelMatrix.Rows, i =>
             {
-                if(significances[i] > 0)
+                if (significances[i] > 0)
                 {
                     representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
                 }
@@ -228,29 +233,26 @@ namespace DataUtility
                 double[] vertexSimilarities = kernelMatrix.GetRow(i);
                 List<int> potentialNeighbours = Enumerable.Range(0, this.DataCount).ToList();
                 potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
-
-
-
-
-
-
+                
                 resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[1]].ToString(), 1);
 
                 if (k > 0)
                 {
-                    for(int n = 2; n < k + 1; n++)
+                    for (int n = 2; n < k + 1; n++)
                     {
 
-                        
+
                         resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
 
-                       
+
                     }
 
                 }
-
                 
-            }
+                
+
+
+            });
             return resultNet;
         }
 
@@ -386,13 +388,13 @@ namespace DataUtility
                                 for (int i = 0; i < headers.Length; i++)
                                 {
                                     //Check if value is number or string
-                                    if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+                                    /*if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
                                     {
                                         this.Data[headers[i]] = new List<int>();
                                         this.Data[headers[i]].Add(resultInt);
 
-                                    }
-                                    else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                    }*/
+                                    if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                     {
                                         this.Data[headers[i]] = new List<double>();
                                         this.Data[headers[i]].Add(resultFloat);
@@ -428,13 +430,13 @@ namespace DataUtility
                             for (int i = 0; i < headers.Length; i++)
                             {
                                 //Check if value is number or string
-                                if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+                                /*if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
                                 {
                                     this.Data[headers[i]] = new List<int>();
                                     this.Data[headers[i]].Add(resultInt);
 
-                                }
-                                else if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                }*/
+                                if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                 {
                                     this.Data[headers[i]] = new List<double>();
                                     this.Data[headers[i]].Add(resultFloat);
@@ -469,9 +471,9 @@ namespace DataUtility
                         for(int i = 0; i < headers.Length; i++)
                         {
                             //keys.MoveNext();
-                            if (this.Data[headers[i]] is List<int>)
-                                this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
-                            else if (this.Data[headers[i]] is List<double>)
+                            /*if (this.Data[headers[i]] is List<int>)
+                                this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
+                            if (this.Data[headers[i]] is List<double>)
                                 this.Data[headers[i]].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
                             else if (this.Data[headers[i]] is List<string>)
                                 this.Data[headers[i]].Add(vector[i]);

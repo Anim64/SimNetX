@@ -87,7 +87,7 @@
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+                <p><label><input type="checkbox" onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
                 <label title="Negative strength repels nodes. Positive strength attracts nodes.">
                     strength
                     <output id="charge_StrengthSliderOutput">-30</output>
@@ -123,37 +123,37 @@
                     <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#collide_iterationsSliderOutput').text(value); forceProperties.collide.iterations=value; updateAll();">
                 </label>
             </div>
+            <!--
+    <div class="force">
+        <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+        <label>
+            strength
+            <output id="forceX_StrengthSliderOutput">.1</output>
+            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
+        </label>
+        <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+            x
+            <output id="forceX_XSliderOutput">.5</output>
+            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
+        </label>
+    </div>
 
+    <div class="force">
+        <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+        <label>
+            strength
+            <output id="forceY_StrengthSliderOutput">.1</output>
+            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
+        </label>
+        <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+            y
+            <output id="forceY_YSliderOutput">.5</output>
+            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
+        </label>
+    </div>
+        -->
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
-                <label>
-                    strength
-                    <output id="forceX_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
-                </label>
-                <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
-                    x
-                    <output id="forceX_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
-                </label>
-            </div>
-
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
-                <label>
-                    strength
-                    <output id="forceY_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
-                </label>
-                <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
-                    y
-                    <output id="forceY_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
-                </label>
-            </div>
-
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
+                <p><label><input type="checkbox" onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
                     distance
                     <output id="link_DistanceSliderOutput">30</output>
@@ -164,30 +164,6 @@
                     <output id="link_IterationsSliderOutput">1</output>
                     <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#link_IterationsSliderOutput').text(value); forceProperties.link.iterations=value; updateAll();">
                 </label>
-            </div>
-            <div class="force">
-                <p><label><input type="checkbox" onchange="forceProperties.radial.enabled = this.checked; updateAll();"> Radial</label> Creates a new positioning force towards a circle of the specified radius.</p>
-                <label>
-                    x
-                    <output id="radial_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#radial_XSliderOutput').text(value); forceProperties.radial.x = value; updateAll();">
-                </label>
-                <label>
-                    y
-                    <output id="radial_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#radial_YSliderOutput').text(value); forceProperties.radial.y=value; updateAll();">
-                </label>
-                <label>
-                    strength
-                    <output id="radial_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#radial_StrengthSliderOutput').text(value); forceProperties.radial.strength = value; updateAll();">
-                </label>
-                <label>
-                    radius
-                    <output id="radial_radiusSliderOutput">1</output>
-                    <input type="range" min="0" max="100" value="1" step="1" oninput="d3.select('#radial_radiusSliderOutput').text(value); forceProperties.radial.radius=value; updateAll();">
-                </label>
-
             </div>
             <div class="force">
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
@@ -218,7 +194,7 @@
                         <text>
                             <div class="panel" id="@("selection_panel_" + selection)">
                                 <div class="panel-heading" role="tab" id="@("heading_selection_" + selection)">
-                                    <input type="color" id="@("selection_color_" + selection)" />
+                                    <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this.value, @selection)"/>
                                     <ul class="list-inline m-0" style="float: right;">
                                         <li class="list-inline-item">
                                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(@selection.ToString())"><i class="fa fa-plus-square"></i></button>
@@ -250,8 +226,12 @@
         </ul>
         <div id="networkGraph" class="graphcontent">
             <svg></svg>
-            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
             <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
+            <script src="https://d3js.org/d3-color.v1.min.js"></script>
+            <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+            <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+
             <script src="~/js/graph.js" asp-append-version="true"></script>
             <script>
                 drawNetwork(@Html.Raw(Model.Graph));
@@ -292,11 +272,6 @@
                             {
                                 <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
                                 <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
-                            }
-                            @if (Model.Mvn.Partition != null)
-                            {
-                                <label for="@(Model.Mvn.IdColumn[node] + "-group")" class="form-check-label">Group:</label>
-                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-group")" class="form-control" value="@(Model.Mvn.Partition[Model.Mvn.IdColumn[node].ToString()])" readonly />
                             }
                         </div>
                     </div>

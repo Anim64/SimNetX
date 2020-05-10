@@ -24,7 +24,14 @@
 
 
 .attributes .categorial {
-    display: inline-block;
+    background-color: #eee;
+    border-radius: 3px;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+.attributes .categorial .checkboxes {
+    margin: 0 5% 1em;
     width: 90%;
 }
 

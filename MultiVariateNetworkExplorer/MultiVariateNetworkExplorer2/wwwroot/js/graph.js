@@ -23,6 +23,11 @@ var gDraw = null;
 var gMain = null;
 var grads = null;
 
+const simulationDurationInMs = 60000; // 20 seconds
+
+let startTime = Date.now();
+let endTime = startTime + simulationDurationInMs;
+
 
 
 //var nodeColor = "#000000";
@@ -58,7 +63,9 @@ var selectionSimulation = d3.forceSimulation()
     //.force("radial", d3.forceRadial());
 
 
-var groupColours = d3.scaleOrdinal(d3.schemeCategory10);
+var groupColours = d3.scaleOrdinal(d3.schemeCategory20);
+//var groupColours = d3.scaleOrdinal(d3.interpolateSpectral);
+
 var defaultColour = "#FFFFFF";
 
 var xScale = d3.scaleLinear()
@@ -78,7 +85,7 @@ var forceProperties = {
     },
 
     charge: {
-        enabled: true,
+        enabled: false,
         strength: -80,
         distanceMin: 1,
         distanceMax: 2000
@@ -104,19 +111,11 @@ var forceProperties = {
     },
 
     link: {
-        enabled: true,
-        distance: 50,
+        enabled: false,
+        distance: 75,
         strength: 0.1,
         iterations: 1
     },
-
-    radial: {
-        enabled: false,
-        x: 0.5,
-        y: 0.5,
-        strength: 0.1,
-        radius: 1
-    }
 
 
 };
@@ -154,36 +153,31 @@ function drawNetwork(data) {
     gDraw = gMain.append('g');
 
     var zoom = d3.zoom()
-        .on('zoom', zoomed)
+        .on('zoom', zoomed);
+    
 
     gMain.call(zoom);
 
     gBrushHolder = gDraw.append('g');
     
 
-    
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
         .data(graph.links)
         .enter().append("path")
         .attr("marker-end", "url(#arrow)")
-        .style("stroke", function (d) {
-            if (graph.partitions[d.id] != "") {
-
-                return groupColours(graph.partitions[d.id]);
-
-            }
-            else {
-                return defaultColour;
-            }
+        .style("stroke", function (l) {
+            return nodeColor(l.source);
         });
-        
+
 
     link.append("title")
         .text(function (l) {
             return l.id;
         });
+
+    
 
     
     graph.links.forEach(function (d) {
@@ -196,14 +190,7 @@ function drawNetwork(data) {
         .data(graph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
-            if (graph.partitions[d.id] != "") {
-                
-                return groupColours(graph.partitions[d.id]);
-                
-            }
-            else {
-                return defaultColour;
-            }
+            return nodeColor(d);
 
         })
         .attr("r", forceProperties.collide.radius)
@@ -220,6 +207,9 @@ function drawNetwork(data) {
     
     node.append("title")
         .text(function (d) { return d.id; });
+
+
+    
 
     brushMode = false;
     brushing = false;
@@ -243,9 +233,13 @@ function drawNetwork(data) {
     d3.select('body').on('keyup', keyup);
 
     store = $.extend(true, {}, data);
+
+    startTime = Date.now();
+    endTime = startTime + simulationDurationInMs;
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked)
+        .on("end", simulationStop)
         //.on("end", redrawGradient);
 
     updateForces();
@@ -404,24 +398,23 @@ function ticked() {
     node
         .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
         .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });*/
+    /*if (Date.now() < endTime) {
+        
+    } else {
+        simulation.stop();
+    }*/
 
     link.attr("d", positionLink);
     node.attr("transform", positionNode);
+    
     //positionGrads();
 
 }
 
-function redrawGradient() {
-    link.style("stroke", function (l) {
-        /*var gradient = d3.select("#" + getGradID(l));
-        gradient.select("stop[offset='0%']")
-            .attr("stop-color", nodeColor((l.source.x <= l.target.x) ?
-                l.source : l.target));
-        gradient.select("stop[offset='100%']")
-            .attr("stop-color", nodeColor((l.source.x > l.target.x) ?
-                l.source : l.target));*/
-        return nodeColor(l.source);
-    });
+
+
+function simulationStop() {
+    simulation.stop();
 }
 
 function selectionTicked() {
@@ -497,15 +490,27 @@ function getGradID(d) {
 
 
 function nodeColor(d) {
-    if (graph.partitions[d.id] != "") {
 
-        return document.getElementById("selection_color_" + graph.partitions[d.id]).value;
+    var nodeId = d.id ? d.id : d;
+    if (graph.partitions[nodeId] != "") {
+
+        return document.getElementById("selection_color_" + graph.partitions[nodeId]).value;
 
     }
     else {
         return defaultColour;
     }
     //return d.color = color(d.name.replace(/ .*/, ""));
+}
+
+function changeGroupColour(color, selectionId) {
+    node.filter(function (n) { return graph.partitions[n.id] == selectionId })
+        .style("fill", function (d) {
+            link.filter(function (l) { return l.source == d.id || l.source.id == d.id })
+                .style("stroke", color);
+            return color;
+        });
+    
 }
 
 function setGroupColour(d) {
@@ -634,7 +639,10 @@ function brushended() {
 }
 
 function zoomed() {
-    gDraw.attr('transform', d3.event.transform);
+    
+    var transform = d3.event.transform;
+    var scale = 1 + (transform.k / 10);
+    gDraw.attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + scale + ")");
     
 }
 
@@ -893,10 +901,11 @@ function filterByCategory(filteredAttributeName, category, checked) {
     updateForces();
 }
 
-function addNewSelection() {
-    var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
+function addNewSelection(selection) {
+    //var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
+    var newId = selection.id;
     newId = newId.toString();
-    var newSelection = {};
+    /*var newSelection = {};
     newSelection['id'] = newId;
     newSelection['name'] = 'Selection ' + newId;
     newSelection['nonodes'] = 0; 
@@ -920,7 +929,7 @@ function addNewSelection() {
         }
         
         
-    })
+    })*/
 
     
 
@@ -936,6 +945,12 @@ function addNewSelection() {
         .attr('class', 'panel-heading')
         .attr('role', 'tab')
         .attr('id', 'heading_selection_' + newId);
+
+    panel_heading.append('input')
+        .attr('type', 'color')
+        .attr('id', 'selection_color_' + newId)
+        .attr('value', groupColours(newId))
+        .attr('onchange', 'changeGroupColour(this.value,' + newId + ')');
 
     var panel_list = panel_heading
         .append('ul')
@@ -972,10 +987,10 @@ function addNewSelection() {
 
     panel_heading.append('h4')
         .attr('class', 'panel-title')
-        .html(newSelection.name);
+        .html("Selection" + newId);
 
     updateSelectionNodesAndLinks();
-    updateSelectionForces();
+    //updateSelectionForces();
         
 }
 
@@ -1062,7 +1077,22 @@ function addNodesToSelection(selectionId) {
 }
 
 function deleteAllSelections() {
+    /*selectionNode.each(function (d) {
+        var selectionPanel = document.querySelector('#selection_panel_' + d.id);
+        selectionPanel.parentNode.removeChild(selectionPanel);
 
+        
+    })*/
+
+    node.style("fill", defaultColour);
+
+    selectionGraph.nodes = [];
+    selectionGraph.links = [];
+
+    updateSelectionNodesAndLinks();
+
+    var selectionList = document.querySelector('#list-selections');
+    selectionList.innerHTML = "";
 
 }
 
@@ -1072,24 +1102,17 @@ function deleteSelection(selectionId) {
 
     node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
         .style("fill", defaultColour)
-        .each(function (d) {
-            graph.partitions[d.id] = "";
+        .each(function (n) {
+            graph.partitions[n.id] = "";
         })
 
-    /*d3.select('#' + 'selection_node_' + selectionId)
-        .each(function (d, i) {
-            selectionGraph.nodes.splice(i, 1);
-        })*/
+    
     selectionGraph.nodes = selectionGraph.nodes.filter(function (n) { return n.id != selectionId });
-        
-
-    //_.remove(selectionGraph.nodes, function (d) { return d.id == selectionId });
-
     selectionGraph.links = selectionGraph.links.filter(function (d) { return d.source.id != selectionId && d.target.id != selectionId });
         
 
     updateSelectionNodesAndLinks();
-    updateSelectionForces()
+    //updateSelectionForces()
     
 }
 
@@ -1119,7 +1142,7 @@ function updateForces() {
                 return forceProperties.link.distance;
             }
             else {
-                return forceProperties.link.distance * 5;
+                return forceProperties.link.distance;
             }
         })
         .iterations(forceProperties.link.iterations);
@@ -1263,36 +1286,17 @@ function updateNodesAndLinks() {
 
     link = link.merge(newLink);
 
-    
-    
-    /*grads.each(function (g) {
-        d3.select(this).select("stop[offset='0%']")
-            .attr("stop-color", nodeColor((g.source.x <= g.target.x) ? g.source : g.target));
-        d3.select(this).select("stop[offset='100%']")
-            .attr("stop-color", nodeColor((g.source.x > g.target.x) ? g.source : g.target));
-    });*/
-
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked)
-        .on("end", redrawGradient);
+        .on("end", simulationStop);
 
     simulation.force("link")
         .links(graph.links);
 
-    
-
     simulation.alpha(1).restart();
 
     link.style("stroke", function (l) {
-        /*var gradient = d3.select("#" + getGradID(l));
-        gradient.select("stop[offset='0%']")
-            .attr("stop-color", nodeColor((d.source.x <= d.target.x) ?
-                d.source : d.target));
-        gradient.select("stop[offset='100%']")
-            .attr("stop-color", nodeColor((d.source.x > d.target.x) ?
-                d.source : d.target));*/
-
         return nodeColor(l.source);
     });
 
@@ -1394,7 +1398,9 @@ function requestCommunityDetection() {
             graph.partitions = JSON.parse(result.newPartitions);
             selectionGraph = JSON.parse(result.newSelections);
 
-            
+            selectionGraph.nodes.forEach(function (d) {
+                addNewSelection(d);
+            });
 
             updateNodesAndLinks();
             updateSelectionNodesAndLinks();
@@ -1408,10 +1414,10 @@ function requestCommunityDetection() {
 }
 
 d3.select(window).on("resize", function () {
-    /*width = +svg.node().getBoundingClientRect().width;
+    width = +svg.node().getBoundingClientRect().width;
     height = +svg.node().getBoundingClientRect().height;
     updateForces();
-    updateSelectionForces();*/
+    updateSelectionForces();
 });
 
 $(document).ready(function () {
