@@ -37,7 +37,10 @@
 
 .attributes .categorial input[type="checkbox"] {
     margin: 0 5% 1em;
-    width: 90%;
+}
+
+.attributes .categorial label {
+    margin-left: 20px;
 }
 
 

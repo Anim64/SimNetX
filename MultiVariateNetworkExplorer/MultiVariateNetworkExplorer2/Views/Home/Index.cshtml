@@ -82,6 +82,9 @@
 
                 <label for="header">Headers?</label>
                 <input type="checkbox" id="header" name="header" value="true" />
+
+                <label for="missingvalues">Enter the character representing missing data (leave empty if no character is used):</label>
+                <input type="text" id="missingvalues" name="missingvalues" />
             </div>
 
             <div class="parameterRow">
@@ -112,7 +115,7 @@
                 <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN
             </label>
                 <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
-                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.001" />
+                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" />
 
                 <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
                 <input type="number" id="kNNmin" name="kNNmin" />

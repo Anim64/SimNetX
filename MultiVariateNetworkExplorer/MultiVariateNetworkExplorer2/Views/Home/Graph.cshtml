@@ -59,8 +59,8 @@
                     <div class="checkboxes">
                         @foreach (string category in pair.Value)
                         {
-                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory('@pair.Key', '@category', this.checked)" checked />
                             <label for="@(category + "-checkbox")">@(category)</label>
+                            <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory('@pair.Key', '@category', this.checked)" checked />
                         }
                     </div>
                 </div>
@@ -124,34 +124,33 @@
                 </label>
             </div>
             <!--
-    <div class="force">
-        <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
-        <label>
-            strength
-            <output id="forceX_StrengthSliderOutput">.1</output>
-            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
-        </label>
-        <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
-            x
-            <output id="forceX_XSliderOutput">.5</output>
-            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
-        </label>
-    </div>
-
-    <div class="force">
-        <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
-        <label>
-            strength
-            <output id="forceY_StrengthSliderOutput">.1</output>
-            <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
-        </label>
-        <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
-            y
-            <output id="forceY_YSliderOutput">.5</output>
-            <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
-        </label>
-    </div>
-        -->
+            <div class="force">
+                <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+                <label>
+                    strength
+                    <output id="forceX_StrengthSliderOutput">.1</output>
+                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
+                </label>
+                <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+                    x
+                    <output id="forceX_XSliderOutput">.5</output>
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
+                </label>
+            </div>
+            <div class="force">
+                <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+                <label>
+                    strength
+                    <output id="forceY_StrengthSliderOutput">.1</output>
+                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
+                </label>
+                <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+                    y
+                    <output id="forceY_YSliderOutput">.5</output>
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
+                </label>
+            </div>
+                -->
             <div class="force">
                 <p><label><input type="checkbox" onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
@@ -194,7 +193,7 @@
                         <text>
                             <div class="panel" id="@("selection_panel_" + selection)">
                                 <div class="panel-heading" role="tab" id="@("heading_selection_" + selection)">
-                                    <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this.value, @selection)"/>
+                                    <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this.value, @selection)" />
                                     <ul class="list-inline m-0" style="float: right;">
                                         <li class="list-inline-item">
                                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(@selection.ToString())"><i class="fa fa-plus-square"></i></button>
@@ -291,9 +290,9 @@
     <input type="checkbox" id="edgeCheckBox" checked />
     <label for="groupsCheckBox">Edges</label>
     <input type="checkbox" id="groupsCheckBox" checked />
-    <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities"/>
+    <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities" />
 </div>
-@Url.Action()
+
 
 
 

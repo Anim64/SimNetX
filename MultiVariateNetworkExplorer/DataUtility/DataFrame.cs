@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace DataUtility
             
         }
 
-        public DataFrame(string fileName, bool header = false, params char[] separator)
+        public DataFrame(string fileName, string missingvalues, bool header = false, params char[] separator)
         {
             Data = new SortedDictionary<string, IList>();
             DataCount = 0;
@@ -43,7 +44,7 @@ namespace DataUtility
             NumAtrrExtremes = new Dictionary<string, MinMaxStruct>();
             CatAttrValues = new Dictionary<string, List<string>>();
 
-            this.ReadFromFile(fileName, header, separator);
+            this.ReadFromFile(fileName, missingvalues, header, separator);
             this.FindAttributeExtremesAndValues();
             
         }
@@ -178,7 +179,6 @@ namespace DataUtility
             {
                 int nearestNeighbour = -1;
                 double maxSimilarity = -1;
-                object lockingObject = new object();
                 for (int j = 0; j < kernelMatrix.Cols; j++)
                 {
                     if (i == j)
@@ -234,22 +234,35 @@ namespace DataUtility
                 List<int> potentialNeighbours = Enumerable.Range(0, this.DataCount).ToList();
                 potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
                 
-                resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[1]].ToString(), 1);
+               
 
                 if (k > 0)
                 {
-                    for (int n = 2; n < k + 1; n++)
+                    for (int n = 0; n < k + 1; n++)
                     {
+                        if(i != potentialNeighbours[n])
+                        {
+                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
 
-
-                        resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                        }
 
 
                     }
 
                 }
-                
-                
+
+                else
+                {
+                    for(int n = 0; n < 2; n++)
+                    {
+                        if (i != potentialNeighbours[n])
+                        {
+                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                        }
+                    }
+                }
+
+
 
 
             });
@@ -267,13 +280,17 @@ namespace DataUtility
 
             foreach (var column in this.Data)
             {
-                if (column.Value is List<int> || column.Value is List<double>)
+                if (column.Value is List<int> || column.Value is List<double?>)
                 {
                     double min = double.PositiveInfinity;
                     double max = double.NegativeInfinity;
                 
                     foreach (var value in column.Value)
                     {
+                        if(value == null)
+                        {
+                            continue;
+                        }
                         double dValue = Convert.ToDouble(value);
 
                         if (dValue > max)
@@ -315,7 +332,7 @@ namespace DataUtility
                         
                         if(!(pair.Value is List<string>))
                         {
-                            euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
+                            euclideanDistance += pair.Value[i] != null && pair.Value[j] != null ? Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2) : 0;
                         }
                         
                     }
@@ -332,24 +349,31 @@ namespace DataUtility
             int dataCount = Data.First().Value.Count;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
 
-            for (int i = 0; i < dataCount; i++)
-            {
-                for (int j = i + 1; j < dataCount; j++)
+            Parallel.For(0, dataCount, i => 
+            { 
+                for (int j = i; j < dataCount; j++)
                 {
-                    double euclideanDistance = 0;
-                    foreach (var pair in this.Data)
+                    if (i == j)
                     {
-
-                        if (!(pair.Value is List<string>))
-                        {
-                            euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
-                        }
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = 1;
 
                     }
-                    kernelMatrix[i, i] = 1; 
-                    kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Exp(-(Math.Pow(euclideanDistance, 2) / (2 * Math.Pow(sigma,2))));
+                    else
+                    {
+                        double euclideanDistance = 0;
+                        foreach (var pair in this.Data)
+                        {
+
+                            if (!(pair.Value is List<string>))
+                            {
+                                euclideanDistance += pair.Value[i] == null || pair.Value[j] == null ? 0 : Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
+                            }
+
+                        }
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Exp((-Math.Pow(euclideanDistance, 2)) / (2 * Math.Pow(sigma, 2)));
+                    }
                 }
-            }
+            });
 
             return kernelMatrix;
         }
@@ -363,11 +387,11 @@ namespace DataUtility
         /// <param name="filename"></param>
         /// <param name="header"></param>
         /// <param name="separator"></param>
-        public void ReadFromFile(string filename, bool header = false, params char[] separator)
+        public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
         {
             try
             {
-                
+                Dictionary<int, int> emptyAtrributeCount = new Dictionary<int, int>();
                 using (StreamReader sr = new StreamReader(filename))
                 {
 
@@ -394,9 +418,15 @@ namespace DataUtility
                                         this.Data[headers[i]].Add(resultInt);
 
                                     }*/
-                                    if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                    if(String.IsNullOrEmpty(vector[i]))
                                     {
-                                        this.Data[headers[i]] = new List<double>();
+                                        emptyAtrributeCount[i] = 1;
+                                        continue;
+                                    }
+
+                                    if (double.TryParse(vector[i].Replace(',','.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                    {
+                                        this.Data[headers[i]] = new List<double?>();
                                         this.Data[headers[i]].Add(resultFloat);
                                     }
                                     else
@@ -436,9 +466,15 @@ namespace DataUtility
                                     this.Data[headers[i]].Add(resultInt);
 
                                 }*/
-                                if (double.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                if (String.IsNullOrEmpty(vector[i]))
                                 {
-                                    this.Data[headers[i]] = new List<double>();
+                                    emptyAtrributeCount[i] = 1;
+                                    continue;
+                                }
+
+                                if (double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                {
+                                    this.Data[headers[i]] = new List<double?>();
                                     this.Data[headers[i]].Add(resultFloat);
                                 }
                                 else
@@ -464,6 +500,8 @@ namespace DataUtility
                             continue;
                         }
 
+                        
+
                         vector = line.Split(separator);
                         //var keys = this.Data.Keys.GetEnumerator();
                         
@@ -473,8 +511,57 @@ namespace DataUtility
                             //keys.MoveNext();
                             /*if (this.Data[headers[i]] is List<int>)
                                 this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
-                            if (this.Data[headers[i]] is List<double>)
-                                this.Data[headers[i]].Add(double.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));
+
+                            if (emptyAtrributeCount.ContainsKey(i)) {
+
+                                if (!String.IsNullOrEmpty(vector[i]))
+                                {
+                                    if (double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                    {
+                                        this.Data[headers[i]] = new List<double?>();
+
+                                    }
+                                    else
+                                    {
+                                        this.Data[headers[i]] = new List<string>();
+                                    }
+
+                                    for (int j = 0; j < emptyAtrributeCount[i]; j++)
+                                    {
+                                        this.Data[headers[i]].Add(null);
+                                    }
+
+                                    emptyAtrributeCount.Remove(i);
+
+                                }
+
+                                else
+                                {
+                                    emptyAtrributeCount[i]++;
+                                    continue;
+                                }
+
+                            }
+                            if(vector[i].Equals(missingvalues))
+                            {
+                                this.Data[headers[i]].Add(null);
+                                continue;
+                            }
+                            
+                            if (this.Data[headers[i]] is List<double?>)
+                            {
+                                if(double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                {
+                                    this.Data[headers[i]].Add(resultFloat);
+                                }
+
+                                else
+                                {
+                                    this.Data[headers[i]].Add(null);
+                                }
+                            }
+                                
+                            
                             else if (this.Data[headers[i]] is List<string>)
                                 this.Data[headers[i]].Add(vector[i]);
                             

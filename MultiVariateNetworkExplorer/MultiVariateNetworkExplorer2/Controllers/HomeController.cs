@@ -26,7 +26,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Graph(List<IFormFile> files, string separators, 
+        public async Task<IActionResult> Graph(List<IFormFile> files, string separators, string missingvalues,
             string convert, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, bool directed = false, 
             bool header = false, bool grouping = false)
         {
@@ -60,17 +60,29 @@ namespace MultiVariateNetworkExplorer.Controllers
                 separatorArray = separators.Trim().ToCharArray();
             }
 
+            if(String.IsNullOrEmpty(missingvalues))
+            {
+                missingvalues = "";
+            }
+
             
         /*if (Path.GetExtension(files[0].FileName) == ".csv")
         {*/
                 
-            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
+            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
 
             GraphModel gm = new GraphModel();
             gm.Graph = multiVariateNetwork.ToD3Json();
             gm.Selection = multiVariateNetwork.PartitionsToD3Json();
             gm.Mvn = multiVariateNetwork;
-                
+
+            double[] precisions = multiVariateNetwork.calculatePrecision();
+
+            using(StreamWriter sw = new StreamWriter("precision.txt"))
+            {
+                sw.WriteLine("Weighted: " + precisions[0] + " Prec: " + precisions[1]);
+            }
+
             return View("Graph", gm);
             //}
             
@@ -78,6 +90,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
+        //[DisableRequestSizeLimit]
         public JsonResult GraphCommunityDetection(string graphFilt)
         {
             /*MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork();
@@ -91,17 +104,62 @@ namespace MultiVariateNetworkExplorer.Controllers
             JObject root = JObject.Parse(graphFilt);
             Network filteredNetwork = new Network(root);
             JToken partitions = root["partitions"];
+            JToken realclasses = root["classes"];
+
+            
             
 
             MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
+
+            
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
 
-            Parallel.ForEach(mvnTemp.Partition, node => {
-                partitions[node.Key] = node.Value;
-            });
+            
 
-        
+
+
+            foreach (var node in mvnTemp.Partition)
+            {
+                partitions[node.Key] = node.Value;
+                mvnTemp.RealClasses[node.Key] = (string)realclasses[node.Key];
+            }
+
+
+
+            
+            using (StreamWriter sw = new StreamWriter("filtereddata.txt"))
+            {
+
+                foreach (JObject node in root["nodes"].Children())
+                {
+                    string line = "";
+                    foreach(var property in node.Properties())
+                    {
+                        line = line + property.Value.ToString() + ";";
+                    }
+
+                    sw.WriteLine(line);
+                }
+            }
+
+            //var precision = mvnTemp.calculatePrecision();
+            var temp = mvnTemp.Support();
+
+
+            mvnTemp.PartitionsToFile();
+
+            //Debug.WriteLine("Precision: " + precision[0].ToString() + " - " + precision[1].ToString());
+
+            using(StreamWriter sw = new StreamWriter("supp.txt"))
+            {
+                foreach (var comm in temp.OrderByDescending(kv => kv.Value[0]))
+                {
+                    sw.WriteLine(comm.Value[0] + " & " + comm.Value[1]);
+                }
+            }
+            
+
 
             return Json(new { newPartitions = partitions.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
         }

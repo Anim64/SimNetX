@@ -642,7 +642,7 @@ function zoomed() {
     
     var transform = d3.event.transform;
     var scale = 1 + (transform.k / 10);
-    gDraw.attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + scale + ")");
+    gDraw.attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
     
 }
 
@@ -710,6 +710,8 @@ function filterByMinValue(value, filteredAttributeName) {
     attributefilter[filteredAttributeName].low = value;
 
     store.nodes.forEach(function (n) {
+        if (n[filteredAttributeName] === "")
+            return;
         if (n[filteredAttributeName] < value) {
             if (!n.filters) {
                 n.filters = [];
@@ -800,6 +802,8 @@ function filterByMaxValue(value, filteredAttributeName) {
     
 
     store.nodes.forEach(function (n) {
+        if (n[filteredAttributeName] === "")
+            return;
         if (n[filteredAttributeName] > value) {
             if (!n.filters) {
                 n.filters = [];
@@ -849,6 +853,8 @@ function filterByMaxValue(value, filteredAttributeName) {
 
 function filterByCategory(filteredAttributeName, category, checked) {
     store.nodes.forEach(function (n) {
+        if (n[filteredAttributeName] === "")
+            return;
         if (!checked && n[filteredAttributeName] === category) {
             if (!attributefilter[filteredAttributeName]) {
                 attributefilter[filteredAttributeName] = {};
@@ -901,14 +907,13 @@ function filterByCategory(filteredAttributeName, category, checked) {
     updateForces();
 }
 
-function addNewSelection(selection) {
-    //var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
-    var newId = selection.id;
-    newId = newId.toString();
-    /*var newSelection = {};
+function addNewSelection() {
+     var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
+
+    var newSelection = {};
     newSelection['id'] = newId;
     newSelection['name'] = 'Selection ' + newId;
-    newSelection['nonodes'] = 0; 
+    newSelection['nonodes'] = 0;
 
     selectionGraph.nodes.push(newSelection);
 
@@ -927,12 +932,18 @@ function addNewSelection(selection) {
         if (newId != d.id) {
             selectionGraph.links.push(newLink2);
         }
-        
-        
-    })*/
 
+
+    });
+
+    addSelectionDiv(newSelection)
+    updateSelectionNodesAndLinks();
+}
+
+function addSelectionDiv(selection) {
     
-
+    var newId = selection.id;
+    newId = newId.toString();
 
     var mainDiv = d3.select('#list-selections');
 
@@ -988,9 +999,6 @@ function addNewSelection(selection) {
     panel_heading.append('h4')
         .attr('class', 'panel-title')
         .html("Selection" + newId);
-
-    updateSelectionNodesAndLinks();
-    //updateSelectionForces();
         
 }
 
@@ -1142,7 +1150,7 @@ function updateForces() {
                 return forceProperties.link.distance;
             }
             else {
-                return forceProperties.link.distance;
+                return forceProperties.link.distance * 4;
             }
         })
         .iterations(forceProperties.link.iterations);
@@ -1191,7 +1199,7 @@ function projectAttribute(axis, attributeName) {
     var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
 
     if (x_projection === "" && y_projection === "") {
-        forceProperties.charge.enabled = true;
+        //forceProperties.charge.enabled = true;
         /*simulation.force("link").strength(function (link) {
             return 1 / Math.min(count(link.source), count(link.target));
         });*/
@@ -1207,11 +1215,15 @@ function projectAttribute(axis, attributeName) {
 
         else {
             forceProperties.forceX.enabled = true;
-            forceProperties.charge.enabled = false;
+            //forceProperties.charge.enabled = false;
             //simulation.force("link").strength(0);
             simulation.force("forceX")
                 .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
                 .x(function (d) {
+                    if (d[attributeName] == "") {
+                        return width / 2;
+                    }
+
                     var value = width * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
                     return value;
                 });
@@ -1227,11 +1239,14 @@ function projectAttribute(axis, attributeName) {
 
         else {
             forceProperties.forceY.enabled = true;
-            forceProperties.charge.enabled = false;
+            //forceProperties.charge.enabled = false;
             //simulation.force("link").strength(0);
             simulation.force("forceY")
                 .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
                 .y(function (d) {
+                    if (d[attributeName] == "") {
+                        return height / 2;
+                    }
                     var value = height * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
                     return value;
                     
@@ -1381,6 +1396,8 @@ function requestCommunityDetection() {
         graph.partitions[d.id] = "";
     });
 
+    var graph_string = JSON.stringify(graph);
+
 
     $.ajax({
         url: 'GraphCommunityDetection',
@@ -1390,7 +1407,7 @@ function requestCommunityDetection() {
         // request header to application/json because
         // that's how the client will send the request
         //contentType: 'application/json',
-        data: { graphFilt: JSON.stringify(graph)},
+        data: { graphFilt: graph_string},
         //cache: false,
         success: function (result) {
             deleteAllSelections();
@@ -1399,7 +1416,7 @@ function requestCommunityDetection() {
             selectionGraph = JSON.parse(result.newSelections);
 
             selectionGraph.nodes.forEach(function (d) {
-                addNewSelection(d);
+                addSelectionDiv(d);
             });
 
             updateNodesAndLinks();
@@ -1412,6 +1429,7 @@ function requestCommunityDetection() {
         }
     });
 }
+
 
 d3.select(window).on("resize", function () {
     width = +svg.node().getBoundingClientRect().width;
