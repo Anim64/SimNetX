@@ -31,6 +31,13 @@ namespace MultiVariateNetworkExplorer.Controllers
             bool header = false, bool grouping = false)
         {
             
+
+            if(files.Count == 0)
+            {
+                ViewData["Message"] = "Please insert your data file";
+                return View("Index");
+            }
+
             long size = files.Sum(f => f.Length);
             var filePaths = new List<string>();
 
@@ -186,7 +193,8 @@ namespace MultiVariateNetworkExplorer.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            ViewData["Message"] = "There was an error while loading your data, check if you have fill every parameter correctly";
+            return View("Index", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
         

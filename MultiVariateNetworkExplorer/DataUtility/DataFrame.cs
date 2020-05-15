@@ -366,11 +366,11 @@ namespace DataUtility
 
                             if (!(pair.Value is List<string>))
                             {
-                                euclideanDistance += pair.Value[i] == null || pair.Value[j] == null ? 0 : Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
+                                euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value[i]) - Convert.ToDouble(pair.Value[j])), 2);
                             }
 
                         }
-                        kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Exp((-Math.Pow(euclideanDistance, 2)) / (2 * Math.Pow(sigma, 2)));
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = (1.0 / (sigma*Math.Sqrt(2*Math.PI))) * Math.Exp((-euclideanDistance) / (2 * Math.Pow(sigma, 2)));
                     }
                 }
             });
@@ -389,9 +389,11 @@ namespace DataUtility
         /// <param name="separator"></param>
         public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
         {
+            Dictionary<int, int> emptyAtrributeCount = new Dictionary<int, int>();
+            Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
+            Dictionary<string, double> averages = new Dictionary<string, double>();
             try
             {
-                Dictionary<int, int> emptyAtrributeCount = new Dictionary<int, int>();
                 using (StreamReader sr = new StreamReader(filename))
                 {
 
@@ -418,16 +420,20 @@ namespace DataUtility
                                         this.Data[headers[i]].Add(resultInt);
 
                                     }*/
+                                    nullIndeces[headers[i]] = new List<int>();
+                                    averages[headers[i]] = 0;
                                     if(String.IsNullOrEmpty(vector[i]))
                                     {
                                         emptyAtrributeCount[i] = 1;
                                         continue;
                                     }
 
-                                    if (double.TryParse(vector[i].Replace(',','.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
+                                    if (double.TryParse(vector[i].Replace(',','.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !headers[i].Contains("ID"))
                                     {
                                         this.Data[headers[i]] = new List<double?>();
                                         this.Data[headers[i]].Add(resultFloat);
+                                        averages[headers[i]] += resultFloat;
+
                                     }
                                     else
                                     {
@@ -452,20 +458,14 @@ namespace DataUtility
                         {
                             vector = line.Trim().Split(separator);
                             headers = new string[vector.Length];
+                            
+
                             for (int i = 0; i < vector.Length; i++)
                             {
                                 headers[i] = "Attribute" + (i + 1).ToString();
-                            }
+                                nullIndeces[headers[i]] = new List<int>();
+                                averages[headers[i]] = 0;
 
-                            for (int i = 0; i < headers.Length; i++)
-                            {
-                                //Check if value is number or string
-                                /*if (int.TryParse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
-                                {
-                                    this.Data[headers[i]] = new List<int>();
-                                    this.Data[headers[i]].Add(resultInt);
-
-                                }*/
                                 if (String.IsNullOrEmpty(vector[i]))
                                 {
                                     emptyAtrributeCount[i] = 1;
@@ -476,6 +476,7 @@ namespace DataUtility
                                 {
                                     this.Data[headers[i]] = new List<double?>();
                                     this.Data[headers[i]].Add(resultFloat);
+                                    averages[headers[i]] += resultFloat;
                                 }
                                 else
                                 {
@@ -485,6 +486,7 @@ namespace DataUtility
                                 }
 
                             }
+
                         }
                     }
 
@@ -493,7 +495,7 @@ namespace DataUtility
                     //Load Data to Frame
                     while ((line = sr.ReadLine()) != null)
                     {
-                        DataCount++;
+                        
                         line = line.Trim();
                         if(line == "")
                         {
@@ -528,6 +530,7 @@ namespace DataUtility
 
                                     for (int j = 0; j < emptyAtrributeCount[i]; j++)
                                     {
+                                        nullIndeces[headers[i]].Add(j);
                                         this.Data[headers[i]].Add(null);
                                     }
 
@@ -542,21 +545,25 @@ namespace DataUtility
                                 }
 
                             }
-                            if(vector[i].Equals(missingvalues))
+
+                            /*if(vector[i].Equals(missingvalues))
                             {
                                 this.Data[headers[i]].Add(null);
                                 continue;
-                            }
+                            }*/
                             
                             if (this.Data[headers[i]] is List<double?>)
                             {
                                 if(double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
                                 {
                                     this.Data[headers[i]].Add(resultFloat);
+                                    averages[headers[i]] += resultFloat;
+
                                 }
 
                                 else
                                 {
+                                    nullIndeces[headers[i]].Add(DataCount);
                                     this.Data[headers[i]].Add(null);
                                 }
                             }
@@ -566,6 +573,8 @@ namespace DataUtility
                                 this.Data[headers[i]].Add(vector[i]);
                             
                         }
+
+                        DataCount++;
                     }
                 }
             }
@@ -573,6 +582,17 @@ namespace DataUtility
             {
                 Console.WriteLine(fe.Message);
             }
+
+            foreach(var pair in nullIndeces)
+            {
+                double columnAverage = averages[pair.Key] / DataCount;
+                foreach(int index in pair.Value)
+                {
+                    this.Data[pair.Key][index] = columnAverage;
+                }
+            }
+
+
         }
 
         public void RemoveColumn(string column)
