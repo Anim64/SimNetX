@@ -1,13 +1,80 @@
 ﻿body {
-    background-image: none;
     text-align: center;
     color: white;
+    background: url('../images/main_background.png') no-repeat fixed center;
+    background-size: cover;
 }
 
 h1 {
-    font-size: 50px;
+    font-size: 3.5rem;
 }
 
+
+
+form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    -webkit-justify-content: center;
+    justify-content: center;
+    height: 100%;
+    align-items: center;
+}
+
+input {
+    color: black;
+}
+
+.file-buttons {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 95%;
+    align-items: stretch;
+}
+
+
+.inputfile {
+    height: 0;
+    overflow: hidden;
+    width: 0;
+}
+
+.inputfile + label {
+    background-color: cadetblue;
+    border: 2px solid black;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: inherit;
+    font-weight: 600;
+    margin: 0 1rem 1rem 1rem;
+    outline: none;
+    padding: 1rem 50px;
+    transition: all 0.3s;
+    width: 200px;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+}
+
+
+.inputfile:hover + label,
+.inputfile + label:active {
+    /*background-color: darken(#f15d22, 10%);*/
+    filter: saturate(0.7);
+    transform: scale(1.05);
+    border-color: lightblue;
+    cursor: pointer;
+
+}
+
+.inputfile:active + label {
+    outline: 1px dotted #000;
+}
 
 
 #parameters labels {
@@ -27,7 +94,7 @@ h1 {
 }
 
 .parameterRow input {
-    display: inline-block;
+    
     color: #000000;
 }
 
@@ -37,38 +104,48 @@ h1 {
 
 
 
-.inputfile {
-    height: 0;
-    overflow: hidden;
-    width: 0;
+.body-content {
+    padding-left: 5px;
+    padding-right: 5px;
+    margin: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
 }
 
-.inputfile + label {
-    background: #f15d22;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    cursor: pointer;
-    display: inline-block;
-    font-family: 'Poppins', sans-serif;
-    font-size: inherit;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    outline: none;
-    padding: 1rem 50px;
-    position: relative;
-    transition: all 0.3s;
-    vertical-align: middle;
+.body-content h1 {
+    flex: 0 1 auto;
+    font-family: "Segoe print", Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 4rem;
+    color: orange;
+    text-shadow: -1px -1px #0c0, 1px 1px #060, -3px 0 4px #000;
+    -moz-box-shadow: 2px 2px 6px #888;
+    -webkit-box-shadow: 2px 2px 6px #888;
+    box-shadow: 2px 2px 6px #888;
 }
 
-.inputfile:focus + label,
-.inputfile + label:hover {
-    background-color: darken(#f15d22, 10%);
+.body-content footer {
+    flex: 0 1 40px;
+    align-self: stretch;
 }
 
-.inputfile:focus + label {
-    outline: 1px dotted #000;
+.body-content .content {
+    width: 98%;
+    flex: 1 1 auto;
+    padding: 1em 0;
+    border-radius: 10px;
+    background-color: #696969E1;
 }
+
+input[type=submit] {
+    width: 100px;
+    height: 50px;
+    margin: 10px 0;
+}
+
 
 
 

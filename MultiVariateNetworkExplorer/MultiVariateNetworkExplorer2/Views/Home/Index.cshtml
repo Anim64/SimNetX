@@ -64,18 +64,16 @@
 <h1>Welcome to Multi Variate Network Explorer</h1>
 
 
-
-<section class="page-section bg-dark clearfix">
+<div class="content bg-dark">
     <form method="post" asp-action="Graph" asp-controller="Home" enctype="multipart/form-data">
-        <div class="form-group">
+        <div class="file-buttons">
             <input class="inputfile" type="file" id="fileVector" name="files" data-caption="{filePath}">
             <label for="fileVector"><strong>Choose a file with vector data</strong></label>
-        </div>
-        <div class="form-group">
+            
             <input class="inputfile" type="file" id="fileNetwork" name="files" data-caption="{filePath}">
             <label for="fileNetwork"><strong>Choose a file with network</strong></label>
         </div>
-        <div class="form-group" id="parameters">
+        <div id="parameters">
             <div class="parameterRow">
                 <h4>Data parameters</h4>
                 <label for="directed">Is the network directed?</label>
@@ -88,12 +86,12 @@
                 <input type="text" id="missingvalues" name="missingvalues" />
             </div>
 
-            <div class="parameterRow">
+            <div>
                 <h4>Separators</h4>
                 <label for="separators">Enter the data separating characters (separated by SPACE):</label>
                 <input type="text" id="separators" name="separators" />
             </div>
-            <div class="parameterRow">
+            <div>
                 <h4>Group and Id Parameters</h4>
                 <label for="grouping">Initialize with community detection</label>
                 <input type="checkbox" id="grouping" name="grouping" value="true" />
@@ -104,7 +102,7 @@
                 <label for="idColumn">Enter the column name or number with ids (optional)</label>
                 <input type="text" id="idColumn" name="idColumn" />
             </div>
-            <div class="parameterRow">
+            <div>
                 <h4>Conversion Parameters</h4>
                 <label for="convert">Choose a conversion algorithm:</label>
 
@@ -116,10 +114,10 @@
                 <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN
             </label>
                 <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
-                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" />
+                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1"/>
 
                 <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
-                <input type="number" id="kNNmin" name="kNNmin" />
+                <input type="number" id="kNNmin" name="kNNmin" min="0"/>
             </div>
             </div>
                 <input type="submit" class="btn btn-primary" value="Upload" />
@@ -127,7 +125,7 @@
                     @ViewData["Message"]
                 </p>
 </form>
-</section>
+</div>
 
 
 

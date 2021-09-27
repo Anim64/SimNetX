@@ -14,10 +14,9 @@ Array.prototype.forEach.call(inputs, function (input) {
     input.addEventListener('change', function (e) {
         var fileName = '';
         fileName = e.target.value.split('\\').pop();
-
         if (fileName) {
             label.innerHTML = fileName;
-            textbox.innerHTML = fileName
+            textbox.innerHTML = fileName;
         }
         else
             label.innerHTML = labelVal;

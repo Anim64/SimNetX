@@ -72,58 +72,58 @@ namespace MultiVariateNetworkExplorer.Controllers
                 missingvalues = "";
             }
 
-            
-        /*if (Path.GetExtension(files[0].FileName) == ".csv")
-        {*/
-                
-            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
-
+            MultiVariateNetwork multiVariateNetwork;
             GraphModel gm = new GraphModel();
-            gm.Graph = multiVariateNetwork.ToD3Json();
-            gm.Selection = multiVariateNetwork.PartitionsToD3Json();
-            gm.Mvn = multiVariateNetwork;
 
-            double[] precisions = multiVariateNetwork.calculatePrecision();
+            //try
+            //{
+                multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
+                gm.Graph = multiVariateNetwork.ToD3Json();
+                gm.Selection = multiVariateNetwork.PartitionsToD3Json();
+                gm.Mvn = multiVariateNetwork;
+
+            //}
+            //catch(Exception e)
+            //{
+            //    multiVariateNetwork = new MultiVariateNetwork();
+            //    if(e is KeyNotFoundException)
+            //    {
+            //        ViewData["Message"] = "Your Id column name or Group column name is incorrect.";
+            //        return View("Index");
+            //    }
+
+                
+            //}
+
+            
+           
+
+            /*double[] precisions = multiVariateNetwork.calculatePrecision();
 
             using(StreamWriter sw = new StreamWriter("precision.txt"))
             {
                 sw.WriteLine("Weighted: " + precisions[0] + " Prec: " + precisions[1]);
-            }
+            }*/
 
             return View("Graph", gm);
-            //}
             
-            //return View();
         }
 
         [HttpPost]
-        //[DisableRequestSizeLimit]
         public JsonResult GraphCommunityDetection(string graphFilt)
         {
-            /*MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork();
-            multiVariateNetwork.VectorData.Data = HttpContext.Session.GetObject<SortedDictionary<string, IList>>("dataframe");
-            multiVariateNetwork.VectorData.DataCount = multiVariateNetwork.Network.NumberOfVertices =  HttpContext.Session.GetObject<int>("datacount");
-            multiVariateNetwork.VectorData.NumAtrrExtremes = HttpContext.Session.GetObject<Dictionary<string, DataFrame.MinMaxStruct>>("numattr");
-            multiVariateNetwork.VectorData.CatAttrValues = HttpContext.Session.GetObject<Dictionary<string, List<string>>>("catattr");
-            multiVariateNetwork.Network.Data = HttpContext.Session.GetObject<Dictionary<string, Dictionary<string, double>>>("network-data");*/
-
-
+          
             JObject root = JObject.Parse(graphFilt);
             Network filteredNetwork = new Network(root);
             JToken partitions = root["partitions"];
             JToken realclasses = root["classes"];
 
-            
-            
-
+        
             MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
 
             
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
-
-            
-
 
 
             foreach (var node in mvnTemp.Partition)
@@ -135,7 +135,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
 
             
-            using (StreamWriter sw = new StreamWriter("filtereddata.txt"))
+            /*using (StreamWriter sw = new StreamWriter("filtereddata.txt"))
             {
 
                 foreach (JObject node in root["nodes"].Children())
@@ -148,23 +148,23 @@ namespace MultiVariateNetworkExplorer.Controllers
 
                     sw.WriteLine(line);
                 }
-            }
+            }*/
 
             //var precision = mvnTemp.calculatePrecision();
             var temp = mvnTemp.Support();
 
 
-            mvnTemp.PartitionsToFile();
+            //mvnTemp.PartitionsToFile();
 
             //Debug.WriteLine("Precision: " + precision[0].ToString() + " - " + precision[1].ToString());
 
-            using(StreamWriter sw = new StreamWriter("supp.txt"))
+            /*using(StreamWriter sw = new StreamWriter("supp.txt"))
             {
                 foreach (var comm in temp.OrderByDescending(kv => kv.Value[0]))
                 {
                     sw.WriteLine(comm.Value[0] + " & " + comm.Value[1]);
                 }
-            }
+            }*/
             
 
 

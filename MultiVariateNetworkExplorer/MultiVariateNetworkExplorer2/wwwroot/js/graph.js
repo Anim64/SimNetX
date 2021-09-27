@@ -77,7 +77,7 @@ var selectedNode = null;
 var shiftKey = null;
 
 
-
+//Properties of force simulation
 var forceProperties = {
     center: {
         x: 0.5,
@@ -85,7 +85,7 @@ var forceProperties = {
     },
 
     charge: {
-        enabled: false,
+        enabled: true,
         strength: -80,
         distanceMin: 1,
         distanceMax: 2000
@@ -111,7 +111,7 @@ var forceProperties = {
     },
 
     link: {
-        enabled: false,
+        enabled: true,
         distance: 75,
         strength: 0.1,
         iterations: 1
@@ -120,6 +120,8 @@ var forceProperties = {
 
 };
 
+
+//Draw graph of the network
 function drawNetwork(data) {
 
     graph = data;
@@ -129,6 +131,8 @@ function drawNetwork(data) {
     gMain = svg.append('g')
         .classed('g-main', true);
 
+
+    //Edge arrow definition
     var defs = svg.append("defs");
     defs.append("marker")
         .attr("id", "arrow")
@@ -143,7 +147,7 @@ function drawNetwork(data) {
         .attr("d", "M0,-5L10,0L0,5");
 
     
-
+    //Background rectangle
     rect = gMain.append('rect')
         .attr("class", "background")
         .attr('width', width)
@@ -152,24 +156,33 @@ function drawNetwork(data) {
 
     gDraw = gMain.append('g');
 
+
+    //Define zoom function
     var zoom = d3.zoom()
         .on('zoom', zoomed);
     
 
     gMain.call(zoom);
 
-    gBrushHolder = gDraw.append('g');
+    gBrushHolder = gMain.append('g');
+
+    /*gBrushHolder.append('rect')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', '#333333')*/
+
     
 
+
+    //Create line or curves in SVG
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
         .data(graph.links)
         .enter().append("path")
         .attr("marker-end", "url(#arrow)")
-        .style("stroke", function (l) {
-            return nodeColor(l.source);
-        });
+        
+        
 
 
     link.append("title")
@@ -177,28 +190,18 @@ function drawNetwork(data) {
             return l.id;
         });
 
-    
 
-    
-    graph.links.forEach(function (d) {
-        linkedByIndex[d.source + "," + d.target] = 1;
-    });
-    
+    //Create node circles in SVG
     node = gDraw.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
         .data(graph.nodes)
         .enter().append("circle")
-        .style("fill", function (d) {
-            return nodeColor(d);
-
-        })
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended))
-        //.on("click", displayNodeProperties)
         .on("mouseover", mouseOver(.2))
         .on("mouseout", mouseOut);
 
@@ -208,19 +211,26 @@ function drawNetwork(data) {
     node.append("title")
         .text(function (d) { return d.id; });
 
-
     
+
+
+
+
+    graph.links.forEach(function (d) {
+        linkedByIndex[d.source + "," + d.target] = 1;
+    });
 
     brushMode = false;
     brushing = false;
 
     brush = d3.brush()
+        .extent([[0, 0], [width, height]])
         .on("start", brushstarted)
         .on("brush", brushed)
         .on("end", brushended);
 
     
-
+    //Background event to deselect all nodes
     rect.on('click', () => {
         node.each(function (d) {
             d.selected = false;
@@ -232,10 +242,11 @@ function drawNetwork(data) {
     d3.select('body').on('keydown', keydown);
     d3.select('body').on('keyup', keyup);
 
+
+    //Store graph for filtration
     store = $.extend(true, {}, data);
 
-    startTime = Date.now();
-    endTime = startTime + simulationDurationInMs;
+    //Add nodes to simulation
     simulation
         .nodes(graph.nodes)
         .on("tick", ticked)
@@ -243,49 +254,20 @@ function drawNetwork(data) {
         //.on("end", redrawGradient);
 
     updateForces();
-    /*simulation.force("link")
-        .links(graph.links);*/
-
-
-    /*grads = defs.selectAll("linearGradient")
-        .data(graph.links, getGradID)
-        .enter().append("linearGradient")
-        .attr("id", getGradID)
-        .attr("gradientUnits", "userSpaceOnUse");
-        
-        
-
-    /*grads.html("") //erase any existing <stop> elements on update
-        .append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", function (d) {
-            return nodeColor((d.source.x <= d.target.x) ?
-                d.source : d.target);
-        });*/
-
-    /*grads.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", function (d) {
-            return nodeColor((+d.source.x <= +d.target.x) ?
-                d.source : d.target);
-        })
-
-    grads.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", function (d) {
-            return nodeColor((+d.source.x > +d.target.x) ?
-                d.source : d.target);
-        });*/
-
+    
    
 
 }
 
+
+//Draw selection graph
 function drawSelectionNetwork(data) {
     selectionGraph = data;
     
 
-    selectionSvg = d3.select("#selectionGraph svg");
+    selectionSvg = d3.select("#selectionGraph svg")
+        .attr('width', width)
+        .attr('height', height);
     selectionSvg.selectAll('.g-main').remove();
 
     var selectionMain = selectionSvg.append('g')
@@ -293,6 +275,7 @@ function drawSelectionNetwork(data) {
 
     var defs = selectionMain.append("defs");
 
+    //Edge arrow definition
     defs.append("marker")
         .attr("id", "selection_arrow")
         .attr("viewBox", "0 -5 10 10")
@@ -305,41 +288,22 @@ function drawSelectionNetwork(data) {
         .append("svg:path")
         .attr("d", "M0,-5L10,0L0,5");
 
-    
-    /*var grads = defs.selectAll("linearGradient")
-        .data(selectionGraph.links, getGradID);
-
-    grads.enter().append("linearGradient")
-        .attr("id", getGradID)
-        .attr("gradientUnits", "userSpaceOnUse");
-
-    grads.html("") //erase any existing <stop> elements on update
-        .append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", function (d) {
-            return nodeColor((+d.source.x <= +d.target.x) ?
-                d.source : d.target);
-        });
-
-    grads.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", function (d) {
-            return nodeColor((+d.source.x > +d.target.x) ?
-                d.source : d.target)
-        });*/
-
     var zoom = d3.zoom()
         .on('zoom', selectionZoomed)
 
     selectionMain.call(zoom);
 
+
+    //Background rectangle
     var selectionRect = selectionMain.append('rect')
         .attr('width', width)
         .attr('height', height)
         .style('fill', '#333333')
 
     selectionDraw = selectionMain.append('g');
-    
+
+
+    //Create lines or curves for graph
     selectionLink = selectionDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
@@ -355,6 +319,8 @@ function drawSelectionNetwork(data) {
             return l.value;
         });
 
+
+    //Create nodes circles for graph
     selectionNode = selectionDraw.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
@@ -384,30 +350,24 @@ function drawSelectionNetwork(data) {
         .on("tick", selectionTicked);
 
     updateSelectionForces();
-    selectionSimulation.force("link")
-        .links(selectionGraph.links);
+    /*selectionSimulation.force("link")
+        .links(selectionGraph.links);*/
+
+    node.style("fill", function (d) {
+        return nodeColor(d.id);
+
+    })
+
+    link.style("stroke", function (l) {
+        return nodeColor(l.source.id);
+
+    })
 }
 
+//Update node or link position when simulation starts
 function ticked() {
-    /*link
-        .attr("x1", function (d) { return d.source.x; })
-        .attr("y1", function (d) { return d.source.y; })
-        .attr("x2", function (d) { return d.target.x; })
-        .attr("y2", function (d) { return d.target.y; });
-
-    node
-        .attr("cx", function (d) { return d.x = Math.max(forceProperties.collide.radius, Math.min(width - forceProperties.collide.radius, d.x)); })
-        .attr("cy", function (d) { return d.y = Math.max(forceProperties.collide.radius, Math.min(height - forceProperties.collide.radius, d.y)); });*/
-    /*if (Date.now() < endTime) {
-        
-    } else {
-        simulation.stop();
-    }*/
-
     link.attr("d", positionLink);
     node.attr("transform", positionNode);
-    
-    //positionGrads();
 
 }
 
@@ -417,11 +377,14 @@ function simulationStop() {
     simulation.stop();
 }
 
+
+//Update node or link position when simulation starts
 function selectionTicked() {
     selectionLink.attr("d", positionLink);
     selectionNode.attr("transform", positionNode);
 }
 
+//Update link position when simulation starts
 function positionLink(d) {
     var offset = 20;
 
@@ -429,6 +392,8 @@ function positionLink(d) {
         y1 = d.source.y,
         x2 = d.target.x,
         y2 = d.target.y;
+
+    link
 
     var midpoint_x = (x1 + x2) / 2;
     var midpoint_y = (y1 + y2) / 2;
@@ -465,33 +430,26 @@ function positionLink(d) {
         return "M" + d.source.x + "," + d.source.y + "A" + drx + "," + dry + " " + xRotation + "," + largeArc + "," + sweep + " " + x2 + "," + y2;
     }
 
-    var offSetX = midpoint_x + offset * (dy / normalise);
-    var offSetY = midpoint_y - offset * (dx / normalise);
+    //var offSetX = midpoint_x + offset * (dy / normalise);
+    //var offSetY = midpoint_y - offset * (dx / normalise);
+
+    var offSetX = midpoint_x;
+    var offSetY = midpoint_y;
 
     return "M" + d.source.x + "," + d.source.y +
-        "S" + offSetX + "," + offSetY +
+        //"S" + offSetX + "," + offSetY +
         " " + d.target.x + "," + d.target.y;
 }
 
+//Update node position when simulation starts
 function positionNode(d) {
     return "translate(" + d.x + "," + d.y + ")";
 }
 
-/*function positionGrads() {
-    grads.attr("x1", function (d) { return d.source.x; })
-        .attr("y1", function (d) { return d.source.y; })
-        .attr("x2", function (d) { return d.target.x; })
-        .attr("y2", function (d) { return d.target.y; });
-}
+//Get node color
+function nodeColor(nodeId) {
 
-function getGradID(d) {
-    return "linkGrad-" + d.source.id + "-" + d.target.id;
-}*/
-
-
-function nodeColor(d) {
-
-    var nodeId = d.id ? d.id : d;
+    
     if (graph.partitions[nodeId] != "") {
 
         return document.getElementById("selection_color_" + graph.partitions[nodeId]).value;
@@ -500,9 +458,9 @@ function nodeColor(d) {
     else {
         return defaultColour;
     }
-    //return d.color = color(d.name.replace(/ .*/, ""));
 }
 
+//Change color of nodes in certain selection
 function changeGroupColour(color, selectionId) {
     node.filter(function (n) { return graph.partitions[n.id] == selectionId })
         .style("fill", function (d) {
@@ -513,14 +471,18 @@ function changeGroupColour(color, selectionId) {
     
 }
 
+//Set color of nodes for certain selection
 function setGroupColour(d) {
     document.getElementById("selection_color_" + d.id).value = groupColours(d.id);
 }
 
+//Get color of nodes in certain selection
 function getGroupColour(d) {
     return document.getElementById("selection_color_" + d.id).value;
 }
 
+
+//Function for node dragging start
 function dragstarted(d) {
     if (!d3.event.active) simulation.alphaTarget(0.9).restart();
 
@@ -564,7 +526,7 @@ function mouseOver(opacity) {
             return o.source === d || o.target === d ? 1 : opacity;
         });
         link.style("stroke", function (o) {
-            return o.source === d || o.target === d ? o.source.colour : nodeColor(o.source);
+            return o.source === d || o.target === d ? o.source.colour : nodeColor(o.source.id);
         });
     };
 }
@@ -574,10 +536,12 @@ function mouseOut() {
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
     link.style("stroke", function (d) {
-        return nodeColor(d.source);
+        return nodeColor(d.source.id);
     });
 }
 
+
+//Function for node dragging
 function dragged(d) {
     //d.fx = d3v4.event.x;
     //d.fy = d3v4.event.y;
@@ -588,6 +552,8 @@ function dragged(d) {
         })
 }
 
+
+//Function for node dragging end
 function dragended(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
     d.fx = null;
@@ -599,6 +565,8 @@ function dragended(d) {
         })
 }
 
+
+//Function for node brushing start
 function brushstarted() {
     // keep track of whether we're actively brushing so that we
     // don't remove the brush on keyup in the middle of a selection
@@ -609,6 +577,7 @@ function brushstarted() {
     });
 }
 
+//Function for node brushing
 function brushed() {
     if (!d3.event.sourceEvent) return;
     if (!d3.event.selection) return;
@@ -616,12 +585,13 @@ function brushed() {
     var extent = d3.event.selection;
 
     node.classed("selected", function (d) {
-        return d.selected = d.previouslySelected ^
+        return d.selected = //d.previouslySelected ^
             (extent[0][0] <= d.x && d.x < extent[1][0]
                 && extent[0][1] <= d.y && d.y < extent[1][1]);
     });
 }
 
+//Function for node brushing end
 function brushended() {
     if (!d3.event.sourceEvent) return;
     if (!d3.event.selection) return;
@@ -638,6 +608,8 @@ function brushended() {
     brushing = false;
 }
 
+
+//Calculate zoom
 function zoomed() {
     
     var transform = d3.event.transform;
@@ -646,10 +618,14 @@ function zoomed() {
     
 }
 
+
+//Calculate zoom
+
 function selectionZoomed() {
     selectionDraw.attr("transform", d3.event.transform);
 }
 
+//On shift key event
 function keydown() {
     shiftKey = d3.event.shiftKey;
 
@@ -667,6 +643,7 @@ function keydown() {
     }
 }
 
+//On shift key event
 function keyup() {
     shiftKey = false;
     brushMode = false;
@@ -686,7 +663,9 @@ function keyup() {
 
 function displayNodeProperties(d) {
     console.log(d.id);
-    //$("#accordion").accordion('activate', d.id);
+    $("#btn_node_" + d.id).removeClass("collapsed");
+        
+    
 }
 
 function resetSelection() {
@@ -694,7 +673,7 @@ function resetSelection() {
     selectedNode = null;
 }
 
-
+//Filter nodes by min numeric value
 function filterByMinValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
 
@@ -787,6 +766,8 @@ function filterByMinValue(value, filteredAttributeName) {
 
 }
 
+
+//Filter nodes by max numeric value
 function filterByMaxValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
     var maxValue = document.getElementById(filteredAttributeName + "-sliderOutputMax").max;
@@ -851,6 +832,7 @@ function filterByMaxValue(value, filteredAttributeName) {
     updateForces();
 }
 
+//Filter nodes by category
 function filterByCategory(filteredAttributeName, category, checked) {
     store.nodes.forEach(function (n) {
         if (n[filteredAttributeName] === "")
@@ -907,6 +889,7 @@ function filterByCategory(filteredAttributeName, category, checked) {
     updateForces();
 }
 
+//Add new custom group
 function addNewSelection() {
      var newId = selectionGraph.nodes.length === 0 ? 0 : parseInt(selectionGraph.nodes[selectionGraph.nodes.length - 1].id) + 1;
 
@@ -940,6 +923,7 @@ function addNewSelection() {
     updateSelectionNodesAndLinks();
 }
 
+//Add new custom's group div
 function addSelectionDiv(selection) {
     
     var newId = selection.id;
@@ -998,10 +982,12 @@ function addSelectionDiv(selection) {
 
     panel_heading.append('h4')
         .attr('class', 'panel-title')
-        .html("Selection" + newId);
+        .html("Selection " + newId);
         
 }
 
+
+//Move nodes to different selection
 function addNodesToSelection(selectionId) {
 
     node.filter(function (d) { return d.selected })
@@ -1042,12 +1028,12 @@ function addNodesToSelection(selectionId) {
                         var value = l.value;
 
                         if (l.source.id == d.id &&  graph.partitions[l.target.id] != "") {
-                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id] != "");
+                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == selectionId && sl.target.id == graph.partitions[l.target.id]);
                             newSelectionLink.value = newSelectionLink.value + value;
                         }
 
                         else if (l.target.id == d.id && graph.partitions[l.source.id] != "") {
-                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == graph.partitions[l.source.id] != "" && sl.target.id == selectionId);
+                            var newSelectionLink = selectionGraph.links.find(sl => sl.source.id == graph.partitions[l.source.id] && sl.target.id == selectionId);
                             newSelectionLink.value = newSelectionLink.value + value;
                         }
                         
@@ -1084,6 +1070,7 @@ function addNodesToSelection(selectionId) {
 
 }
 
+//Deletes all selections
 function deleteAllSelections() {
     /*selectionNode.each(function (d) {
         var selectionPanel = document.querySelector('#selection_panel_' + d.id);
@@ -1104,6 +1091,7 @@ function deleteAllSelections() {
 
 }
 
+//Deletes one specific selection
 function deleteSelection(selectionId) {
     var selectionPanel = document.querySelector('#selection_panel_' + selectionId);
     selectionPanel.parentNode.removeChild(selectionPanel);
@@ -1124,6 +1112,8 @@ function deleteSelection(selectionId) {
     
 }
 
+
+//Update graph simulation forces
 function updateForces() {
     simulation.force("center")
         .x(width * forceProperties.center.x)
@@ -1155,12 +1145,14 @@ function updateForces() {
         })
         .iterations(forceProperties.link.iterations);
     
-
+   
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
     simulation.alpha(1).restart();
 }
 
+
+//Update selection graph simulation forces
 function updateSelectionForces() {
     selectionSimulation.force("center")
         .x(width * forceProperties.center.x)
@@ -1191,6 +1183,8 @@ function updateSelectionForces() {
     selectionSimulation.alpha(1).restart();
 }
 
+
+//Update X and Y force to project nodes on axes
 function projectAttribute(axis, attributeName) {
     var x_projection = $("#droplist_x").val();
     var y_projection = $("#droplist_y").val();
@@ -1257,6 +1251,8 @@ function projectAttribute(axis, attributeName) {
     updateForces();
 }
 
+
+//Update node colors
 function updateNodeGroups() {
     node.style("fill", function (d) {
         document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
@@ -1272,6 +1268,8 @@ function updateNodeGroups() {
     
 }
 
+
+//Update nodes and links after filtration
 function updateNodesAndLinks() {
     node = node.data(graph.nodes, function (d) { return d.id; });
     //	EXIT
@@ -1312,7 +1310,7 @@ function updateNodesAndLinks() {
     simulation.alpha(1).restart();
 
     link.style("stroke", function (l) {
-        return nodeColor(l.source);
+        return nodeColor(l.source.id);
     });
 
     
@@ -1320,6 +1318,7 @@ function updateNodesAndLinks() {
     
 }
 
+//Update nodes and links after filtration
 function updateSelectionNodesAndLinks() {
     selectionNode = selectionNode.data(selectionGraph.nodes, function (d) { return d.id; });
     //	EXIT
@@ -1391,6 +1390,7 @@ function updateAll() {
     updateDisplay();
 }
 
+//Request for community detection on server
 function requestCommunityDetection() {
     store.nodes.forEach(function (d) {
         graph.partitions[d.id] = "";
@@ -1447,6 +1447,8 @@ $(document).ready(function () {
         .on('hide.bs.collapse', function (a) {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
+
+    node.on("click", displayNodeProperties);
 });
 
 $(function () {

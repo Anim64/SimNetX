@@ -40,13 +40,13 @@
                 <div class="numeric">
                     <p><label>@pair.Key</label></p>
                     <div id="@(pair.Key + "-slider")"></div>
-                    <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.minAttrValue, @pair.Value.maxAttrValue)</script>
+                    <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.minAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMinValue(this.value, '@pair.Key');">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMinValue(this.value, '@pair.Key');">
                         </div>
                         <div class="col-md-4 col-md-offset-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.minAttrValue" max="@pair.Value.maxAttrValue" value="@pair.Value.maxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMaxValue(this.value, '@pair.Key');">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMaxValue(this.value, '@pair.Key');">
                         </div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+                <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
                 <label title="Negative strength repels nodes. Positive strength attracts nodes.">
                     strength
                     <output id="charge_StrengthSliderOutput">-30</output>
@@ -152,7 +152,7 @@
             </div>
                 -->
             <div class="force">
-                <p><label><input type="checkbox" onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
+                <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
                     distance
                     <output id="link_DistanceSliderOutput">30</output>
@@ -217,28 +217,26 @@
     <div id="graph" class="col-md-8">
         <ul class="nav nav-tabs">
             <li class="nav-item">
-                <a class="nav-link active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graphcontent')">Network Graph</a>
+                <a class="nav-link active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graphcontent')" id="defaultGraphTab">Network Graph</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graphcontent') " id="defaultGraphTab">Selection Graph</a>
+                <a class="nav-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graphcontent') " >Selection Graph</a>
             </li>
         </ul>
         <div id="networkGraph" class="graphcontent">
             <svg></svg>
-            <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
             <script src="https://d3js.org/d3-color.v1.min.js"></script>
             <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
             <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-
+            <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+            <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
             <script src="~/js/graph.js" asp-append-version="true"></script>
             <script>
                 drawNetwork(@Html.Raw(Model.Graph));
-
             </script>
         </div>
         <div id="selectionGraph" class="graphcontent">
-            <svg viewBox="0 0 1080 720" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg></svg>
             <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
             <script>
                 drawSelectionNetwork(@Html.Raw(Model.Selection));
@@ -260,12 +258,12 @@
                 <div class="panel" id="@("panel_" + Model.Mvn.IdColumn[node])">
                     <div class="panel-heading" role="tab" id="@("heading_" + Model.Mvn.IdColumn[node])">
                         <h4 class="panel-title">
-                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
+                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_detail_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
                                 @("Node " + Model.Mvn.IdColumn[node])
                             </a>
                         </h4>
                     </div>
-                    <div id="@("node_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
+                    <div id="@("node_detail_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
                         <div class="panel-body form-group">
                             @foreach (var attribute in Model.Mvn.VectorData.Columns())
                             {
@@ -286,10 +284,6 @@
     </div>
 </div>
 <div class="bottompanel">
-    <label for="edgeCheckBox">Edges</label>
-    <input type="checkbox" id="edgeCheckBox" checked />
-    <label for="groupsCheckBox">Edges</label>
-    <input type="checkbox" id="groupsCheckBox" checked />
     <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities" />
 </div>
 
