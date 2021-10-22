@@ -37,7 +37,7 @@
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 
-    @RenderSection("Scripts", required: false)
+   
     @RenderSection("Styles", required: false)
 </head>
 <body>
@@ -66,14 +66,13 @@
 
     <div class="body-content">
         @RenderBody()
-        <hr />
         <footer>
             <p>&copy; 2019 - MultiVariateNetworkExplorer</p>
         </footer>
     </div>
+    @RenderSection("Scripts", required: false)
 
-    
 
-    
+
 </body>
 </html>

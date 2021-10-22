@@ -5,166 +5,117 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/index.css" type="text/css" asp-append-version="true" />
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 }
 
-
-    @*<div id="mycarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
-        <ol class="carousel-indicators">
-            <li data-target="#mycarousel" data-slide-to="0" class="active"></li>
-            <li data-target="#mycarousel" data-slide-to="1"></li>
-            <li data-target="#mycarousel" data-slide-to="2"></li>
-        </ol>
-        <div class="carousel-inner" role="listbox">
-            <div class="item active">
-                <img src="~/images/banner1.svg" alt="asp.net" class="img-responsive" />
-                <div class="carousel-caption" role="option">
-                    <p>
-                        learn how to build asp.net apps that can run anywhere.
-                        <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?linkid=525028&clcid=0x409">
-                            learn more
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="~/images/banner2.svg" alt="visual studio" class="img-responsive" />
-                <div class="carousel-caption" role="option">
-                    <p>
-                        there are powerful new features in visual studio for building modern web apps.
-                        <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?linkid=525030&clcid=0x409">
-                            learn more
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="~/images/banner3.svg" alt="microsoft azure" class="img-responsive" />
-                <div class="carousel-caption" role="option">
-                    <p>
-                        learn how microsoft's azure cloud platform allows you to build, deploy, and scale web apps.
-                        <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?linkid=525027&clcid=0x409">
-                            learn more
-                        </a>
-                    </p>
-                </div>
-            </div>
-        </div>
-        <a class="left carousel-control" href="#mycarousel" role="button" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-            <span class="sr-only">previous</span>
-        </a>
-        <a class="right carousel-control" href="#mycarousel" role="button" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-            <span class="sr-only">next</span>
-        </a>
-    </div>*@
+@section Scripts {
+    <script src="~/js/index.js" asp-append-version="true"></script>
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+}
 
 
 
 <h1>Welcome to Multi Variate Network Explorer</h1>
 
 
-<div class="content bg-dark">
-    <form method="post" asp-action="Graph" asp-controller="Home" enctype="multipart/form-data">
-        <div class="file-buttons">
+
+<form method="post" asp-action="Graph" asp-controller="Home" enctype="multipart/form-data">
+    <div class="file-buttons">
+        <div class="file-button">
             <input class="inputfile" type="file" id="fileVector" name="files" data-caption="{filePath}">
             <label for="fileVector"><strong>Choose a file with vector data</strong></label>
-            
+        </div>
+        <div class="file-button">
             <input class="inputfile" type="file" id="fileNetwork" name="files" data-caption="{filePath}">
             <label for="fileNetwork"><strong>Choose a file with network</strong></label>
         </div>
-        <div id="parameters">
-            <div class="parameterRow">
-                <h4>Data parameters</h4>
-                <label for="directed">Is the network directed?</label>
-                <input type="checkbox" id="directed" name="directed" value="true" />
+    </div>
+    <div class="parameters">
+        <div class="collapsible-parameters-btn">
+            <i class='fas fa-chevron-up'></i>
+            <span>Data parameters</span>
+        </div>
+        <div class="collapsible-parameters-content">
+            <label for="directed"><span>Is the network directed?</span></label>
+            <select name="directed" , id="directed">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
 
-                <label for="header">Headers?</label>
-                <input type="checkbox" id="header" name="header" value="true" />
+            <label for="header"><span>Does the vector data file contain headers?</span></label>
+            <select name="header" , id="header">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
 
-                <label for="missingvalues">Enter the character representing missing data (leave empty if no character is used):</label>
-                <input type="text" id="missingvalues" name="missingvalues" />
-            </div>
+            <label for="missingvalues"><span>Enter the character representing missing data (leave empty if no character is used)</span></label>
+            <input type="text" id="missingvalues" name="missingvalues" placeholder="eg: -, --, NA etc." />
 
-            <div>
-                <h4>Separators</h4>
-                <label for="separators">Enter the data separating characters (separated by SPACE):</label>
-                <input type="text" id="separators" name="separators" />
-            </div>
-            <div>
-                <h4>Group and Id Parameters</h4>
-                <label for="grouping">Initialize with community detection</label>
-                <input type="checkbox" id="grouping" name="grouping" value="true" />
+        </div>
 
-                <label for="groupColumn">Enter the column name or number with groups (optional)</label>
-                <input type="text" id="idColumn" name="groupColumn" />
+        <div class="collapsible-parameters-btn">
+            <i class='fas fa-chevron-up'></i>
+            <span>Separators</span>
+        </div>
+        <div class="collapsible-parameters-content">
+            <label for="separators">Enter the data separating characters (separated by SPACE):</label>
+            <input type="text" id="separators" name="separators" />
+        </div>
 
-                <label for="idColumn">Enter the column name or number with ids (optional)</label>
-                <input type="text" id="idColumn" name="idColumn" />
-            </div>
-            <div>
-                <h4>Conversion Parameters</h4>
-                <label for="convert">Choose a conversion algorithm:</label>
+        <div class="collapsible-parameters-btn">
+            <i class='fas fa-chevron-up'></i>
+            <span>Group and Id Parameters</span>
+        </div>
+        <div class="collapsible-parameters-content">
+            <label for="grouping">Initialize with community detection</label>
+            <select name="grouping" , id="grouping">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+            <label for="groupColumn">Enter the column name or number with groups (optional)</label>
+            <input type="text" id="groupColumn" name="groupColumn" />
 
-            <label class="radio-inline">
-                <input type="radio" value="LRNet" id="convert" name="convert" checked />LRNet
-            </label>
+            <label for="idColumn">Enter the column name or number with ids (optional)</label>
+            <input type="text" id="idColumn" name="idColumn" />
+        </div>
 
-            <label class="radio-inline">
-                <input type="radio" value="Epsilon" id="convert" name="convert" />Epsilon and kNN
-            </label>
+        <div class="collapsible-parameters-btn">
+            <i class='fas fa-chevron-up'></i>
+            <span>Conversion Parameters</span>
+        </div>
+        <div class="collapsible-parameters-content" id="conversion-collapsible-content">
+            
+            <label for="convert">Choose a conversion algorithm:</label>
+            <select name="convert" id="convert" onchange="displayConversionParameters(this.value)">
+                <option value="LRNet">LRNet</option>
+                <option value="Epsilon">Epsilon and kNN</option>
+            </select>
+
+            <h4 id="conversion-parameters-headline">Algorithm Parameters</h4>
+            <div class="conversion-parameters-div" id="epsilon-parameters">
                 <label for="epsilonRadius">Choose a radius for Epsilon and kNN algorithm</label>
-                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1"/>
+                <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1" value="1"/>
 
                 <label for="kNNmin">Choose a minimal number of neighbours for Epsilon and kNN algorithm</label>
-                <input type="number" id="kNNmin" name="kNNmin" min="0"/>
+                <input type="number" id="kNNmin" name="kNNmin" min="0" value="1"/>
             </div>
-            </div>
-                <input type="submit" class="btn btn-primary" value="Upload" />
-                <p style="color: #ff0033; font-size: 15px; margin: 0 30em;">
-                    @ViewData["Message"]
-                </p>
+           
+        </div>
+    </div>
+    <div class="submit-buttons">
+        <input type="submit" class="submit-btn" value="Upload" />
+        <input type="button" class="clear-btn" value="Clear" />
+    </div>
+    <p style="color: #ff0033; font-size: 15px; margin: 0 30em;">
+        @ViewData["Message"]
+    </p>
 </form>
-</div>
 
 
 
-@*<div class="row">
-        <div class="col-md-3">
-            <h2>Application uses</h2>
-            <ul>
-                <li>Sample pages using ASP.NET Core MVC</li>
-                <li>Theming using <a href="https://go.microsoft.com/fwlink/?LinkID=398939">Bootstrap</a></li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <h2>How to</h2>
-            <ul>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=398600">Add a Controller and View</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=699315">Manage User Secrets using Secret Manager.</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=699316">Use logging to log a message.</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=699317">Add packages using NuGet.</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=699319">Target development, staging or production environment.</a></li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <h2>Overview</h2>
-            <ul>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=518008">Conceptual overview of what is ASP.NET Core</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=699320">Fundamentals of ASP.NET Core such as Startup and middleware.</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=398602">Working with Data</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkId=398603">Security</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=699321">Client side development</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=699322">Develop on different platforms</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=699323">Read more on the documentation site</a></li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <h2>Run &amp; Deploy</h2>
-            <ul>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=517851">Run your app</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=517853">Run tools such as EF migrations and more</a></li>
-                <li><a href="https://go.microsoft.com/fwlink/?LinkID=398609">Publish to Microsoft Azure Web Apps</a></li>
-            </ul>
-        </div>
-    </div>*@
+
+
+
+
+
