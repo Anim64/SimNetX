@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using DataUtility.DataStructures.Metrics;
+using DataUtility.DataStructures.VectorDataConversion;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,7 +33,7 @@ namespace DataUtility
             RealClasses = new Dictionary<string, string>();
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, string convert, double simThresh, int k,  bool grouping, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
             VectorData = new DataFrame(paths.ElementAt(0), missingvalues, header, separator);
             Directed = directed;
@@ -79,14 +81,9 @@ namespace DataUtility
             }
             else
             {
-                if (convert.Equals("LRNet"))
-                {
-                    Network = VectorData.LRNet(IdColumn);
-                }
-                else
-                {
-                    Network = VectorData.ToNetwork(IdColumn, simThresh, k);
-                }
+
+                this.Network = convertAlg.ConvertToNetwork(this.VectorData, new GaussKernel(), IdColumn);
+                
             }
 
             if(grouping && Partition == null)

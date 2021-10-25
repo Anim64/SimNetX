@@ -39,14 +39,14 @@
         <div class="collapsible-parameters-content">
             <label for="directed"><span>Is the network directed?</span></label>
             <select name="directed" , id="directed">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="0">Yes</option>
+                <option selected value="1">No</option>
             </select>
 
             <label for="header"><span>Does the vector data file contain headers?</span></label>
             <select name="header" , id="header">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option selected value="0">Yes</option>
+                <option value="1">No</option>
             </select>
 
             <label for="missingvalues"><span>Enter the character representing missing data (leave empty if no character is used)</span></label>
@@ -70,8 +70,8 @@
         <div class="collapsible-parameters-content">
             <label for="grouping">Initialize with community detection</label>
             <select name="grouping" , id="grouping">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="0">Yes</option>
+                <option selected value="1">No</option>
             </select>
             <label for="groupColumn">Enter the column name or number with groups (optional)</label>
             <input type="text" id="groupColumn" name="groupColumn" />
@@ -88,8 +88,8 @@
             
             <label for="convert">Choose a conversion algorithm:</label>
             <select name="convert" id="convert" onchange="displayConversionParameters(this.value)">
-                <option value="LRNet">LRNet</option>
-                <option value="Epsilon">Epsilon and kNN</option>
+                <option value="0">LRNet</option>
+                <option value="1">Epsilon and kNN</option>
             </select>
 
             <h4 id="conversion-parameters-headline">Algorithm Parameters</h4>

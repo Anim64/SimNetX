@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DataUtility;
+using DataUtility.DataStructures.Metrics;
+using DataUtility.DataStructures.VectorDataConversion;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -15,6 +17,8 @@ using MultiVariateNetworkExplorer2;
 using MultiVariateNetworkExplorer2.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static DataUtility.DataStructures.Metrics.ParameterEnums;
+using static DataUtility.DataStructures.VectorDataConversion.ConversionEnums;
 
 namespace MultiVariateNetworkExplorer.Controllers
 {
@@ -27,8 +31,8 @@ namespace MultiVariateNetworkExplorer.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Graph(List<IFormFile> files, string separators, string missingvalues,
-            string convert, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, bool directed = false, 
-            bool header = false, bool grouping = false)
+            ConversionAlgorithm convert, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False, 
+            BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
         {
             
 
@@ -75,12 +79,39 @@ namespace MultiVariateNetworkExplorer.Controllers
             MultiVariateNetwork multiVariateNetwork;
             GraphModel gm = new GraphModel();
 
+            bool hasHeaders = header == BooleanParameter.True;
+            bool isDirected = directed == BooleanParameter.True;
+            bool doCommunityDetection = grouping == BooleanParameter.True;
             //try
             //{
-                multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, convert, (double)epsilonRadius, (int)kNNmin, grouping, directed, header, separatorArray);
-                gm.Graph = multiVariateNetwork.ToD3Json();
-                gm.Selection = multiVariateNetwork.PartitionsToD3Json();
-                gm.Mvn = multiVariateNetwork;
+            IVectorConversion conversionAlg;
+            switch (convert)
+            {
+                case ConversionAlgorithm.LRNet:
+                {
+                    conversionAlg = new LRNet();
+                    break;
+                }
+                    
+                case ConversionAlgorithm.Epsilon:
+                {
+                    conversionAlg = new EpsilonKNN((double)epsilonRadius, (int)kNNmin);
+                    break;
+                }
+                    
+                default:
+                {
+                    conversionAlg = new LRNet();
+                    break;
+                }
+                
+            }
+
+
+            multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, conversionAlg, doCommunityDetection, isDirected, hasHeaders, separatorArray);
+            gm.Graph = multiVariateNetwork.ToD3Json();
+            gm.Selection = multiVariateNetwork.PartitionsToD3Json();
+            gm.Mvn = multiVariateNetwork;
 
             //}
             //catch(Exception e)

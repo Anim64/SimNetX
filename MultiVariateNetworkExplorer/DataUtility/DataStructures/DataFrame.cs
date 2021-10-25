@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DataUtility
 {
-    public class DataFrame
+    public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     {
         /// <summary>
         /// A dataframe that holds vector data
@@ -615,6 +615,14 @@ namespace DataUtility
 
         
 
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.Data.GetEnumerator();
+        }
 
+        IEnumerator<KeyValuePair<string, IColumn>> IEnumerable<KeyValuePair<string, IColumn>>.GetEnumerator()
+        {
+            return this.Data.GetEnumerator();
+        }
     }
 }
