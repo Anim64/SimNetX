@@ -1,19 +1,93 @@
-﻿svg {
-    flex-basis: 100%;
-    min-width: 200px;
-    border: solid;
-    border-color: white;
+﻿html {
     
 }
-#networkGraph {
-    height: 80vh;
-    max-height: 80vh;
+
+.body-content {
+    padding-left: 5px;
+    padding-right: 5px;
+    margin: 1.3rem auto 0 auto;
+    border: none;
+    outline: none;
+    width: 100%;
+    
+   
+}
+.main-div {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 0.5rem;
+    max-height: 90vh;
     width: 100%;
 }
 
-html {
+.column {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    justify-content: flex-start;
+    border: 1px solid #ccc;
+}
+
+.tab-link {
+    padding: 1rem 1.5rem;
+}
+
+.left-col {
+    width: 16%;
+    border-right: none;
+}
+
+
+
+.right-col {
+    width: 16%;
+    padding-top: 4.1rem;
+    border-left: none;
+}
+
+.graph-col {
+    width: 68%;
+    border-right: none;
+}
+
+
+.column-content {
+    padding: 0.3rem;
+    border-bottom: none;
+    overflow-y: scroll;
+    flex: 1 1 40%;
+    
+}
+
+.graph-content{
+    height: 100%;
+}
+
+.bottom-panel {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 1rem;
+   
+}
+
+footer {
+    border: none;
+    outline: none;
+    display: none;
+}
+
+
+svg {
+    overflow: hidden;
+    height: 100%;
     width: 100%;
 }
+#networkGraph {
+    height: 100%;
+}
+
+
 
 .links path {
     stroke: lightgray;
