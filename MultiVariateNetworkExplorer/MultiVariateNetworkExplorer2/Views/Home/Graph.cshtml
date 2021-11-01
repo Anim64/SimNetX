@@ -7,8 +7,8 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/controls.css" type="text/css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/selections.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/attributes.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/tab.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" />
@@ -24,20 +24,21 @@
 
 
 <div class="main-div">
-    <div class="column left-col" id="leftpanel" style="padding-left: 7px; padding-right: 7px;">
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" href="#" onclick="openTab(event, 'attributes', 'leftpanel', '.column-content')" id="defaultTab">Atributes</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" onclick="openTab(event, 'settings', 'leftpanel', '.column-content')">Graph Settings</a>
-            </li>
-        </ul>
+    <div class="column left-col" id="leftpanel">
+        <div class="navigation">
+            <div class="tab-nav">
+                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'attributes', 'leftpanel', '.column-content')" id="defaultTab">Attributes</a>
+            </div>
+            <div class="tab-nav">
+                <a class="tab-link" href="#" onclick="openTab(event, 'settings', 'leftpanel', '.column-content')">Graph Settings</a>
+            </div>
+            <div></div>
+        </div>
         <div class="column-content attributes" id="attributes">
             @foreach (var pair in Model.Mvn.VectorData.NumAtrrExtremes)
             {
                 <div class="numeric">
-                    <p><label>@pair.Key</label></p>
+                    <h4>@pair.Key</h4>
                     <div id="@(pair.Key + "-slider")"></div>
                     <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
                     <div class="row">
@@ -53,8 +54,8 @@
 
             @foreach (var pair in Model.Mvn.VectorData.CatAttrValues)
             {
-                <div class="categorial">
-                    <p><label>@pair.Key</label></p>
+                <div class="categorical">
+                    <h4>@pair.Key</h4>
                     <div class="checkboxes">
                         @foreach (string category in pair.Value)
                         {
@@ -123,33 +124,33 @@
                 </label>
             </div>
             <!--
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
-                <label>
-                    strength
-                    <output id="forceX_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
-                </label>
-                <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
-                    x
-                    <output id="forceX_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
-                </label>
-            </div>
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
-                <label>
-                    strength
-                    <output id="forceY_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
-                </label>
-                <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
-                    y
-                    <output id="forceY_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
-                </label>
-            </div>
-                -->
+        <div class="force">
+            <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+            <label>
+                strength
+                <output id="forceX_StrengthSliderOutput">.1</output>
+                <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
+            </label>
+            <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+                x
+                <output id="forceX_XSliderOutput">.5</output>
+                <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
+            </label>
+        </div>
+        <div class="force">
+            <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+            <label>
+                strength
+                <output id="forceY_StrengthSliderOutput">.1</output>
+                <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
+            </label>
+            <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+                y
+                <output id="forceY_YSliderOutput">.5</output>
+                <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
+            </label>
+        </div>
+            -->
             <div class="force">
                 <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
@@ -177,9 +178,87 @@
         </div>
         <script>
             // Get the element with id="defaultOpen" and click on it
-            $('#defaultTab').click();
+            
         </script>
-        <div class="column-content attributes" id="selections">
+        
+    </div>
+    <div id="graph" class="column graph-col">
+        <div class="navigation">
+            <div class="tab-nav">
+                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graph-content')" id="defaultGraphTab">Network Graph</a>
+            </div>
+            <div class="tab-nav">
+                <a class="tab-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graph-content') ">Selection Graph</a>
+            </div>
+            <div></div>
+        </div>
+        <div id="networkGraph" class="graph-content">
+            <svg></svg>
+            <script src="https://d3js.org/d3-color.v1.min.js"></script>
+            <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+            <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+            <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+            <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
+            <script src="~/js/graph.js" asp-append-version="true"></script>
+            <script>
+            drawNetwork(@Html.Raw(Model.Graph));
+            </script>
+        </div>
+        <div id="selectionGraph" class="graph-content">
+            <svg></svg>
+            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+            <script>
+            drawSelectionNetwork(@Html.Raw(Model.Selection));
+            </script>
+        </div>
+        <script>
+            // Get the element with id="defaultOpen" and click on it
+
+            //$('#defaultGraphTab').click();
+        </script>
+    </div>
+
+    <div class="column right-col" id="nodes">
+        <div class="navigation">
+            <div class="tab-nav">
+                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'accordion', 'nodes', '.column-content')">Node Properties</a>
+            </div>
+            <div class="tab-nav">
+                <a class="tab-link" href="#" onclick="openTab(event, 'selections', 'nodes', '.column-content')">Selection properties</a>
+            </div>
+            <div></div>
+        </div>
+        <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
+
+            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
+            {
+                <div class="node-container" id="@("panel_" + Model.Mvn.IdColumn[node])">
+                    <div class="node-heading" role="tab" id="@("heading_" + Model.Mvn.IdColumn[node])">
+                        <h4 class="node-title">
+                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_detail_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
+                                @("Node " + Model.Mvn.IdColumn[node])
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="@("node_detail_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
+                        <div class="node-content form-group">
+                            @foreach (var attribute in Model.Mvn.VectorData.Columns())
+                            {
+                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+
+            }
+            <script>
+                updateNodeGroups();
+            </script>
+        </div>
+        <div class="column-content selections" id="selections">
             <div>
                 <input type="button" onclick="addNewSelection()" value="Add New Selection" />
                 <input type="button" onclick="deleteAllSelections()" value="Delete All Selection" />
@@ -211,74 +290,6 @@
                 }
 
             </div>
-        </div>
-    </div>
-    <div id="graph" class="column graph-col">
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="tab-link active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graph-content')" id="defaultGraphTab">Network Graph</a>
-            </li>
-            <li class="nav-item">
-                <a class="tab-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graph-content') ">Selection Graph</a>
-            </li>
-        </ul>
-        <div id="networkGraph" class="graph-content">
-            <svg></svg>
-            <script src="https://d3js.org/d3-color.v1.min.js"></script>
-            <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
-            <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-            <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-            <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
-            <script src="~/js/graph.js" asp-append-version="true"></script>
-            <script>
-            drawNetwork(@Html.Raw(Model.Graph));
-            </script>
-        </div>
-        <div id="selectionGraph" class="graph-content">
-            <svg></svg>
-            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-            <script>
-            drawSelectionNetwork(@Html.Raw(Model.Selection));
-            </script>
-        </div>
-        <script>
-            // Get the element with id="defaultOpen" and click on it
-
-            $('#defaultGraphTab').click();
-        </script>
-    </div>
-
-    <div class="column right-col" id="nodes">
-
-        <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
-
-            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
-            {
-                <div class="node-container" id="@("panel_" + Model.Mvn.IdColumn[node])">
-                    <div class="node-heading" role="tab" id="@("heading_" + Model.Mvn.IdColumn[node])">
-                        <h4 class="node-title">
-                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_detail_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
-                                @("Node " + Model.Mvn.IdColumn[node])
-                            </a>
-                        </h4>
-                    </div>
-                    <div id="@("node_detail_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
-                        <div class="node-content form-group">
-                            @foreach (var attribute in Model.Mvn.VectorData.Columns())
-                            {
-                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
-                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
-                            }
-                        </div>
-                    </div>
-
-                </div>
-
-
-            }
-            <script>
-                updateNodeGroups();
-            </script>
         </div>
     </div>
 </div>

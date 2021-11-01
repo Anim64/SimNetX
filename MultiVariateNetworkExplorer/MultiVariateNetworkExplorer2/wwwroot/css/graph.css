@@ -1,4 +1,8 @@
 ﻿html {
+    --border-color: #ccc;
+    --active-content: rgb(60,60,60);
+    --shadow-color: rgba(0,0,0, 0.11);
+    
     
 }
 
@@ -9,6 +13,7 @@
     border: none;
     outline: none;
     width: 100%;
+
     
    
 }
@@ -20,29 +25,64 @@
     width: 100%;
 }
 
+.navigation {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+
+.navigation div:last-child {
+    flex-grow: 1;
+    border-bottom: 2px solid var(--border-color);
+}
+
+
+.tab-link {
+    padding: 1rem 1.5rem;
+    display: block;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    text-decoration: none;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-link:hover {
+    text-decoration: none;
+}
+
+.tab-active {
+    background-color: var(--active-content);
+    border: 2px solid var(--border-color);
+    border-bottom: none;
+    z-index: 10;
+    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), 
+        -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
+}
+
+.navigation .tab-nav:first-child .tab-active {
+    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
+}
+
+
 .column {
     display: flex;
     flex-direction: column;
     margin: 0;
     justify-content: flex-start;
-    border: 1px solid #ccc;
+    border-bottom: 2px solid var(--border-color);
+    
 }
 
-.tab-link {
-    padding: 1rem 1.5rem;
-}
-
-.left-col {
+.column.left-col {
     width: 16%;
-    border-right: none;
 }
 
 
 
-.right-col {
+.column.right-col {
     width: 16%;
-    padding-top: 4.1rem;
-    border-left: none;
+    
 }
 
 .graph-col {
@@ -52,15 +92,28 @@
 
 
 .column-content {
+    background-color: var(--active-content);
     padding: 0.3rem;
-    border-bottom: none;
     overflow-y: scroll;
     flex: 1 1 40%;
+    border-left: 2px solid var(--border-color);
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+}
+
+
+.graph-content {
+    height: 100%;
+    border-left: 2px solid var(--border-color);
     
 }
 
-.graph-content{
-    height: 100%;
+#networkGraph.graph-content{
+    display: block;
+}
+
+#selectionGraph.graph-content {
+    display: none;
 }
 
 .bottom-panel {
@@ -83,6 +136,8 @@ svg {
     height: 100%;
     width: 100%;
 }
+
+
 #networkGraph {
     height: 100%;
 }

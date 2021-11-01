@@ -1,14 +1,26 @@
 ﻿.attributes {
-    padding: 0 5px;
+    padding: 0 0.5rem;
     font-size: 90%;
     color: black;
+    display: block;
 }
 
-.attributes .numeric {
+.attributes h4 {
+    margin: 1rem 0.5rem;
+    width: 100%;
+    text-decoration: underline;
+}
+
+.attributes > div {
     background-color: #eee;
     border-radius: 3px;
-    padding: 5px;
+    padding: 0.5rem 1rem;
     margin: 5px 0;
+}
+
+
+.attributes .numeric h4 {
+    color: crimson;
 }
 
 .attributes .numeric div[id$="slider"] {
@@ -22,24 +34,22 @@
 }
 
 
-.attributes .categorial {
-    background-color: #eee;
-    border-radius: 3px;
-    padding: 5px;
-    margin: 5px 0;
+.attributes .categorical h4 {
+    color: forestgreen;
+    
 }
 
-.attributes .categorial .checkboxes {
+.attributes .categorical .checkboxes {
     margin: 0 5% 1em;
     width: 90%;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
 }
 
-.attributes .categorial input[type="checkbox"] {
+.attributes .categorical input[type="checkbox"] {
     margin: 0 5% 1em;
 }
 
-.attributes .categorial label {
-    margin-left: 20px;
-}
+
 
 

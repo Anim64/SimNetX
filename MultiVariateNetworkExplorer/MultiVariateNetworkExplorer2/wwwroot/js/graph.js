@@ -152,7 +152,7 @@ function drawNetwork(data) {
         .attr("class", "background")
         .attr('width', width)
         .attr('height', height)
-        .style('fill', '#333333')
+        .style('fill', '#1A1A1A')
 
     gDraw = gMain.append('g');
 
@@ -298,7 +298,7 @@ function drawSelectionNetwork(data) {
     var selectionRect = selectionMain.append('rect')
         .attr('width', width)
         .attr('height', height)
-        .style('fill', '#333333')
+        .style('fill', '#1A1A1A')
 
     selectionDraw = selectionMain.append('g');
 

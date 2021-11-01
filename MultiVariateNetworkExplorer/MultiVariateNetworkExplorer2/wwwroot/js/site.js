@@ -15,13 +15,13 @@ function openTab(event, contentId, divId, contentClass) {
         tabcontent[i].style.display = "none";
     }
 
-    tablinks = document.getElementById(divId).querySelectorAll(".nav-link");
+    tablinks = document.getElementById(divId).querySelectorAll(".tab-link");
     for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
+        tablinks[i].className = tablinks[i].className.replace(" tab-active", "");
     }
 
     document.getElementById(contentId).style.display = "block";
-    event.currentTarget.className += " active";
+    event.currentTarget.className += " tab-active";
 }
 
 
