@@ -1,7 +1,7 @@
 ﻿html {
     --border-color: #ccc;
-    --active-content: rgb(60,60,60);
-    --shadow-color: rgba(0,0,0, 0.11);
+    --active-content: rgb(255 216 0);
+    --shadow-color: rgba(0,0,0, 0.20);
     
     
 }
@@ -81,12 +81,12 @@
 
 
 .column.right-col {
-    width: 16%;
+    width: 24%;
     
 }
 
 .graph-col {
-    width: 68%;
+    width: 60%;
     border-right: none;
 }
 

@@ -229,28 +229,39 @@
             <div></div>
         </div>
         <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
-
-            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
+            
+            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node=node+5)
             {
-                <div class="node-container" id="@("panel_" + Model.Mvn.IdColumn[node])">
-                    <div class="node-heading" role="tab" id="@("heading_" + Model.Mvn.IdColumn[node])">
-                        <h4 class="node-title">
-                            <a role="button" id="@("btn_node_" + Model.Mvn.IdColumn[node])" data-toggle="collapse" data-parent="#accordion" href="#@("node_detail_" + Model.Mvn.IdColumn[node])" aria-expanded="true" aria-controls="@("node_" + Model.Mvn.IdColumn[node])">
-                                @("Node " + Model.Mvn.IdColumn[node])
-                            </a>
-                        </h4>
+                <div class="node-row-group" id="@($"node-row-group-{ node }")">
+                
+                    @for(int nodeRowIdx = 0; nodeRowIdx < 5; nodeRowIdx++)
+                    {
+                        if((node + nodeRowIdx) < Model.Mvn.VectorData.DataCount)
+                        {
+                            <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node + nodeRowIdx])">
+                                
+                                <a role="button" id="@("btn-node-" + Model.Mvn.IdColumn[node + nodeRowIdx])" href="#" onclick="toggleNodeDetails(@(node + nodeRowIdx), '@($"heading-{ Model.Mvn.IdColumn[node + nodeRowIdx] }")', '@($"node-detail-{node}")', '@($"node-row-group-{ node }")')">
+                                    @(Model.Mvn.IdColumn[node + nodeRowIdx])
+                                </a>
+                                
+                            </div>
+                        }
+                        
+                    }
+                    
+                    <div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
+                        @foreach (var attribute in Model.Mvn.VectorData.Columns())
+                        {
+                            
+                            <div class="node-property-group">
+                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)">@(attribute + ":")</label>
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly />
+                            </div>
+                        }
                     </div>
-                    <div id="@("node_detail_" + Model.Mvn.IdColumn[node])" class="panel-collapse collapse" role="tabpanel" aria-labelledby="@("heading_" + Model.Mvn.IdColumn[node])">
-                        <div class="node-content form-group">
-                            @foreach (var attribute in Model.Mvn.VectorData.Columns())
-                            {
-                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-check-label">@(attribute + ":")</label>
-                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" class="form-control" value="@(Model.Mvn.VectorData[attribute, node])" readonly />
-                            }
-                        </div>
-                    </div>
-
+                    
                 </div>
+                
 
 
             }

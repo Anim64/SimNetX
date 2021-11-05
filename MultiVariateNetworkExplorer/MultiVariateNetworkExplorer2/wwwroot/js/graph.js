@@ -659,7 +659,42 @@ function keyup() {
     }
 }
 
+function toggleNodeDetails(nodeId, headingId, detailsId, nodeRowGroupId) {
+    let headingElement = document.getElementById(headingId);
+    let detailsElement = document.getElementById(detailsId);
 
+    if (detailsElement.style.display === 'none' || detailsElement.style.display === '') {
+        detailsElement.style.display = 'block';
+        let inputs = detailsElement.querySelectorAll('input');
+        
+        inputs.forEach((input) => {
+            let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
+            input.value = graph.nodes[nodeId][attributeName];
+        });
+
+    }
+
+    else {
+        if (!headingElement.classList.contains('active-node-heading')) {
+            let rowHeadings = $('#' + nodeRowGroupId + ' .active-node-heading');
+
+            rowHeadings.removeClass('active-node-heading');
+
+            let inputs = detailsElement.querySelectorAll('input');
+
+            inputs.forEach((input) => {
+                let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
+                input.value = graph.nodes[nodeId][attributeName];
+            });
+
+        }
+        else {
+            detailsElement.style.display = 'none';
+        }
+    }
+
+    headingElement.classList.toggle('active-node-heading');
+}
 
 function displayNodeProperties(d) {
     console.log(d.id);
@@ -1254,7 +1289,7 @@ function projectAttribute(axis, attributeName) {
 
 //Update node colors
 function updateNodeGroups() {
-    node.style("fill", function (d) {
+    /*node.style("fill", function (d) {
         document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
         if (graph.partitions[d.id] != "") {
 
@@ -1264,7 +1299,7 @@ function updateNodeGroups() {
         else {
             return defaultColour;
         }
-    })
+    })*/
     
 }
 
