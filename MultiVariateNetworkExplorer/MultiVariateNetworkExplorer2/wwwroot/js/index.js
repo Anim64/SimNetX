@@ -1,39 +1,43 @@
-﻿var inputs = document.querySelectorAll('.inputfile');
+﻿function addCollapsibleEventListeners() {
+    var parameter_collapsibles = document.getElementsByClassName("collapsible-parameters-btn");
 
-Array.prototype.forEach.call(inputs, function (input) {
-    var label = input.nextElementSibling,
-        labelVal = label.innerHTML;
-    var textbox = label.previousElementSibling;
+    for (var i = 0; i < parameter_collapsibles.length; i++) {
+        parameter_collapsibles[i].addEventListener("click", function () {
+            this.classList.toggle("collapsible-parameters-btn-active");
+            var content = this.nextElementSibling;
 
-    input.addEventListener('change', function (e) {
-        var fileName = '';
-        fileName = e.target.value.split('\\').pop();
-        if (fileName) {
-            label.innerHTML = fileName;
-            textbox.innerHTML = fileName;
-            label.style.backgroundColor = "green";
-            textbox.style.backgroundColor = "green";
-        }
-        else
-            label.innerHTML = labelVal;
+            if (content.clientHeight) {
+                content.style.height = 0;
+            }
+            else {
+                content.style.height = content.scrollHeight + "px";
+            }
+        });
+    };
+}
+
+function addFileButtonsEventListeners() {
+    var inputs = document.querySelectorAll('.inputfile');
+
+    Array.prototype.forEach.call(inputs, function (input) {
+        var label = input.nextElementSibling,
+            labelVal = label.innerHTML;
+        var textbox = label.previousElementSibling;
+
+        input.addEventListener('change', function (e) {
+            var fileName = '';
+            fileName = e.target.value.split('\\').pop();
+            if (fileName) {
+                label.innerHTML = fileName;
+                textbox.innerHTML = fileName;
+                label.style.backgroundColor = "green";
+                textbox.style.backgroundColor = "green";
+            }
+            else
+                label.innerHTML = labelVal;
+        });
     });
-});
-
-var parameter_collapsibles = document.getElementsByClassName("collapsible-parameters-btn");
-
-for (var i = 0; i < parameter_collapsibles.length; i++) {
-    parameter_collapsibles[i].addEventListener("click", function () {
-        this.classList.toggle("collapsible-parameters-btn-active");
-        var content = this.nextElementSibling;
-        
-        if (content.clientHeight) {
-            content.style.height = 0;
-        }
-        else {
-            content.style.height = content.scrollHeight + "px";
-        }
-    });
-};
+}
 
 function selectFocusIn(select_element) {
     select_element.style.textAlign = "left";
@@ -78,3 +82,8 @@ function displayConversionParameters(conversion_alg) {
 
     recalculateCollapsibleContentHeight("conversion-collapsible-content");
 }
+
+window.addEventListener('load', function () {
+    addFileButtonsEventListeners();
+    addCollapsibleEventListeners();
+})

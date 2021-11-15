@@ -1,3 +1,48 @@
 ﻿.selections {
     display: none;
+    --shadow-color: rgba(0,0,0, 0.20);
+    --light: 80;
+    --threshold: 60;
 }
+
+.selections .selection-edit {
+    display: flex;
+    flex-direction: row;
+    justify-content:space-evenly;
+    margin: 0.5rem 0;
+}
+
+
+.selections .selection-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.selection-panel {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border: 1px solid black;
+    border-radius: 5px;
+    box-shadow: none;
+    box-shadow: 0px 2px 2px var(--shadow-color), 0 4px 4px var(--shadow-color), 0 8px 8px var(--shadow-color);
+    outline: none;
+}
+
+.selection-panel h4 {
+    margin-right: auto;
+    --switch: calc((var(--light) - var(--threshold)) * -100%);
+    color: hsl(0, 0%, var(--switch));
+}
+
+.selection-panel input, button {
+    margin: 0 0.5rem;
+}
+
+.selection-panel input[type=color] {
+    display: none;
+}
+
+

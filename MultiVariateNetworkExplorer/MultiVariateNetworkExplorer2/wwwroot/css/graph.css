@@ -1,10 +1,11 @@
 ﻿html {
     --border-color: #ccc;
-    --active-content: rgb(255 216 0);
+    --active-content: rgb(254 232 115);
     --shadow-color: rgba(0,0,0, 0.20);
     
-    
 }
+
+
 
 .body-content {
     padding-left: 5px;
@@ -13,9 +14,7 @@
     border: none;
     outline: none;
     width: 100%;
-
     
-   
 }
 .main-div {
     display: flex;
@@ -23,6 +22,7 @@
     padding-bottom: 0.5rem;
     max-height: 90vh;
     width: 100%;
+    
 }
 
 .navigation {
@@ -92,6 +92,7 @@
 
 
 .column-content {
+    
     background-color: var(--active-content);
     padding: 0.3rem;
     overflow-y: scroll;
@@ -101,11 +102,18 @@
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
 }
 
+.column-content a {
+    color: black;
+}
+
 
 .graph-content {
     height: 100%;
     border-left: 2px solid var(--border-color);
-    
+}
+
+.graph-content a{
+    color: black;
 }
 
 #networkGraph.graph-content{

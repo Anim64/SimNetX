@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/selections.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/attributes.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" />
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -18,8 +18,11 @@
 }
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <script src="~/js/graph_settings.js" type="text/javascript" asp-append-version="true"></script>
+    <script src="~/js/nodes.js" type="text/javascript" asp-append-version="true"></script>
+    <script src="~/js/selections.js" type="text/javascript" asp-append-version="true"></script>
 }
 
 
@@ -124,33 +127,33 @@
                 </label>
             </div>
             <!--
-        <div class="force">
-            <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
-            <label>
-                strength
-                <output id="forceX_StrengthSliderOutput">.1</output>
-                <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
-            </label>
-            <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
-                x
-                <output id="forceX_XSliderOutput">.5</output>
-                <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
-            </label>
-        </div>
-        <div class="force">
-            <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
-            <label>
-                strength
-                <output id="forceY_StrengthSliderOutput">.1</output>
-                <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
-            </label>
-            <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
-                y
-                <output id="forceY_YSliderOutput">.5</output>
-                <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
-            </label>
-        </div>
-            -->
+            <div class="force">
+                <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
+                <label>
+                    strength
+                    <output id="forceX_StrengthSliderOutput">.1</output>
+                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
+                </label>
+                <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
+                    x
+                    <output id="forceX_XSliderOutput">.5</output>
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
+                </label>
+            </div>
+            <div class="force">
+                <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
+                <label>
+                    strength
+                    <output id="forceY_StrengthSliderOutput">.1</output>
+                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
+                </label>
+                <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
+                    y
+                    <output id="forceY_YSliderOutput">.5</output>
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
+                </label>
+            </div>
+                -->
             <div class="force">
                 <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
@@ -178,9 +181,9 @@
         </div>
         <script>
             // Get the element with id="defaultOpen" and click on it
-            
+
         </script>
-        
+
     </div>
     <div id="graph" class="column graph-col">
         <div class="navigation">
@@ -199,7 +202,7 @@
             <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
             <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
             <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
-            <script src="~/js/graph.js" asp-append-version="true"></script>
+            <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
             <script>
             drawNetwork(@Html.Raw(Model.Graph));
             </script>
@@ -229,39 +232,35 @@
             <div></div>
         </div>
         <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
-            
-            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node=node+5)
+
+            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node = node + 5)
             {
                 <div class="node-row-group" id="@($"node-row-group-{ node }")">
-                
-                    @for(int nodeRowIdx = 0; nodeRowIdx < 5; nodeRowIdx++)
+
+                    @for (int nodeRowIdx = 0; nodeRowIdx < 5; nodeRowIdx++)
                     {
-                        if((node + nodeRowIdx) < Model.Mvn.VectorData.DataCount)
+                        if ((node + nodeRowIdx) < Model.Mvn.VectorData.DataCount)
                         {
-                            <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node + nodeRowIdx])">
-                                
-                                <a role="button" id="@("btn-node-" + Model.Mvn.IdColumn[node + nodeRowIdx])" href="#" onclick="toggleNodeDetails(@(node + nodeRowIdx), '@($"heading-{ Model.Mvn.IdColumn[node + nodeRowIdx] }")', '@($"node-detail-{node}")', '@($"node-row-group-{ node }")')">
-                                    @(Model.Mvn.IdColumn[node + nodeRowIdx])
-                                </a>
-                                
+                            <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node + nodeRowIdx])" onclick="toggleNodeDetails(@(node + nodeRowIdx), '@($"heading-{ Model.Mvn.IdColumn[node + nodeRowIdx] }")', '@($"node-detail-{node}")', '@($"node-row-group-{ node }")')">
+                                <h5>@(Model.Mvn.IdColumn[node + nodeRowIdx])</h5>
                             </div>
                         }
-                        
+
                     }
-                    
+
                     <div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
                         @foreach (var attribute in Model.Mvn.VectorData.Columns())
                         {
-                            
+
                             <div class="node-property-group">
                                 <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)">@(attribute + ":")</label>
                                 <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly />
                             </div>
                         }
                     </div>
-                    
+
                 </div>
-                
+
 
 
             }
@@ -270,33 +269,25 @@
             </script>
         </div>
         <div class="column-content selections" id="selections">
-            <div>
+            <div class="selection-edit">
                 <input type="button" onclick="addNewSelection()" value="Add New Selection" />
                 <input type="button" onclick="deleteAllSelections()" value="Delete All Selection" />
             </div>
-            <div class="panel-group wrap" id="list-selections" role="tablist" aria-multiselectable="true">
+            <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
                 @if (Model.Mvn.Partition != null)
                 {
                     foreach (var selection in Model.Mvn.Partition.Values.Distinct())
                     {
-                        <text>
-                            <div class="panel" id="@("selection_panel_" + selection)">
-                                <div class="panel-heading" role="tab" id="@("heading_selection_" + selection)">
-                                    <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this.value, @selection)" />
-                                    <ul class="list-inline m-0" style="float: right;">
-                                        <li class="list-inline-item">
-                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(@selection.ToString())"><i class="fa fa-plus-square"></i></button>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(@selection.ToString())"><i class="fa fa-trash"></i></button>
-                                        </li>
-                                    </ul>
-                                    <h4 class="panel-title">
-                                        @("Selection " + selection)
-                                    </h4>
-                                </div>
-                            </div>
-                        </text>
+                        
+                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="inputColorClick(this)">
+                            <h4 class="panel-title">
+                                @("Selection " + selection)
+                            </h4>
+                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, @selection)" />
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, @selection.ToString())"><i class="fa fa-plus-square"></i></button>
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, @selection.ToString())"><i class="fa fa-trash"></i></button>
+                        </div>
+                        
                     }
                 }
 
