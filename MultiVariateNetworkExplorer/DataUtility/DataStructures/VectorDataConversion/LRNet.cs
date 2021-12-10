@@ -17,7 +17,7 @@ namespace DataUtility.DataStructures.VectorDataConversion
             Dictionary<int, int> significances = new Dictionary<int, int>();
 
             Dictionary<int, double> representativeness = new Dictionary<int, double>();
-            Dictionary<int, int> representativeNeighboursCount = new Dictionary<int, int>();
+            
 
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
@@ -84,13 +84,10 @@ namespace DataUtility.DataStructures.VectorDataConversion
                     {
                         if (i != potentialNeighbours[n])
                         {
-                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                            resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
 
                         }
-
-
                     }
-
                 }
 
                 else
@@ -99,7 +96,7 @@ namespace DataUtility.DataStructures.VectorDataConversion
                     {
                         if (i != potentialNeighbours[n])
                         {
-                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                            resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
                         }
                     }
                 }

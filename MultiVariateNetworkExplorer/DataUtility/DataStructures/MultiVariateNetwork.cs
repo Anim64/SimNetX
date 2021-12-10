@@ -54,7 +54,7 @@ namespace DataUtility
             {
                 IdColumn = new ColumnDouble(Enumerable.Range(0, this.VectorData.DataCount).ToList());
             }
-
+            
             if (!String.IsNullOrEmpty(groupColumn))
             {
                 Dictionary<string, string> groups = new Dictionary<string, string>();
@@ -120,59 +120,63 @@ namespace DataUtility
 
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
+            JArray jAttributes = new JArray(this.VectorData.Columns);
             JObject jPartition = new JObject();
             JObject jRealClasses = new JObject();
 
             for(int i = 0; i < this.IdColumn.DataCount; i++)
             {
                 JObject jNode = new JObject();
-                var node = IdColumn[i].ToString();
-                var links = this.Network[node];
-                jNode["id"] = node;
-                foreach(string column in VectorData.Columns())
+                var source = IdColumn[i].ToString();
+                var links = this.Network[source];
+                jNode["id"] = source;
+                foreach(string column in VectorData.Columns)
                 {
-                    jNode[column] = VectorData[column, i] != null ? VectorData[column, i].ToString() : "";
+                    jNode[column] = VectorData[column, i] != null ? JToken.FromObject(VectorData[column, i]) : "";
                 }
                 if(Partition != null)
                 {
                     //jNode["group"] = Partition[node.Key];
-                    jPartition[node] = Partition[node];
+                    jPartition[source] = Partition[source];
                 }
                 else
                 {
-                    jPartition[node] = "";
+                    jPartition[source] = "";
                 }
 
                 if(RealClasses != null)
                 {
-                    jRealClasses[node] = RealClasses[node];
+                    jRealClasses[source] = RealClasses[source];
                 }
 
                 else
                 {
-                    jRealClasses[node] = "";
+                    jRealClasses[source] = "";
                 }
                 //jNode["neighbours"] = JArray.FromObject(Network[node.Key].Keys);
                 jNodes.Add(jNode);
-                //jNodes.Insert(Int32.Parse(node.Key, CultureInfo.InvariantCulture), jNode);
                 
 
-                foreach(var target in links)
+                foreach(var target in this.Network[source].Where(kv => String.Compare(source, kv.Key) < 0))
                 {
+                    
                     JObject newLink = new JObject();
-                    newLink["source"] = node;
+                    newLink["source"] = source;
                     newLink["target"] = target.Key;
                     newLink["value"] = target.Value;
                     newLink["id"] = ++edgeId;
                     jLinks.Add(newLink);
-                    //jLinks.Insert(Int32.Parse(node.Key + target.Key, CultureInfo.InvariantCulture), newLink);
+                    
+                    
                 }
             }
 
+            var count = this.Network.NumberOfEdges;
             root["nodes"] = jNodes;
             root["links"] = jLinks;
             root["partitions"] = jPartition;
             root["classes"] = jRealClasses;
+            root["attributes"] = jAttributes;
 
             
             string json = root.ToString();

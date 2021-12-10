@@ -70,7 +70,7 @@ function displayConversionParameters(conversion_alg) {
     hideConversionParameters();
     var conversion_parameters_headline = document.getElementById("conversion-parameters-headline");
 
-    if (conversion_alg === "Epsilon") {
+    if (conversion_alg === "1") {
         var epsilon_parameters_div = document.getElementById("epsilon-parameters");
         epsilon_parameters_div.style.display = "grid";
         conversion_parameters_headline.style.display = "block";

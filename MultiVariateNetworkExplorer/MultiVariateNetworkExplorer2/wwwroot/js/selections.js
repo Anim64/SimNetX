@@ -1,4 +1,21 @@
-﻿function inputColorClick(selection_panel) {
+﻿function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function calculate 
+
+function inputColorClick(selection_panel) {
     selection_panel.querySelector('input').click();
 }
 
@@ -9,15 +26,17 @@ function stopClickPropagation(event) {
 
 function changeGroupColour(input, selectionId) {
     const selectionPanel = input.parentNode
-    selectionPanel.style.backgroundColor = input.value;
+    let newBackgroundColour = input.value;
+    selectionPanel.style.backgroundColor = newBackgroundColour;
+    
     //selectionPanel.style.setProperty(--light)
     var selectionNodes = node.filter(function (n) {
         return graph.partitions[n.id] === selectionId;
     })
     selectionNodes.style("fill", function (d) {
-        $('#heading-' + d.id).style.backgroundColor = input.value;
-            link.filter(function (l) { return l.source === d.id || l.source.id === d.id })
-                .style("stroke", input.value);
+        $('#heading-' + d.id).style.backgroundColor = newBackgroundColour;
+        link.filter(function (l) { return l.source === d.id || l.source.id === d.id })
+            .style("stroke", newBackgroundColour);
             return input.value;
         });
 
@@ -120,10 +139,25 @@ function addSelectionDiv(selection) {
 
 }
 
+
 //Move nodes to different selection
 function addNodesToSelection(event, selectionId) {
     event.stopPropagation();
     var newColour = document.getElementById("selection_color_" + selectionId).value;
+    const threshold = 0.5;
+    var rgbRepresentation = hexToRgb(newColour);
+    var red = rgbRepresentation['r'];
+    var green = rgbRepresentation['g'];
+    var blue = rgbRepresentation['b'];
+
+    var lumaRed = red * 0.2126;
+    var lumaGreen = green * 0.7152;
+    var lumaBlue = blue * 0.0722;
+
+    var lumaSum = lumaRed + lumaGreen + lumaBlue;
+    var perceivedLightness = lumaSum / 255;
+
+    var finalLightness = (perceivedLightness - threshold) * -10000000;
 
     node.filter(function (d) { return d.selected })
         .each(function (d) {
@@ -188,8 +222,10 @@ function addNodesToSelection(event, selectionId) {
 
         })
         .style('fill', function (d) {
+            let heading = document.querySelector('#heading-' + d.id);
 
-            document.querySelector('#heading-' + d.id).style.backgroundColor = newColour;
+            heading.style.backgroundColor = newColour;
+            heading.style.color = 'hsl(0, 0%, ' + String(finalLightness) + '%)';
             return newColour;
         })
 

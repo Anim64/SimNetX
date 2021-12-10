@@ -19,34 +19,34 @@
 }
 
 
-.attributes .numeric h4 {
+.numeric h4 {
     color: crimson;
 }
 
-.attributes .numeric div[id$="slider"] {
+.numeric div[id$="slider"] {
     margin: 0 5% 1em;
     width: 90%;
 }
 
-.attributes .numeric input[type="number"] {
+.numeric input[type="number"] {
     margin: 0 5% 1em;
     width: 90%;
 }
 
 
-.attributes .categorical h4 {
+.categorical h4 {
     color: forestgreen;
     
 }
 
-.attributes .categorical .checkboxes {
+.categorical .checkboxes {
     margin: 0 5% 1em;
     width: 90%;
     display: grid;
     grid-template-columns: 2fr 1fr;
 }
 
-.attributes .categorical input[type="checkbox"] {
+.categorical input[type="checkbox"] {
     margin: 0 5% 1em;
 }
 

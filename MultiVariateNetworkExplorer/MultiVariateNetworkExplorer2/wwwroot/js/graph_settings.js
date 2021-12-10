@@ -300,3 +300,218 @@ function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue
     //$("#" + maxValueId).val($("#" + sliderId).slider("values", 1));
 
 }
+
+function hideConversionParameters() {
+    var conversion_parameters_divs = document.getElementsByClassName("remodel-parameters-div");
+    Array.prototype.forEach.call(conversion_parameters_divs, function (conversion_parameters_div) {
+        conversion_parameters_div.style.display = "none";
+    });
+}
+
+function displayConversionParameters(conversion_alg) {
+
+    hideConversionParameters();
+    var remodel_parameters_headline = document.getElementById("remodel-parameters-headline");
+
+    if (conversion_alg === "Epsilon") {
+        var epsilon_parameters_div = document.getElementById("epsilon-parameters");
+        epsilon_parameters_div.style.display = "grid";
+        remodel_parameters_headline.style.display = "block";
+    }
+
+    else {
+        remodel_parameters_headline.style.display = "none";
+    }
+
+    remodel_parameters_headline.parentElement.style.height = "auto";
+}
+
+function remodelNetwork(checkboxesDivId, algorithmSelectId) {
+    var attributeCheckboxDiv = document.querySelector('#' + checkboxesDivId);
+    var selectedAlgorithm = document.querySelector('#' + algorithmSelectId).value;
+
+    var checkboxes = attributeCheckboxDiv.querySelectorAll("input[type='checkbox']:checked");
+    var selected_attributes = Array.prototype.map.call(checkboxes, function (checkbox) {
+        return checkbox.value;
+    });
+
+    var newNet;
+
+    switch (selectedAlgorithm) {
+        default:
+        case 'LRNet':
+            newNet = LRNet(graph.nodes, graph.attributes, gaussianKernel);
+            break;
+        
+
+        case 'Epsilon':
+            var epsilonRadius = document.querySelector('#epsilonRadius').value;
+            var k = document.querySelector('#kNNmin').value;
+            newNet = Epsilon(graph.nodes, graph.attributes, gaussianKernel, epsilonRadius, k);
+            break;
+    }
+
+    graph.links = newNet;
+    updateLinks();
+    
+}
+
+function gaussianKernel(nodes, attributes, sigma = 1) {
+    var gaussianKernel = new Array(nodes.length * nodes.length);
+    let nodeCount = nodes.length;
+    nodes.forEach(function (node, index) {
+        for (let i = index; i < nodes.length; i++){
+            
+            if (i === index) {
+                gaussianKernel[index * nodeCount + i] = 1
+            }
+            else {
+                let distance = euclideanDistance(node, nodes[i], attributes);
+                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
+            }
+            
+        }
+    });
+
+    return gaussianKernel;
+}
+
+
+
+function euclideanDistance(node1, node2, attributes) {
+    let result = 0;
+    attributes.forEach(function (attribute) {
+        if (typeof node1[attribute] == 'number' && typeof node2[attribute] == 'number') {
+            result += Math.pow(node1[attribute] - node2[attribute], 2);
+        }
+    });
+
+    return result;
+}
+
+function EpsilonAndkNN(nodes, attributes, kernelMatrixFunction, similarity_threshold = 0.5, k = 1) {
+    let resultNet = new Array();
+    let kernel = kernelMatrixFunction(nodes, attributes);
+    let potentialNeighbours = Array.from(Array(nodes.length).keys());
+    let nodeCount = nodes.length;
+    var duplicateCheckDict = {};
+    nodes.forEach(function (node, index) {
+        var edgeCount = 0;
+        
+        potentialNeighbours.sort(function (node1, node2) {
+            if (kernel[index * nodeCount + node1] < kernel[index * nodeCount + node2]) {
+                return 1;
+            }
+
+            if (kernel[index * nodeCount + node1] > kernel[index * nodeCount + node2]) {
+                return -1;
+            }
+
+            return 0;
+        });
+
+        let n = 0;
+        while (edgeCount < k && kernel[index * nodeCount + potentialNeighbours[n]] > similarity_threshold && i < nodeCount) {
+            if (index !== potentialNeighbours[n] && (duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] == undefined || duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] == undefined)) {
+                duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
+                duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
+                let newLink = {
+                    source: node.index,
+                    target: nodes[potentialNeighbours[n]].index,
+                    value: 1,
+                    id: ++edgeId
+                };
+                resultNet.push(newLink);
+            }
+        }
+    });
+}
+
+function LRNet(nodes, attributes, kernelMatrixFunction) {
+    let resultNet = new Array();
+    let kernel = kernelMatrixFunction(nodes, attributes);
+    let degrees = {};
+    let significances = {};
+    let representativeness = {};
+    let nodeCount = nodes.length;
+    let edgeId = -1;
+
+    nodes.forEach(function (node1, index1) {
+        let nearestNeighbour = -1;
+        let maxSimilarity = -1;
+        nodes.forEach(function (node2, index2) {
+            if (index1 === index2) {
+                return;
+            }
+
+            if (!degrees.hasOwnProperty(index1)) {
+                degrees[index1] = 0;
+                significances[index1] = 0;
+            }
+
+            if (kernel[index1 * nodeCount + index2] > 0) {
+                degrees[index1]++;
+            }
+
+            if (kernel[index1 * nodeCount + index2] > maxSimilarity) {
+                maxSimilarity = kernel[index1 * nodes.length + index2];
+                nearestNeighbour = index2;
+            }
+        });
+
+        if (!significances.hasOwnProperty(nearestNeighbour)) {
+            significances[nearestNeighbour] = 0;
+        }
+
+        significances[nearestNeighbour]++;
+    });
+    var duplicateCheckDict = {};
+    nodes.forEach(function (node, index) {
+        if (significances[index] > 0) {
+            representativeness[index] = 1.0 / (Math.pow((1 + degrees[index]), (1.0 / significances[index])));
+        }
+
+        else {
+            representativeness[index] = 0;
+        }
+
+        let k = parseInt(Math.round(representativeness[index] * degrees[index]), 10);
+
+        let potentialNeighbours = Array.from(Array(nodeCount).keys());
+        potentialNeighbours.sort(function (node1, node2) {
+            if (kernel[index * nodeCount + node1] < kernel[index * nodeCount + node2]) {
+                return 1;
+            }
+
+            if (kernel[index * nodeCount + node1] > kernel[index * nodeCount + node2]) {
+                return -1;
+            }
+    
+            return 0;
+        });
+        let l;
+        if (k > 0) {
+            l = k + 1;
+        }
+
+        else {
+            l = 2;
+        }
+
+        for (let n = 0; n < l; n++) {
+            if (index !== potentialNeighbours[n] && (duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] == undefined || duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] == undefined)) {
+                duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
+                duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
+                let newLink = {
+                    source: node.index,
+                    target: nodes[potentialNeighbours[n]].index,
+                    value: 1,
+                    id: ++edgeId
+                };
+                resultNet.push(newLink);
+            }
+        }
+    });
+
+    return resultNet;
+}

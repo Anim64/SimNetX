@@ -17,6 +17,12 @@ namespace DataUtility
         /// </summary>
         public SortedDictionary<string, IColumn> Data { get; set; }
 
+        public IEnumerable<string> Columns { 
+            get 
+            {
+                return this.Data.Keys;
+            } 
+        }
         /// <summary>
         /// Gets the number of rows in the dataframe.
         /// </summary>
@@ -145,170 +151,6 @@ namespace DataUtility
                 }
             }
         }
-        /// <summary>
-        /// Creates a new network based on Dataframe using epsilon and kNN conversion.
-        /// </summary>
-        /// <param name="radius">Threshold under which every vertice will create an edge</param>
-        /// <param name="N">Number of minimum edges per vertice</param>
-        /// <returns>Returns a network representation of the DataFrame as <see cref="Network"/></returns>
-        public Network ToNetwork(IColumn idColumn, double radius = 0.5, int N = 1)
-        {
-            Network result = new Network(this.DataCount);
-            Matrix<double> kernelMatrix = GaussKernelMatrix();
-
-           
-            for (int i = 0; i < kernelMatrix.Rows; i++)
-            {
-                Dictionary<int, double> dict = new Dictionary<int, double>();
-
-                for (int j = i; j < kernelMatrix.Cols; j++)
-                {
-                    if (i != j)
-                    {
-                        dict[j] = kernelMatrix[i, j];
-                    }
-
-                }
-
-                var orderedDict = dict.OrderByDescending(key => key.Value);
-
-                int edgeCount = 0;
-
-                foreach (KeyValuePair<int, double> pair in orderedDict)
-                {
-                    if (edgeCount >= N && pair.Value < radius)
-                        break;
-
-                    result.AddIndirectedEdge(idColumn[i].ToString(), idColumn[pair.Key].ToString(), 1);
-                    edgeCount++;
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Creates a new network based on Dataframe using the LRNet algorithm.
-        /// 
-        /// <para>
-        /// References:
-        /// Graph construction based on local representativeness, Ochodkova, Eliska and Zehnalova, Sarka and Kudelka, Milos, International Computing and Combinatorics Conference, 2017
-        /// </para>
-        /// </summary>
-        /// <param name="idColumn"></param>
-        /// <returns>Returns a network representation of the DataFrame as <see cref="Network"/></returns>
-        public Network LRNet(IColumn idColumn)
-        {
-            Network resultNet = new Network(this.DataCount);
-            Matrix<double> kernelMatrix = GaussKernelMatrix();
-            Dictionary<int, int> degrees = new Dictionary<int, int>();
-            Dictionary<int, int> significances = new Dictionary<int, int>();
-
-            Dictionary<int, double> representativeness = new Dictionary<int, double>();
-            Dictionary<int, int> representativeNeighboursCount = new Dictionary<int, int>();
-
-            for(int i = 0; i < kernelMatrix.Rows; i++)
-            {
-                int nearestNeighbour = -1;
-                double maxSimilarity = -1;
-                for (int j = 0; j < kernelMatrix.Cols; j++)
-                {
-                    if (i == j)
-                    {
-                        continue;
-                    }
-
-                    if (!degrees.ContainsKey(i))
-                    {
-                        degrees[i] = 0;
-                        significances[i] = 0;
-                    }
-
-                    if (kernelMatrix[i, j] > 0)
-                    {
-                        
-                            degrees[i]++;
-                        
-                    }
-
-                    if (kernelMatrix[i, j] > maxSimilarity)
-                    {
-                        maxSimilarity = kernelMatrix[i, j];
-                        nearestNeighbour = j;
-                    }
-                }
-
-                if (!significances.ContainsKey(nearestNeighbour))
-                {
-                    significances[nearestNeighbour] = 0;
-                }
-
-                significances[nearestNeighbour]++;
-                
-
-            };
-
-            for (int i = 0; i < kernelMatrix.Rows; i++)
-            {
-                if (significances[i] > 0)
-                {
-                    representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
-                }
-
-                else
-                {
-                    representativeness[i] = 0;
-                }
-
-                int k = ((int)Math.Round(representativeness[i] * degrees[i]));
-
-                double[] vertexSimilarities = kernelMatrix.GetRow(i);
-                List<int> potentialNeighbours = Enumerable.Range(0, this.DataCount).ToList();
-                potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
-                
-               
-
-                if (k > 0)
-                {
-                    for (int n = 0; n < k + 1; n++)
-                    {
-                        if(i != potentialNeighbours[n])
-                        {
-                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
-
-                        }
-
-
-                    }
-
-                }
-
-                else
-                {
-                    for(int n = 0; n < 2; n++)
-                    {
-                        if (i != potentialNeighbours[n])
-                        {
-                            resultNet.AddIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
-                        }
-                    }
-                }
-
-
-
-
-            };
-            return resultNet;
-        }
-
-        /// <summary>
-        /// Gets all column names
-        /// </summary>
-        /// <returns>A list of column names</returns>
-        public IEnumerable<string> Columns()
-        {
-            return this.Data.Keys;
-        }
 
 
         /// <summary>
@@ -347,88 +189,9 @@ namespace DataUtility
                 {
                     this.CatAttrValues[column.Key] = ((List<string>)column.Value.Data).Distinct().ToList();
                 }
-
-                
-                
-
-
-
             }
 
         }
-
-        /// <summary>
-        /// Computes Eucledian distance between every pair of rows of the Dataframe.
-        /// </summary>
-        /// <returns>A matrix of all Eucledian distances</returns>
-        private Matrix<double> EuclideanKernelMatrix()
-        {
-            int dataCount = Data.First().Value.Data.Count;
-            Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
-
-            for(int i = 0; i < dataCount; i++)
-            {
-                for(int j = i + 1; j < dataCount; j++)
-                {
-                    double euclideanDistance = 0;
-                    foreach (var pair in this.Data)
-                    {
-                        
-                        if(!(pair.Value is ColumnString))
-                        {
-                            euclideanDistance += pair.Value.Data[i] != null && pair.Value.Data[j] != null ? Math.Pow((double)(Convert.ToDouble(pair.Value.Data[i]) - Convert.ToDouble(pair.Value.Data[j])), 2) : 0;
-                        }
-                        
-                    }
-
-                    kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Sqrt(euclideanDistance);
-                }
-            }
-
-            return kernelMatrix;
-        }
-
-        /// <summary>
-        /// Computes Gaussian similarity between every pair of rows of the Dataframe.
-        /// </summary>
-        /// <param name="sigma"></param>
-        /// <returns>A matrix of all Gaussian similarities</returns>
-        private Matrix<double> GaussKernelMatrix(double sigma = 1)
-        {
-            int dataCount = Data.First().Value.DataCount;
-            Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
-
-            Parallel.For(0, dataCount, i => 
-            { 
-                for (int j = i; j < dataCount; j++)
-                {
-                    if (i == j)
-                    {
-                        kernelMatrix[i, j] = kernelMatrix[j, i] = 1;
-
-                    }
-                    else
-                    {
-                        double euclideanDistance = 0;
-                        foreach (var pair in this.Data)
-                        {
-
-                            if (!(pair.Value is ColumnString))
-                            {
-                                euclideanDistance += Math.Pow((double)(Convert.ToDouble(pair.Value.Data[i]) - Convert.ToDouble(pair.Value.Data[j])), 2);
-                            }
-
-                        }
-                        kernelMatrix[i, j] = kernelMatrix[j, i] = (1.0 / (sigma*Math.Sqrt(2*Math.PI))) * Math.Exp((-euclideanDistance) / (2 * Math.Pow(sigma, 2)));
-                    }
-                }
-            });
-
-            return kernelMatrix;
-        }
-
-
-
 
         /// <summary>
         /// Reads vector data from a file and saves them to Dataframe

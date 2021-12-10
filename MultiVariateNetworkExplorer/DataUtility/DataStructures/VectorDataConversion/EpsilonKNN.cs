@@ -45,7 +45,7 @@ namespace DataUtility.DataStructures.VectorDataConversion
                     if (edgeCount >= this.K && pair.Value < this.Radius)
                         break;
 
-                    result.AddIndirectedEdge(idColumn[i].ToString(), idColumn[pair.Key].ToString(), 1);
+                    result.SetIndirectedEdge(idColumn[i].ToString(), idColumn[pair.Key].ToString(), 1);
                     edgeCount++;
                 }
             }

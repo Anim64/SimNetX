@@ -2,7 +2,8 @@
     --border-color: #ccc;
     --active-content: rgb(254 232 115);
     --shadow-color: rgba(0,0,0, 0.20);
-    
+    --parameter-label-bg-color: rgba(70,70,70, 0.7);
+    --parameter-input-and-select-bg-color: rgba(85,85,85, 0.7);
 }
 
 

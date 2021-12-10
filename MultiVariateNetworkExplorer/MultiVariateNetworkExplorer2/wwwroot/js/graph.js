@@ -1,4 +1,5 @@
-﻿var graph = null;
+﻿
+var graph = null;
 var store = null;
 var filterNodeList = [];
 var linkedByIndex = {};
@@ -29,6 +30,8 @@ let startTime = Date.now();
 let endTime = startTime + simulationDurationInMs;
 
 
+
+    
 
 //var nodeColor = "#000000";
 
@@ -731,9 +734,7 @@ function updateNodeGroups() {
     
 }
 
-
-//Update nodes and links after filtration
-function updateNodesAndLinks() {
+function updateNodes() {
     node = node.data(graph.nodes, function (d) { return d.id; });
     //	EXIT
     node.exit().remove();
@@ -751,14 +752,16 @@ function updateNodesAndLinks() {
 
     node = node.merge(newNode);
     updateNodeGroups();
+}
 
+function updateLinks() {
     link = link.data(graph.links, function (d) { d.source });
     //	EXIT
     link.exit().remove();
 
     var newLink = link.enter().append("path")
         .attr("marker-end", "url(#arrow)")
-        
+
 
     link = link.merge(newLink);
 
@@ -775,10 +778,13 @@ function updateNodesAndLinks() {
     link.style("stroke", function (l) {
         return nodeColor(l.source.id);
     });
+}
 
-    
 
-    
+//Update nodes and links after filtration
+function updateNodesAndLinks() {
+    updateNodes();
+    updateLinks();
 }
 
 //Update nodes and links after filtration
@@ -865,6 +871,8 @@ function nodeColor(nodeId) {
         return defaultColour;
     }
 }
+
+
 
 d3.select(window).on("resize", function () {
     width = +svg.node().getBoundingClientRect().width;

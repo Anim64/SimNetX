@@ -31,7 +31,15 @@ namespace DataUtility
         /// <summary>
         /// Return the total number of edges that exist in network.
         /// </summary>
-        public int NumberOfEdges { get; private set; }
+        private int numberOfEdges = -1;
+        public int NumberOfEdges
+        {
+            get
+            {
+                return this.Data.Sum(kv => kv.Value.Count(kv1 => String.Compare(kv.Key, kv1.Key) < 0));
+            }
+        }
+            
 
         /// <summary>
         /// Returns the number of nodes in the network. Returns the same value as <see cref="Count"/>.
@@ -142,7 +150,6 @@ namespace DataUtility
         {
             this.Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             this.NumberOfVertices = json["nodes"].Count();
-            this.NumberOfEdges = 0;
             this.TotalWeight = 0;
             foreach(var node in json["nodes"])
             {
@@ -152,11 +159,11 @@ namespace DataUtility
             {
                 this.SetDirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
                 TotalWeight += (double)link["value"];
-                NumberOfEdges++; 
+                
             }
 
             TotalWeight = TotalWeight / 2;
-            NumberOfEdges = NumberOfEdges / 2;
+            
 
         }
 
@@ -167,7 +174,7 @@ namespace DataUtility
         public Network(Network net)
         {
             Data = new SortedDictionary<string, SortedDictionary<string, double>>();
-            this.NumberOfEdges = net.NumberOfEdges;
+            
             this.TotalWeight = net.TotalWeight;
             this.NumberOfVertices = net.NumberOfVertices;
             foreach(var pair in net.Data)
@@ -283,7 +290,7 @@ namespace DataUtility
                 AddDirectedEdge(toNode, fromNode, weight);
             }
             TotalWeight += weight;
-            NumberOfEdges++;
+            
         }
 
         /// <summary>
@@ -312,7 +319,6 @@ namespace DataUtility
                 SetDirectedEdge(toNode, fromNode, weight);
             }
             TotalWeight += weight;
-            NumberOfEdges++;
         }
 
 
