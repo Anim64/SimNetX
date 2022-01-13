@@ -1,0 +1,30 @@
+﻿.network-metrics-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    color: lavender;
+    margin: 0 1rem;
+    
+}
+
+.network-metric-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+}
+
+.network-metric-content span {
+    font-size: larger;
+}
+
+.network-metric-content button {
+    margin: 0;
+    width: 25%;
+    align-self: flex-end;
+}
+
+

@@ -340,14 +340,14 @@ function remodelNetwork(checkboxesDivId, algorithmSelectId) {
     switch (selectedAlgorithm) {
         default:
         case 'LRNet':
-            newNet = LRNet(graph.nodes, graph.attributes, gaussianKernel);
+            newNet = LRNet(graph.nodes, selected_attributes, gaussianKernel);
             break;
         
 
         case 'Epsilon':
             var epsilonRadius = document.querySelector('#epsilonRadius').value;
             var k = document.querySelector('#kNNmin').value;
-            newNet = Epsilon(graph.nodes, graph.attributes, gaussianKernel, epsilonRadius, k);
+            newNet = Epsilon(graph.nodes, selected_attributes, gaussianKernel, epsilonRadius, k);
             break;
     }
 

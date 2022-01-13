@@ -385,6 +385,27 @@ namespace DataUtility
         }
 
         //******************************************
+        //***************Metrics********************
+        //******************************************
+
+        public int MaxDegree()
+        {
+            return this.Data.Max(x => x.Value.Count);
+        }
+
+        public int MinDegree()
+        {
+            return this.Data.Min(x => x.Value.Count);
+
+        }
+
+        public double AverageDegree()
+        {
+            return this.Data.Sum(x => x.Value.Count) / this.NumberOfVertices;
+        }
+
+
+        //******************************************
         //*************Miscellanious****************
         //******************************************
 

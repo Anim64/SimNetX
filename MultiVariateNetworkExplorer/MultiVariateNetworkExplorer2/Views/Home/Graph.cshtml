@@ -7,6 +7,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/controls.css" type="text/css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/metrics.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/selections.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/attributes.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
@@ -230,7 +231,9 @@
             <div class="tab-nav">
                 <a class="tab-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graph-content') ">Selection Graph</a>
             </div>
-            <div></div>
+            <div class="tab-nav">
+                <a class="tab-link" href="#" onclick="openTab(event, 'networkMetrics', 'graph', '.graph-content') ">Graph Metrics</a>
+            </div>
         </div>
         <div id="networkGraph" class="graph-content">
             <svg></svg>
@@ -248,6 +251,15 @@
             drawSelectionNetwork(@Html.Raw(Model.Selection));
             </script>
         </div>
+        <div id="networkMetrics" class="graph-content">
+            <div class="network-metrics-container">
+                <div class="network-metric-content" data-value="degree">
+                    <h4>Average Degree</h4>
+                    <span>Calculating...</span>
+                    <button>Recalculate</button>
+                </div>
+            </div>
+        </div>
         <script>
             // Get the element with id="defaultOpen" and click on it
 
@@ -263,7 +275,6 @@
             <div class="tab-nav">
                 <a class="tab-link" href="#" onclick="openTab(event, 'selections', 'nodes', '.column-content')">Selection properties</a>
             </div>
-            <div></div>
         </div>
         <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
 

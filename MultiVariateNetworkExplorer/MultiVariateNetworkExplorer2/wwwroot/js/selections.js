@@ -13,7 +13,6 @@
     } : null;
 }
 
-function calculate 
 
 function inputColorClick(selection_panel) {
     selection_panel.querySelector('input').click();

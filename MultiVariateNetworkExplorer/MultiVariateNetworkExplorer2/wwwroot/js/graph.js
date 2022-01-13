@@ -1,5 +1,4 @@
-﻿
-var graph = null;
+﻿var graph = null;
 var store = null;
 var filterNodeList = [];
 var linkedByIndex = {};
@@ -23,13 +22,16 @@ var brush = null;
 var gDraw = null;
 var gMain = null;
 var grads = null;
+var transformX = 0;
+var transformY = 0;
+var scaleK = 1;
 
 const simulationDurationInMs = 60000; // 20 seconds
 
 let startTime = Date.now();
 let endTime = startTime + simulationDurationInMs;
 
-
+const jsPath = '../js/';
 
     
 
@@ -207,18 +209,11 @@ function drawNetwork(data) {
             .on("end", dragended))
         .on("mouseover", mouseOver(.2))
         .on("mouseout", mouseOut);
-
-        
-
     
     node.append("title")
         .text(function (d) { return d.id; });
 
-    
-
-
-
-
+   
     graph.links.forEach(function (d) {
         linkedByIndex[d.source + "," + d.target] = 1;
     });
@@ -258,7 +253,15 @@ function drawNetwork(data) {
 
     updateForces();
     
-   
+    node.style("fill", function (d) {
+        return nodeColor(d.id);
+
+    })
+
+    link.style("stroke", function (l) {
+        return nodeColor(l.source.id);
+
+    })
 
 }
 
@@ -356,15 +359,7 @@ function drawSelectionNetwork(data) {
     /*selectionSimulation.force("link")
         .links(selectionGraph.links);*/
 
-    node.style("fill", function (d) {
-        return nodeColor(d.id);
-
-    })
-
-    link.style("stroke", function (l) {
-        return nodeColor(l.source.id);
-
-    })
+    
 }
 
 //Update node or link position when simulation starts
@@ -554,11 +549,11 @@ function brushed() {
     if (!d3.event.selection) return;
 
     var extent = d3.event.selection;
-
+    
     node.classed("selected", function (d) {
-        return d.selected = //d.previouslySelected ^
-            (extent[0][0] <= d.x && d.x < extent[1][0]
-                && extent[0][1] <= d.y && d.y < extent[1][1]);
+        return d.selected = d.previouslySelected |
+            (extent[0][0] <= ((d.x * scaleK) + transformX) && ((d.x * scaleK) + transformX) < extent[1][0]
+            && extent[0][1] <= ((d.y * scaleK) + transformY) && ((d.y * scaleK) + transformY) < extent[1][1]);
     });
 }
 
@@ -584,9 +579,10 @@ function brushended() {
 function zoomed() {
     
     var transform = d3.event.transform;
-    var scale = 1 + (transform.k / 10);
-    gDraw.attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")");
-    
+    transformX = transform.x;
+    transformY = transform.y;
+    scaleK = transform.k;
+    gDraw.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
 }
 
 
@@ -751,6 +747,17 @@ function updateNodes() {
         .text(function (d) { return d.id; });
 
     node = node.merge(newNode);
+
+    node.style("fill", function (d) {
+        return nodeColor(d.id);
+
+    })
+
+    link.style("stroke", function (l) {
+        return nodeColor(l.source.id);
+
+    })
+
     updateNodeGroups();
 }
 
@@ -872,6 +879,15 @@ function nodeColor(nodeId) {
     }
 }
 
+function calculateMetric(graph, metricDiv) {
+    const workerName = metricDiv.getAttribute('data-value');
+    const worker = new Worker(jsPath + workerName + '_worker.js?v=2');
+    worker.postMessage(graph);
+    
+    worker.onmessage = e => metricDiv.querySelector('span').innerHTML = e.data.average;
+
+}
+
 
 
 d3.select(window).on("resize", function () {
@@ -892,6 +908,11 @@ $(document).ready(function () {
         });
 
     node.on("click", displayNodeProperties);
+
+    var metricsDivs = document.querySelectorAll('.network-metric-content');
+    Array.prototype.forEach.call(metricsDivs, function (metricDiv) {
+        calculateMetric(graph, metricDiv);
+    });
 });
 
 $(function () {

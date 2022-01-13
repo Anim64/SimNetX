@@ -1,6 +1,6 @@
 ﻿html {
-    --border-color: #ccc;
-    --active-content: rgb(254 232 115);
+    --border-color: rgb(89, 118, 135);
+    --active-content: rgb(138, 182, 210);
     --shadow-color: rgba(0,0,0, 0.20);
     --parameter-label-bg-color: rgba(70,70,70, 0.7);
     --parameter-input-and-select-bg-color: rgba(85,85,85, 0.7);
@@ -46,6 +46,12 @@
     border-top-right-radius: 7px;
     text-decoration: none;
     border-bottom: 2px solid var(--border-color);
+    font-size: 18px;
+    color:lavender;
+}
+
+.tab-link.tab-active {
+    color: rgb(52, 59, 74);
 }
 
 .tab-link:hover {
@@ -111,6 +117,7 @@
 .graph-content {
     height: 100%;
     border-left: 2px solid var(--border-color);
+    display: none;
 }
 
 .graph-content a{
@@ -119,10 +126,6 @@
 
 #networkGraph.graph-content{
     display: block;
-}
-
-#selectionGraph.graph-content {
-    display: none;
 }
 
 .bottom-panel {
