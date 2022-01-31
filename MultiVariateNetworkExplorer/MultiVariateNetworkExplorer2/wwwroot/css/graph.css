@@ -20,6 +20,7 @@
 .main-div {
     display: flex;
     flex-direction: row;
+    justify-content: stretch;
     padding-bottom: 0.5rem;
     max-height: 90vh;
     width: 100%;
@@ -46,7 +47,7 @@
     border-top-right-radius: 7px;
     text-decoration: none;
     border-bottom: 2px solid var(--border-color);
-    font-size: 18px;
+    font-size: 1.7rem;
     color:lavender;
 }
 
@@ -82,18 +83,18 @@
 }
 
 .column.left-col {
-    width: 16%;
+    flex-grow: 1;
+    max-width: 20%;
 }
-
 
 
 .column.right-col {
-    width: 24%;
-    
+    flex-grow: 1;
+    max-width: 20%;
 }
 
 .graph-col {
-    width: 60%;
+    flex-grow: 2;
     border-right: none;
 }
 
@@ -118,6 +119,7 @@
     height: 100%;
     border-left: 2px solid var(--border-color);
     display: none;
+    position: relative;
 }
 
 .graph-content a{

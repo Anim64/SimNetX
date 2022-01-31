@@ -207,7 +207,7 @@ function drawNetwork(data) {
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended))
-        .on("mouseover", mouseOver(.2))
+        .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
     
     node.append("title")
@@ -229,13 +229,7 @@ function drawNetwork(data) {
 
     
     //Background event to deselect all nodes
-    rect.on('click', () => {
-        node.each(function (d) {
-            d.selected = false;
-            d.previouslySelected = false;
-        });
-        node.classed("selected", false);
-    });
+    rect.on('click', deselectAllNodes);
 
     d3.select('body').on('keydown', keydown);
     d3.select('body').on('keyup', keyup);
@@ -469,31 +463,34 @@ function dragstarted(d) {
 
 
 // check the dictionary to see if nodes are linked
-function isConnected(a, b) {
-    return linkedByIndex[a.id + "," + b.id] || linkedByIndex[b.id + "," + a.id] || a.id == b.id;
+function isConnected(nodeId1, nodeId2) {
+    return linkedByIndex[nodeId1 + "," + nodeId2] || linkedByIndex[nodeId2 + "," + nodeId1] || nodeId1 == nodeId2;
 }
 
+function fadeDisconnectedNodes(nodeId, opacity) {
+    // check all other nodes to see if they're connected
+    // to this one. if so, keep the opacity at 1, otherwise
+    // fade
+    node.style("stroke-opacity", function (o) {
+        thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
+        return thisOpacity;
+    });
+    node.style("fill-opacity", function (o) {
+        thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
+        return thisOpacity;
+    });
+    // also style link accordingly
+    link.style("stroke-opacity", function (o) {
+        return o.source.id === nodeId || o.target.id === nodeId ? 1 : opacity;
+    });
+    link.style("stroke", function (o) {
+        return o.source.id === nodeId || o.target.id === nodeId ? o.source.colour : nodeColor(o.source.id);
+    });
+}
 // fade nodes on hover
-function mouseOver(opacity) {
+function nodeMouseOver(opacity) {
     return function (d) {
-        // check all other nodes to see if they're connected
-        // to this one. if so, keep the opacity at 1, otherwise
-        // fade
-        node.style("stroke-opacity", function (o) {
-            thisOpacity = isConnected(d, o) ? 1 : opacity;
-            return thisOpacity;
-        });
-        node.style("fill-opacity", function (o) {
-            thisOpacity = isConnected(d, o) ? 1 : opacity;
-            return thisOpacity;
-        });
-        // also style link accordingly
-        link.style("stroke-opacity", function (o) {
-            return o.source === d || o.target === d ? 1 : opacity;
-        });
-        link.style("stroke", function (o) {
-            return o.source === d || o.target === d ? o.source.colour : nodeColor(o.source.id);
-        });
+        fadeDisconnectedNodes(d.id, opacity);
     };
 }
 
@@ -551,9 +548,13 @@ function brushed() {
     var extent = d3.event.selection;
     
     node.classed("selected", function (d) {
-        return d.selected = d.previouslySelected |
+        d.selected = d.previouslySelected |
             (extent[0][0] <= ((d.x * scaleK) + transformX) && ((d.x * scaleK) + transformX) < extent[1][0]
-            && extent[0][1] <= ((d.y * scaleK) + transformY) && ((d.y * scaleK) + transformY) < extent[1][1]);
+                && extent[0][1] <= ((d.y * scaleK) + transformY) && ((d.y * scaleK) + transformY) < extent[1][1]);
+        if (d.selected) {
+            document.querySelector('#heading-' + d.id).classList.add('node-heading-selected');
+        }
+        return d.selected
     });
 }
 
@@ -572,6 +573,17 @@ function brushended() {
     }
 
     brushing = false;
+}
+
+function deselectAllNodes() {
+    node.each(function (d) {
+        d.selected = false;
+        d.previouslySelected = false;
+    });
+    node.classed("selected", false);
+    document.querySelectorAll('.node-heading-selected').forEach(nodeHeading => {
+        nodeHeading.classList.remove("node-heading-selected");
+    });
 }
 
 
@@ -879,13 +891,19 @@ function nodeColor(nodeId) {
     }
 }
 
-function calculateMetric(graph, metricDiv) {
+function calculateMetric(current_graph, metricDiv) {
+    metricDiv.querySelector('span').innerHTML = "Calculating...";
+
     const workerName = metricDiv.getAttribute('data-value');
     const worker = new Worker(jsPath + workerName + '_worker.js?v=2');
-    worker.postMessage(graph);
-    
-    worker.onmessage = e => metricDiv.querySelector('span').innerHTML = e.data.average;
+    worker.postMessage(current_graph);
 
+    worker.onmessage = e => metricDiv.querySelector('span').innerHTML = e.data.average;
+    
+}
+
+function getNodeCount(graph) {
+    return graph.nodes.length;
 }
 
 

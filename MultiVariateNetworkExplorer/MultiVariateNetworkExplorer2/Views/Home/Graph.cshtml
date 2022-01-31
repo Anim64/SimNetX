@@ -176,11 +176,11 @@
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
                 <label>
                     X Axis
-                    @Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('x', this.value);" })
+                    @Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-x-attributes", @class = "form-control", onchange = "projectAttribute('x', this.value);" })
                 </label>
                 <label>
                     Y Axis
-                    @Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @class = "form-control", onchange = "projectAttribute('y', this.value);" })
+                    @Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-y-attributes", @class = "form-control", onchange = "projectAttribute('y', this.value);" })
                 </label>
             </div>
             <div class="force">
@@ -243,6 +243,21 @@
             <script>
             drawNetwork(@Html.Raw(Model.Graph));
             </script>
+            <div class="node-detail-container" id="node-detail-container">
+                <div class="node-detail-heading-container">
+                    <h4 id="node-detail-heading">Node:</h4>
+                    <button class="close-button" onclick="closeNodeDetails('node-detail-container')">X</button>
+                </div>
+                <div id="node-detail" class="node-detail">
+                    @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                    {
+                        <div class="node-property-group">
+                            <label for="@("display-" + attribute)">@(attribute + ":")</label>
+                            <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
         <div id="selectionGraph" class="graph-content">
             <svg></svg>
@@ -256,10 +271,11 @@
                 <div class="network-metric-content" data-value="degree">
                     <h4>Average Degree</h4>
                     <span>Calculating...</span>
-                    <button>Recalculate</button>
+                    <button onclick="calculateMetric(graph, this.parentNode);">Recalculate</button>
                 </div>
             </div>
         </div>
+        
         <script>
             // Get the element with id="defaultOpen" and click on it
 
@@ -277,38 +293,24 @@
             </div>
         </div>
         <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
-
-            @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node = node + 5)
-            {
-                <div class="node-row-group" id="@($"node-row-group-{ node }")">
-
-                    @for (int nodeRowIdx = 0; nodeRowIdx < 5; nodeRowIdx++)
-                    {
-                        if ((node + nodeRowIdx) < Model.Mvn.VectorData.DataCount)
-                        {
-                            <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node + nodeRowIdx])" onclick="toggleNodeDetails(@(node + nodeRowIdx), '@($"heading-{ Model.Mvn.IdColumn[node + nodeRowIdx] }")', '@($"node-detail-{node}")', '@($"node-row-group-{ node }")')">
-                                <h5>@(Model.Mvn.IdColumn[node + nodeRowIdx])</h5>
-                            </div>
-                        }
-
-                    }
-
-                    <div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
+            <div class="node-grid">
+                @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
+                {
+                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, @(node))" onmouseover="nodeHeadingMouseOver(@(Model.Mvn.IdColumn[node]), .2)" onmouseout="mouseOut()">
+                        <h5>@(Model.Mvn.IdColumn[node])</h5>
+                    </div>
+                    @*<div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
                         @foreach (var attribute in Model.Mvn.VectorData.Columns)
                         {
 
                             <div class="node-property-group">
                                 <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)">@(attribute + ":")</label>
-                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly />
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly/>
                             </div>
                         }
-                    </div>
-
-                </div>
-
-
-
-            }
+                    </div>*@
+                }
+            </div>
             <script>
                 updateNodeGroups();
             </script>
