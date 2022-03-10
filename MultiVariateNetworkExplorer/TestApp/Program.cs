@@ -1,4 +1,5 @@
 ﻿using DataUtility;
+using DataUtility.DataStructures.VectorDataConversion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,13 +15,9 @@ namespace TestApp
             //v.ReadFromFile("iris.data", ',');
 
 
-            /*MultiVariateNetwork mvn = new MultiVariateNetwork("karate.csv", false , ',');
+            MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "ecoli.data" }, null, null, null, new LRNet(), false, false, true, ' ');
             //mvn.FindCommunities();
-            string json = mvn.ToD3Json();
-            Console.WriteLine(json);
-            Console.WriteLine();*/
-            Console.WriteLine(4.54);
-            
+            var ext = ((ColumnDouble)mvn.VectorData["aac"]).Extremes;
 
             /*Network g = new Network();
             //test network

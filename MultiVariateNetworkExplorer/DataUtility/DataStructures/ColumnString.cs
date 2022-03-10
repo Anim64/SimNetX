@@ -25,9 +25,16 @@ namespace DataUtility
                 return this.Data[index];
             }
         }
+
+        public ColumnString() { }
+        
+        public ColumnString(IList data)
+        {
+            this.Data = data;
+        }
         public void AddData(object value, bool updateExtremes = false)
         {
-            string stringValue = (string)value;
+            string stringValue = value.ToString();
             this.Data.Add(stringValue);
         }
 

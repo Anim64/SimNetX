@@ -81,3 +81,5 @@ function closeNodeDetails(nodeDetailsId) {
     var nodeDetailsDiv = document.querySelector('#' + nodeDetailsId);
     nodeDetailsDiv.style.display = "none";
 }
+
+

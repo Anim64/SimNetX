@@ -15,22 +15,24 @@ namespace DataUtility
                 return this.Data.Count;
             }
         }
+
+        private ColumnExtremesStruct extremes = null;
         public ColumnExtremesStruct Extremes 
         {
             get
             {
-                if(this.Extremes == null)
+                if(this.extremes == null)
                 {
-                    this.Extremes = FindExtremes();
+                    this.extremes = FindExtremes();
                 }
 
-                return this.Extremes;
+                return this.extremes;
 
 
             }
             private set
             {
-                this.Extremes = value;
+                this.extremes = value;
             }
         }
 
@@ -70,10 +72,10 @@ namespace DataUtility
 
         private ColumnExtremesStruct FindExtremes()
         {
-            int min = int.MaxValue;
-            int max = int.MinValue;
+            double min = double.MaxValue;
+            double max = double.MinValue;
 
-            foreach(int value in this.Data)
+            foreach(double value in this.Data)
             {
                 if(value > max)
                 {

@@ -176,6 +176,7 @@ svg {
     stroke-width: 1.5px;
 }
 
+
 .nodes .selected {
     stroke: black;
 }
@@ -184,4 +185,18 @@ svg {
     fill-opacity: .1;
     stroke: #fff;
     shape-rendering: crispEdges;
+}
+
+@keyframes circleScale {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(0);
+    }
 }

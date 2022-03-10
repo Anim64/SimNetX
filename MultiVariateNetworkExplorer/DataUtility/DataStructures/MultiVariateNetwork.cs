@@ -22,7 +22,7 @@ namespace DataUtility
 
         public bool Directed { get; set; }
 
-        public IColumn IdColumn { get; set; }
+        public ColumnString IdColumn { get; set; }
 
 
         public MultiVariateNetwork()
@@ -45,14 +45,14 @@ namespace DataUtility
             {
 
                 bool isParsable = int.TryParse(idColumn, out int result);
-                IdColumn = isParsable ? this.VectorData["Attribute" + idColumn] : this.VectorData[idColumn];
+                IdColumn = isParsable ? (ColumnString)this.VectorData["Attribute" + idColumn] : (ColumnString)this.VectorData[idColumn];
                 this.VectorData.RemoveColumn(isParsable ? "Attribute" + idColumn : idColumn);
 
             }
 
             else
             {
-                IdColumn = new ColumnDouble(Enumerable.Range(0, this.VectorData.DataCount).ToList());
+                IdColumn = new ColumnString(Enumerable.Range(0, this.VectorData.DataCount).Select(id => id.ToString()).ToList());
             }
             
             if (!String.IsNullOrEmpty(groupColumn))

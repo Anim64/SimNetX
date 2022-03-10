@@ -138,11 +138,7 @@ function addSelectionDiv(selection) {
 
 }
 
-
-//Move nodes to different selection
-function addNodesToSelection(event, selectionId) {
-    event.stopPropagation();
-    var newColour = document.getElementById("selection_color_" + selectionId).value;
+function fontLightness(newColour) {
     const threshold = 0.5;
     var rgbRepresentation = hexToRgb(newColour);
     var red = rgbRepresentation['r'];
@@ -157,6 +153,16 @@ function addNodesToSelection(event, selectionId) {
     var perceivedLightness = lumaSum / 255;
 
     var finalLightness = (perceivedLightness - threshold) * -10000000;
+
+    return finalLightness;
+}
+
+
+//Move nodes to different selection
+function addNodesToSelection(event, selectionId) {
+    event.stopPropagation();
+    var newColour = document.getElementById("selection_color_" + selectionId).value;
+    var lightness = fontLightness(newColour);
 
     node.filter(function (d) { return d.selected })
         .each(function (d) {
@@ -224,7 +230,7 @@ function addNodesToSelection(event, selectionId) {
             let heading = document.querySelector('#heading-' + d.id);
 
             heading.style.backgroundColor = newColour;
-            heading.style.color = 'hsl(0, 0%, ' + String(finalLightness) + '%)';
+            heading.style.color = 'hsl(0, 0%, ' + String(lightness) + '%)';
             return newColour;
         })
 
@@ -250,8 +256,11 @@ function deleteAllSelections() {
 
         
     })*/
-
+    var lightness = fontLightness(defaultColour);
     node.style("fill", defaultColour);
+    d3.selectAll('.node-heading')
+        .style("background-color", defaultColour)
+        .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
 
     selectionGraph.nodes = [];
     selectionGraph.links = [];
@@ -268,12 +277,16 @@ function deleteSelection(event, selectionId) {
     event.stopPropagation();
     var selectionPanel = document.querySelector('#selection_panel_' + selectionId);
     selectionPanel.parentNode.removeChild(selectionPanel);
-
+    var lightness = fontLightness(defaultColour);
     node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
-        .style("fill", defaultColour)
-        .each(function (n) {
-            graph.partitions[n.id] = "";
-        })
+        .style("fill", function (d) {
+            
+            d3.select('#heading-' + d.id)
+                .style("background-color", defaultColour)
+                .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
+            graph.partitions[d.id] = "";
+            return defaultColour;
+        });
 
 
     selectionGraph.nodes = selectionGraph.nodes.filter(function (n) { return n.id != selectionId });

@@ -122,13 +122,24 @@
                 </label>
                 <label title="Size of nodes">
                     radius
-                    <output id="collide_radiusSliderOutput">5</output>
+                    <output id="collide_radiusSliderOutput">8</output>
                     <input type="range" min="0" max="100" value="5" step="1" oninput="d3.select('#collide_radiusSliderOutput').text(value); forceProperties.collide.radius=value; updateAll();">
                 </label>
                 <label title="Higher values increase rigidity of the nodes (WARNING: high values are computationally expensive)">
                     iterations
                     <output id="collide_iterationsSliderOutput">1</output>
                     <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#collide_iterationsSliderOutput').text(value); forceProperties.collide.iterations=value; updateAll();">
+                </label>
+            </div>
+
+            <div class="force">
+                <label>
+                    default node colour
+                    <input type="color" onchange="changeNetworkNodeColour(value)">
+                </label>
+                <label>
+                    background colour
+                    <input type="color" onchange="changeNetworkBackgroundColour(value);">
                 </label>
             </div>
             <!--
@@ -174,14 +185,42 @@
             </div>
             <div class="force">
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
-                <label>
+                <label for="project-x-attributes">
                     X Axis
-                    @Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-x-attributes", @class = "form-control", onchange = "projectAttribute('x', this.value);" })
+                    @*@Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-x-attributes", @class = "form-control", onchange = "projectAttribute('x', this.value);" })*@
+                    <select id="project-x-attributes" class="form-control" name="project-x-attributes" onchange = "projectAttributeXAxis(this);">
+                        <option value=""><None></option>
+                        <optgroup label="Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Centralities">
+                            <option value="degree">Degree</option>
+                            <option value="closeness">Closeness</option>
+                        </optgroup>
+                    </select>
                 </label>
-                <label>
+                
+                <label for="project-y-attributes">
                     Y Axis
-                    @Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-y-attributes", @class = "form-control", onchange = "projectAttribute('y', this.value);" })
+                    @*@Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-y-attributes", @class = "form-control", onchange = "projectAttribute('y', this.value);" })*@
+                    <select id="project-y-attributes" class="form-control" name="project-y-attributes" onchange = "projectAttributeYAxis(this);">
+                        <option value=""><None></option>
+                        <optgroup label="Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Centralities">
+                            <option value="degree">Degree</option>
+                            <option value="closeness">Closeness</option>
+                        </optgroup>
+                    </select>
                 </label>
+                
             </div>
             <div class="force">
                 <p><label>Remodel the network</label> With option to exclude some attributes</p>
@@ -273,6 +312,11 @@
                     <span>Calculating...</span>
                     <button onclick="calculateMetric(graph, this.parentNode);">Recalculate</button>
                 </div>
+                <div class="network-metric-content" data-value="closeness">
+                    <h4>Average Closeness</h4>
+                    <span>Calculating...</span>
+                    <button onclick="calculateMetric(graph, this.parentNode);">Recalculate</button>
+                </div>
             </div>
         </div>
         
@@ -296,7 +340,7 @@
             <div class="node-grid">
                 @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
                 {
-                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, @(node))" onmouseover="nodeHeadingMouseOver(@(Model.Mvn.IdColumn[node]), .2)" onmouseout="mouseOut()">
+                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.IdColumn[node])', .2)" onmouseout="mouseOut()">
                         <h5>@(Model.Mvn.IdColumn[node])</h5>
                     </div>
                     @*<div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">

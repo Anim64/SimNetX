@@ -210,33 +210,27 @@ function filterByCategory(filteredAttributeName, category, checked) {
     updateForces();
 }
 
-//Update X and Y force to project nodes on axes
-function projectAttribute(axis, attributeName) {
-    var x_projection = $("#droplist_x").val();
-    var y_projection = $("#droplist_y").val();
+function projectAttributeXAxis(selectElement) {
+    var attributeName = selectElement.value;
 
-    var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
-    var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
-
-    if (x_projection === "" && y_projection === "") {
-        //forceProperties.charge.enabled = true;
-        /*simulation.force("link").strength(function (link) {
-            return 1 / Math.min(count(link.source), count(link.target));
-        });*/
-
+    if (attributeName === "") {
+        simulation.force("forceX")
+            .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+            .x(width * forceProperties.forceX.x);
     }
 
-    if (axis === 'x') {
-        if (attributeName === "") {
-            simulation.force("forceX")
-                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
-                .x(width * forceProperties.forceX.x);
-        }
+    else {
 
-        else {
-            forceProperties.forceX.enabled = true;
-            //forceProperties.charge.enabled = false;
-            //simulation.force("link").strength(0);
+        forceProperties.forceX.enabled = true;
+        //forceProperties.charge.enabled = false;
+        //simulation.force("link").strength(0);
+        var optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+
+
+        if (optgroup === "Attributes") {
+            var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
+            var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+
             simulation.force("forceX")
                 .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
                 .x(function (d) {
@@ -248,28 +242,73 @@ function projectAttribute(axis, attributeName) {
                     return value;
                 });
         }
+
+        else if (optgroup === "Centralities"){
+            var attributeMax = graph.properties[attributeName].max;
+            var attributeMin = graph.properties[attributeName].min;
+
+            simulation.force("forceX")
+                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
+                .x(function (d) {
+                    if (graph.properties[attributeName].values[d.id] == "") {
+                        return width / 2;
+                    }
+
+                    var value = width * ((parseFloat(graph.properties[attributeName].values[d.id]) - attributeMin) / (attributeMax - attributeMin));
+                    return value;
+                });
+        }
     }
 
-    else if (axis === 'y') {
-        if (attributeName === "") {
-            simulation.force("forceY")
-                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
-                .y(height * forceProperties.forceY.y);
-        }
+    updateForces();
+}
 
-        else {
-            forceProperties.forceY.enabled = true;
-            //forceProperties.charge.enabled = false;
-            //simulation.force("link").strength(0);
+function projectAttributeYAxis(selectElement) {
+    var attributeName = selectElement.value;
+
+    if (attributeName === "") {
+        simulation.force("forceY")
+            .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+            .y(height * forceProperties.forceY.y);
+    }
+
+    else {
+
+        forceProperties.forceY.enabled = true;
+        //forceProperties.charge.enabled = false;
+        //simulation.force("link").strength(0);
+        var optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+
+
+        if (optgroup === "Attributes") {
+            var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
+            var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+
             simulation.force("forceY")
                 .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
                 .y(function (d) {
                     if (d[attributeName] == "") {
                         return height / 2;
                     }
+
                     var value = height * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
                     return value;
+                });
+        }
 
+        else if (optgroup === "Centralities") {
+            var attributeMax = graph.properties[attributeName].max;
+            var attributeMin = graph.properties[attributeName].min;
+
+            simulation.force("forceY")
+                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
+                .y(function (d) {
+                    if (graph.properties[attributeName].values[d.id] == "") {
+                        return height / 2;
+                    }
+
+                    var value = height - (height * ((parseFloat(graph.properties[attributeName].values[d.id]) - attributeMin) / (attributeMax - attributeMin)));
+                    return value;
                 });
         }
     }
@@ -345,9 +384,9 @@ function remodelNetwork(checkboxesDivId, algorithmSelectId) {
         
 
         case 'Epsilon':
-            var epsilonRadius = document.querySelector('#epsilonRadius').value;
-            var k = document.querySelector('#kNNmin').value;
-            newNet = Epsilon(graph.nodes, selected_attributes, gaussianKernel, epsilonRadius, k);
+            var epsilonRadius = parseFloat(document.querySelector('#epsilonRadius').value);
+            var k = parseInt(document.querySelector('#kNNmin').value);
+            newNet = EpsilonAndkNN(graph.nodes, selected_attributes, gaussianKernel, epsilonRadius, k);
             break;
     }
 
@@ -395,8 +434,9 @@ function EpsilonAndkNN(nodes, attributes, kernelMatrixFunction, similarity_thres
     let potentialNeighbours = Array.from(Array(nodes.length).keys());
     let nodeCount = nodes.length;
     var duplicateCheckDict = {};
+    let edgeId = -1;
     nodes.forEach(function (node, index) {
-        var edgeCount = 0;
+        
         
         potentialNeighbours.sort(function (node1, node2) {
             if (kernel[index * nodeCount + node1] < kernel[index * nodeCount + node2]) {
@@ -410,21 +450,27 @@ function EpsilonAndkNN(nodes, attributes, kernelMatrixFunction, similarity_thres
             return 0;
         });
 
+        var edgeCount = 0;
         let n = 0;
-        while (edgeCount < k && kernel[index * nodeCount + potentialNeighbours[n]] > similarity_threshold && i < nodeCount) {
+        while ((edgeCount < k || kernel[index * nodeCount + potentialNeighbours[n]] > similarity_threshold) && n < nodeCount) {
             if (index !== potentialNeighbours[n] && (duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] == undefined || duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] == undefined)) {
                 duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
                 duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
                 let newLink = {
-                    source: node.index,
-                    target: nodes[potentialNeighbours[n]].index,
+                    source: node.id,
+                    target: nodes[potentialNeighbours[n]].id,
                     value: 1,
                     id: ++edgeId
                 };
                 resultNet.push(newLink);
+                edgeCount++;
+                
             }
+            n++;
         }
     });
+
+    return resultNet;
 }
 
 function LRNet(nodes, attributes, kernelMatrixFunction) {
@@ -503,8 +549,8 @@ function LRNet(nodes, attributes, kernelMatrixFunction) {
                 duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
                 duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
                 let newLink = {
-                    source: node.index,
-                    target: nodes[potentialNeighbours[n]].index,
+                    source: node.id,
+                    target: nodes[potentialNeighbours[n]].id,
                     value: 1,
                     id: ++edgeId
                 };
@@ -514,4 +560,22 @@ function LRNet(nodes, attributes, kernelMatrixFunction) {
     });
 
     return resultNet;
+}
+
+function changeNetworkNodeColour(colour) {
+    defaultColour = colour;
+    node.style("fill", function (d) {
+        return nodeColor(d.id);
+
+    });
+
+    link.style("stroke", function (l) {
+        return nodeColor(l.source.id);
+
+    });
+}
+
+function changeNetworkBackgroundColour(colour) {
+    var i = d3.select('#network-background-rect.background').style("fill", colour);
+    var p = 0;
 }

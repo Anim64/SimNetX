@@ -31,7 +31,7 @@ const simulationDurationInMs = 60000; // 20 seconds
 let startTime = Date.now();
 let endTime = startTime + simulationDurationInMs;
 
-const jsPath = '../js/';
+const jsPath = '../js/PropertyWorkers/';
 
     
 
@@ -99,7 +99,7 @@ var forceProperties = {
     collide: {
         enabled: true,
         strength: 0.7,
-        radius: 4,
+        radius: 8,
         iterations: 1
     },
 
@@ -130,6 +130,7 @@ var forceProperties = {
 function drawNetwork(data) {
 
     graph = data;
+    graph["properties"] = {};
 
     svg.selectAll('.g-main').remove();
 
@@ -155,6 +156,7 @@ function drawNetwork(data) {
     //Background rectangle
     rect = gMain.append('rect')
         .attr("class", "background")
+        .attr("id", "network-background-rect")
         .attr('width', width)
         .attr('height', height)
         .style('fill', '#1A1A1A')
@@ -185,7 +187,7 @@ function drawNetwork(data) {
         .selectAll("path")
         .data(graph.links)
         .enter().append("path")
-        .attr("marker-end", "url(#arrow)")
+        //.attr("marker-end", "url(#arrow)")
         
         
 
@@ -209,6 +211,7 @@ function drawNetwork(data) {
             .on("end", dragended))
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
+        
     
     node.append("title")
         .text(function (d) { return d.id; });
@@ -218,6 +221,7 @@ function drawNetwork(data) {
         linkedByIndex[d.source + "," + d.target] = 1;
     });
 
+    
     brushMode = false;
     brushing = false;
 
@@ -250,12 +254,12 @@ function drawNetwork(data) {
     node.style("fill", function (d) {
         return nodeColor(d.id);
 
-    })
+    });
 
     link.style("stroke", function (l) {
         return nodeColor(l.source.id);
 
-    })
+    });
 
 }
 
@@ -444,6 +448,7 @@ function positionNode(d) {
 
 //Function for node dragging start
 function dragstarted(d) {
+    toggleNodeDetails(d.id);
     if (!d3.event.active) simulation.alphaTarget(0.9).restart();
 
     if (!d.selected && !shiftKey) {
@@ -471,6 +476,9 @@ function fadeDisconnectedNodes(nodeId, opacity) {
     // check all other nodes to see if they're connected
     // to this one. if so, keep the opacity at 1, otherwise
     // fade
+    node.attr("r", function (d) {
+        return nodeId === d.id ? forceProperties.collide.radius * 2 : forceProperties.collide.radius;
+    });
     node.style("stroke-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
         return thisOpacity;
@@ -495,6 +503,7 @@ function nodeMouseOver(opacity) {
 }
 
 function mouseOut() {
+    node.attr("r", forceProperties.collide.radius);
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
@@ -896,9 +905,16 @@ function calculateMetric(current_graph, metricDiv) {
 
     const workerName = metricDiv.getAttribute('data-value');
     const worker = new Worker(jsPath + workerName + '_worker.js?v=2');
-    worker.postMessage(current_graph);
+    const data = {
+        'graph': current_graph,
+        'linksDict': linkedByIndex
+    };
+    worker.postMessage(data);
 
-    worker.onmessage = e => metricDiv.querySelector('span').innerHTML = e.data.average;
+    worker.onmessage = e => {
+        metricDiv.querySelector('span').innerHTML = e.data.average.toFixed(3);
+        graph.properties[workerName] = e.data;
+    }
     
 }
 

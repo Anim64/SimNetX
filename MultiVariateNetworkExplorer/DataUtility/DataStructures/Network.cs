@@ -157,7 +157,7 @@ namespace DataUtility
             }
             foreach(var link in json["links"])
             {
-                this.SetDirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
+                this.SetIndirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
                 TotalWeight += (double)link["value"];
                 
             }
