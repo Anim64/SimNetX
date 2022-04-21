@@ -1,77 +1,67 @@
-﻿function addCollapsibleEventListeners() {
-    var parameter_collapsibles = document.getElementsByClassName("collapsible-parameters-btn");
+﻿const addCollapsibleEventListeners = function() {
+    const parameter_collapsibles = document.getElementsByClassName("collapsible-parameters-btn");
 
-    for (var i = 0; i < parameter_collapsibles.length; i++) {
-        parameter_collapsibles[i].addEventListener("click", function () {
+    for (const parameter_collapsible of parameter_collapsibles) {
+    //for (let i = 0; i < parameter_collapsibles.length; i++) {
+        parameter_collapsible.addEventListener("click", function () {
             this.classList.toggle("collapsible-parameters-btn-active");
-            var content = this.nextElementSibling;
+            const content = this.nextElementSibling;
 
-            if (content.clientHeight) {
-                content.style.height = 0;
-            }
-            else {
-                content.style.height = content.scrollHeight + "px";
-            }
+            content.style.height = content.clientHeight ? 0 : content.scrollHeight + "px";
         });
     };
 }
 
-function addFileButtonsEventListeners() {
-    var inputs = document.querySelectorAll('.inputfile');
+const addFileButtonsEventListeners = function() {
+    const inputs = document.getElementsByClassName('inputfile');
 
-    Array.prototype.forEach.call(inputs, function (input) {
-        var label = input.nextElementSibling,
-            labelVal = label.innerHTML;
-        var textbox = label.previousElementSibling;
+    for (const input of inputs) {
+    
+        const label = input.nextElementSibling;
+        const labelVal = label.innerHTML;
+        const textbox = label.previousElementSibling;
 
         input.addEventListener('change', function (e) {
-            var fileName = '';
+            let fileName = '';
             fileName = e.target.value.split('\\').pop();
             if (fileName) {
-                label.innerHTML = fileName;
-                textbox.innerHTML = fileName;
-                label.style.backgroundColor = "green";
-                textbox.style.backgroundColor = "green";
+                label.innerHTML = textbox.innerHTML = fileName;
+                label.style.backgroundColor = textbox.style.backgroundColor = "green";
             }
             else
                 label.innerHTML = labelVal;
         });
-    });
+    }
 }
 
-function selectFocusIn(select_element) {
+const selectFocusIn = function(select_element) {
     select_element.style.textAlign = "left";
 }
 
-function selectFocusOut(select_element) {
+const selectFocusOut = function(select_element) {
     select_element.style.textAlign = "center";
 }
 
-var select_inputs = document.getElementsByTagName("select");
 
-Array.prototype.forEach.call(select_inputs, function (select_input) {
-    //select_input.addEventListener("focus", selectFocusOut(select_input));
-    //select_input.addEventListener("focusout", selectFocusOut(select_input));
-});
-
-
-function hideConversionParameters() {
-    var conversion_parameters_divs = document.getElementsByClassName("conversion-parameters-div");
-    Array.prototype.forEach.call(conversion_parameters_divs, function (conversion_parameters_div) {
+const hideConversionParameters = function() {
+    const conversion_parameters_divs = document.getElementsByClassName("conversion-parameters-div");
+    for (const conversion_parameters_div of conversion_parameters_divs) {
         conversion_parameters_div.style.display = "none";
-    });
+    }
 }
-function recalculateCollapsibleContentHeight(collapsible_content_id) {
-    var content = document.getElementById(collapsible_content_id);
+
+const recalculateCollapsibleContentHeight = function(collapsible_content_id) {
+    const content = document.getElementById(collapsible_content_id);
     content.style.height = "auto";
 }
-function displayConversionParameters(conversion_alg) {
+
+const displayConversionParameters = function(conversion_alg) {
     
     hideConversionParameters();
-    var conversion_parameters_headline = document.getElementById("conversion-parameters-headline");
+    const conversion_parameters_headline = document.getElementById("conversion-parameters-headline");
 
     if (conversion_alg === "1") {
-        var epsilon_parameters_div = document.getElementById("epsilon-parameters");
+        const epsilon_parameters_div = document.getElementById("epsilon-parameters");
         epsilon_parameters_div.style.display = "grid";
         conversion_parameters_headline.style.display = "block";
     }

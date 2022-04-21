@@ -24,6 +24,7 @@
 
 .controls .force label {
     display: inline-block;
+    
 }
 
 .controls input[type="checkbox"] {
@@ -35,9 +36,32 @@
     width: 90%;
 }
 
-.controls input[type="color"] {
-    margin: 0 5% 0.5em 5%;
+.controls #color-settings label {
+    text-align: center;
 }
+
+.controls input[type="color"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none; 
+    width: 60%;
+    min-height: 50px;
+    margin: auto;
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.controls input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 10px;
+}
+
+.controls input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 10px;
+}
+
 /* alpha viewer */
 .controls .alpha p {
     margin-bottom: .25em;

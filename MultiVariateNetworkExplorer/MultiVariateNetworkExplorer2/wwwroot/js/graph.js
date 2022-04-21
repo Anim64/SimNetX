@@ -1,55 +1,50 @@
-﻿var graph = null;
-var store = null;
-var filterNodeList = [];
-var linkedByIndex = {};
-var attributefilter = {};
+﻿let graph = null;
+let store = null;
+let filterNodeList = [];
+let linkedByIndex = {};
+let attributefilter = {};
 
-var node = null;
-var link = null;
+let node = null;
+let link = null;
 
-var selectionGraph = null;
-var selectionNode = null;
-var selectionLink = null;
-var selectionDraw = null;
+let selectionGraph = null;
+let selectionNode = null;
+let selectionLink = null;
+let selectionDraw = null;
 
 
-var rect = null;
-var gBrushHolder = null;
-var gBrush = null;
-var brushMode = false;
-var brushing = false;
-var brush = null;
-var gDraw = null;
-var gMain = null;
-var grads = null;
-var transformX = 0;
-var transformY = 0;
-var scaleK = 1;
+let rect = null;
+let gBrushHolder = null;
+let gBrush = null;
+let brushMode = false;
+let brushing = false;
+let brush = null;
+let gDraw = null;
+let gMain = null;
+let grads = null;
+let transformX = 0;
+let transformY = 0;
+let scaleK = 1;
 
-const simulationDurationInMs = 60000; // 20 seconds
+const simulationDurationInMs = 10000; // 10 seconds
 
-let startTime = Date.now();
-let endTime = startTime + simulationDurationInMs;
+let startTime = null;
+let endTime = null;
 
 const jsPath = '../js/PropertyWorkers/';
 
-    
-
-//var nodeColor = "#000000";
+   
 
 let width = d3.select("#networkGraph svg").node().parentNode.clientWidth;
 let height = d3.select("#networkGraph svg").node().parentNode.clientHeight;
 
 
-var svg = d3.select("#networkGraph svg")
+let svg = d3.select("#networkGraph svg")
     .attr('width', width)
     .attr('height', height)
-var selectionSvg = null;
+let selectionSvg = null;
 
-console.log(width);
-
-
-var simulation = d3.forceSimulation()
+let simulation = d3.forceSimulation()
     .force("link", d3.forceLink())
     .force("charge", d3.forceManyBody())
     .force("collide", d3.forceCollide())
@@ -58,7 +53,7 @@ var simulation = d3.forceSimulation()
     .force("forceY", d3.forceY())
     //.force("radial", d3.forceRadial());
 
-var selectionSimulation = d3.forceSimulation()
+let selectionSimulation = d3.forceSimulation()
     .force("link", d3.forceLink())
     .force("charge", d3.forceManyBody())
     .force("collide", d3.forceCollide())
@@ -68,22 +63,22 @@ var selectionSimulation = d3.forceSimulation()
     //.force("radial", d3.forceRadial());
 
 
-var groupColours = d3.scaleOrdinal(d3.schemeCategory20);
-//var groupColours = d3.scaleOrdinal(d3.interpolateSpectral);
+let groupColours = d3.scaleOrdinal(d3.schemeCategory20);
+//let groupColours = d3.scaleOrdinal(d3.interpolateSpectral);
 
-var defaultColour = "#FFFFFF";
+let defaultColour = "#FFFFFF";
 
-var xScale = d3.scaleLinear()
+let xScale = d3.scaleLinear()
     .domain([0, width]).range([0, width]);
-var yScale = d3.scaleLinear()
+let yScale = d3.scaleLinear()
     .domain([0, height]).range([0, height]);
 
-var selectedNode = null;
-var shiftKey = null;
+let selectedNode = null;
+let shiftKey = null;
 
 
 //Properties of force simulation
-var forceProperties = {
+let forceProperties = {
     center: {
         x: 0.5,
         y: 0.5
@@ -118,7 +113,6 @@ var forceProperties = {
     link: {
         enabled: true,
         distance: 75,
-        strength: 0.1,
         iterations: 1
     },
 
@@ -126,20 +120,103 @@ var forceProperties = {
 };
 
 
+const prepareLinks = function() {
+    //Create line or curves in SVG
+    link = gDraw.append("g")
+        .attr("class", "links")
+        .selectAll("path")
+        .data(graph.links)
+        .enter().append("path")
+
+    link.append("title")
+        .text(function (l) {
+            return l.id;
+        });
+
+
+    for (let l of graph.links) {
+        const index = l.source + "," + l.target
+        linkedByIndex[index] = 1;
+    }
+
+}
+
+const prepareNodes = function() {
+    //Create node circles in SVG
+    const { nodes } = graph;
+    const { radius } = forceProperties.collide;
+
+    node = gDraw.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(nodes)
+        .enter().append("circle")
+        .attr("r", radius)
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended))
+        .on("mouseover", nodeMouseOver(.2))
+        .on("mouseout", mouseOut);
+
+    //Add nodes to simulation
+    simulation
+        .nodes(nodes)
+        .on("tick", ticked)
+}
+
+const prepareBrush = function() {
+    gBrushHolder = gMain.append('g');
+
+    brushMode = false;
+    brushing = false;
+
+    brush = d3.brush()
+        .extent([[0, 0], [width, height]])
+        .on("start", brushstarted)
+        .on("brush", brushed)
+        .on("end", brushended);
+}
+
+const prepareZoom = function() {
+    //Define zoom function
+    const zoom = d3.zoom()
+        .on('zoom', zoomed);
+
+    gMain.call(zoom);
+}
+
+const prepareNetworkBackground = function() {
+    //Background rectangle
+    rect = gMain.append('rect')
+        .attr("class", "background")
+        .attr("id", "network-background-rect")
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', '#1A1A1A')
+        .on('click', deselectAllNodes)
+}
+
+
+
 //Draw graph of the network
-function drawNetwork(data) {
+const drawNetwork = function(data) {
+//function drawNetwork(data) {
 
     graph = data;
-    graph["properties"] = {};
+    graph.properties = {};
 
     svg.selectAll('.g-main').remove();
 
     gMain = svg.append('g')
-        .classed('g-main', true);
+        .classed('g-main', true)
 
+    prepareNetworkBackground();
+
+    gDraw = gMain.append('g');
 
     //Edge arrow definition
-    var defs = svg.append("defs");
+    /*var defs = svg.append("defs");
     defs.append("marker")
         .attr("id", "arrow")
         .attr("viewBox", "0 -5 10 10")
@@ -150,90 +227,13 @@ function drawNetwork(data) {
         .attr("orient", "auto")
         .attr("class", "arrow")
         .append("svg:path")
-        .attr("d", "M0,-5L10,0L0,5");
+        .attr("d", "M0,-5L10,0L0,5");*/
 
+    prepareLinks();
+    prepareNodes();
     
-    //Background rectangle
-    rect = gMain.append('rect')
-        .attr("class", "background")
-        .attr("id", "network-background-rect")
-        .attr('width', width)
-        .attr('height', height)
-        .style('fill', '#1A1A1A')
-
-    gDraw = gMain.append('g');
-
-
-    //Define zoom function
-    var zoom = d3.zoom()
-        .on('zoom', zoomed);
-    
-
-    gMain.call(zoom);
-
-    gBrushHolder = gMain.append('g');
-
-    /*gBrushHolder.append('rect')
-        .attr('width', width)
-        .attr('height', height)
-        .style('fill', '#333333')*/
-
-    
-
-
-    //Create line or curves in SVG
-    link = gDraw.append("g")
-        .attr("class", "links")
-        .selectAll("path")
-        .data(graph.links)
-        .enter().append("path")
-        //.attr("marker-end", "url(#arrow)")
-        
-        
-
-
-    link.append("title")
-        .text(function (l) {
-            return l.id;
-        });
-
-
-    //Create node circles in SVG
-    node = gDraw.append("g")
-        .attr("class", "nodes")
-        .selectAll("circle")
-        .data(graph.nodes)
-        .enter().append("circle")
-        .attr("r", forceProperties.collide.radius)
-        .call(d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended))
-        .on("mouseover", nodeMouseOver(.2))
-        .on("mouseout", mouseOut);
-        
-    
-    node.append("title")
-        .text(function (d) { return d.id; });
-
-   
-    graph.links.forEach(function (d) {
-        linkedByIndex[d.source + "," + d.target] = 1;
-    });
-
-    
-    brushMode = false;
-    brushing = false;
-
-    brush = d3.brush()
-        .extent([[0, 0], [width, height]])
-        .on("start", brushstarted)
-        .on("brush", brushed)
-        .on("end", brushended);
-
-    
-    //Background event to deselect all nodes
-    rect.on('click', deselectAllNodes);
+    prepareBrush();
+    prepareZoom();  
 
     d3.select('body').on('keydown', keydown);
     d3.select('body').on('keyup', keyup);
@@ -242,30 +242,13 @@ function drawNetwork(data) {
     //Store graph for filtration
     store = $.extend(true, {}, data);
 
-    //Add nodes to simulation
-    simulation
-        .nodes(graph.nodes)
-        .on("tick", ticked)
-        .on("end", simulationStop)
-        //.on("end", redrawGradient);
-
+    resetSimulation();
     updateForces();
-    
-    node.style("fill", function (d) {
-        return nodeColor(d.id);
-
-    });
-
-    link.style("stroke", function (l) {
-        return nodeColor(l.source.id);
-
-    });
-
 }
 
 
 //Draw selection graph
-function drawSelectionNetwork(data) {
+const drawSelectionNetwork = function(data) {
     selectionGraph = data;
     
 
@@ -274,10 +257,10 @@ function drawSelectionNetwork(data) {
         .attr('height', height);
     selectionSvg.selectAll('.g-main').remove();
 
-    var selectionMain = selectionSvg.append('g')
+    let selectionMain = selectionSvg.append('g')
         .classed('g-main', true);
 
-    var defs = selectionMain.append("defs");
+    /*var defs = selectionMain.append("defs");
 
     //Edge arrow definition
     defs.append("marker")
@@ -290,16 +273,16 @@ function drawSelectionNetwork(data) {
         .attr("orient", "auto")
         .attr("class", "arrow")
         .append("svg:path")
-        .attr("d", "M0,-5L10,0L0,5");
+        .attr("d", "M0,-5L10,0L0,5");*/
 
-    var zoom = d3.zoom()
+    let zoom = d3.zoom()
         .on('zoom', selectionZoomed)
 
     selectionMain.call(zoom);
 
 
     //Background rectangle
-    var selectionRect = selectionMain.append('rect')
+    let selectionRect = selectionMain.append('rect')
         .attr('width', width)
         .attr('height', height)
         .style('fill', '#1A1A1A')
@@ -313,7 +296,6 @@ function drawSelectionNetwork(data) {
         .selectAll("path")
         .data(selectionGraph.links)
         .enter().append("path")
-        .attr("marker-end", "url(#selection_arrow)")
         .attr("id", function (l) {
             return "selection_link_" + l.source + "-" + l.target;
         });
@@ -331,7 +313,7 @@ function drawSelectionNetwork(data) {
         .data(selectionGraph.nodes)
         .enter().append("circle")
         .style("fill", function (d) {
-            setGroupColour(d);
+            
             return groupColours(d.id);
         })
         .attr("r", function (d) {
@@ -360,125 +342,24 @@ function drawSelectionNetwork(data) {
     
 }
 
-//Update node or link position when simulation starts
-function ticked() {
-    link.attr("d", positionLink);
-    node.attr("transform", positionNode);
 
-}
-
-
-
-function simulationStop() {
-    simulation.stop();
-}
-
-
-//Update node or link position when simulation starts
-function selectionTicked() {
-    selectionLink.attr("d", positionLink);
-    selectionNode.attr("transform", positionNode);
-}
-
-//Update link position when simulation starts
-function positionLink(d) {
-    var offset = 20;
-
-    var x1 = d.source.x,
-        y1 = d.source.y,
-        x2 = d.target.x,
-        y2 = d.target.y;
-
-    link
-
-    var midpoint_x = (x1 + x2) / 2;
-    var midpoint_y = (y1 + y2) / 2;
-
-    var dx = (x2 - x1);
-    var dy = (y2 - y1);
-
-    var normalise = Math.sqrt((dx * dx) + (dy * dy));
-
-    
-    // Self edge.
-    if (x1 === x2 && y1 === y2) {
-        // Fiddle with this angle to get loop oriented.
-        var xRotation = -45;
-
-        // Needs to be 1.
-        var largeArc = 1;
-
-        var sweep = 1; // 1 or 0
-
-        // Change sweep to change orientation of loop. 
-        //sweep = 0;
-
-        // Make drx and dry different to get an ellipse
-        // instead of a circle.
-        var drx = 10;
-        var dry = 10;
-
-        // For whatever reason the arc collapses to a point if the beginning
-        // and ending points of the arc are the same, so kludge it.
-        x2 = x2 + 1;
-        y2 = y2 + 1;
-
-        return "M" + d.source.x + "," + d.source.y + "A" + drx + "," + dry + " " + xRotation + "," + largeArc + "," + sweep + " " + x2 + "," + y2;
-    }
-
-    //var offSetX = midpoint_x + offset * (dy / normalise);
-    //var offSetY = midpoint_y - offset * (dx / normalise);
-
-    var offSetX = midpoint_x;
-    var offSetY = midpoint_y;
-
-    return "M" + d.source.x + "," + d.source.y +
-        //"S" + offSetX + "," + offSetY +
-        " " + d.target.x + "," + d.target.y;
-}
-
-//Update node position when simulation starts
-function positionNode(d) {
-    return "translate(" + d.x + "," + d.y + ")";
-}
-
-
-
-
-
-//Function for node dragging start
-function dragstarted(d) {
-    toggleNodeDetails(d.id);
-    if (!d3.event.active) simulation.alphaTarget(0.9).restart();
-
-    if (!d.selected && !shiftKey) {
-        // if this node isn't selected, then we have to unselect every other node
-        node.classed("selected", function (p) { return p.selected = p.previouslySelected = false; });
-    }
-
-    d3.select(this).classed("selected", function (p) { d.previouslySelected = d.selected; return d.selected = true; });
-
-    node.filter(function (d) { return d.selected; })
-        .each(function (d) { //d.fixed |= 2; 
-            d.fx = d.x;
-            d.fy = d.y;
-        })
-}
-
-
+/////////////////////////////////////////////MOUSE OVER///////////////////////////////////////////////////
 
 // check the dictionary to see if nodes are linked
-function isConnected(nodeId1, nodeId2) {
-    return linkedByIndex[nodeId1 + "," + nodeId2] || linkedByIndex[nodeId2 + "," + nodeId1] || nodeId1 == nodeId2;
+const isConnected = function(nodeId1, nodeId2) {
+    return linkedByIndex[nodeId1 + "," + nodeId2] || linkedByIndex[nodeId2 + "," + nodeId1] || nodeId1 === nodeId2;
 }
 
-function fadeDisconnectedNodes(nodeId, opacity) {
+const fadeDisconnectedNodes = function(nodeId, opacity) {
     // check all other nodes to see if they're connected
     // to this one. if so, keep the opacity at 1, otherwise
     // fade
+
+    const { radius } = forceProperties.collide;
     node.attr("r", function (d) {
-        return nodeId === d.id ? forceProperties.collide.radius * 2 : forceProperties.collide.radius;
+        return nodeId === d.id ? radius * 2 : radius;
     });
+
     node.style("stroke-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
         return thisOpacity;
@@ -491,55 +372,94 @@ function fadeDisconnectedNodes(nodeId, opacity) {
     link.style("stroke-opacity", function (o) {
         return o.source.id === nodeId || o.target.id === nodeId ? 1 : opacity;
     });
-    link.style("stroke", function (o) {
-        return o.source.id === nodeId || o.target.id === nodeId ? o.source.colour : nodeColor(o.source.id);
-    });
+    /*link.style("stroke", function (o) {
+        return o.source.id === nodeId || o.target.id === nodeId ? o.source.colour : getNodeColour(o.source.id);
+    });*/
 }
 // fade nodes on hover
-function nodeMouseOver(opacity) {
+const nodeMouseOver = function(opacity) {
     return function (d) {
         fadeDisconnectedNodes(d.id, opacity);
     };
 }
 
-function mouseOut() {
-    node.attr("r", forceProperties.collide.radius);
+const mouseOut = function() {
+    const { radius } = forceProperties.collide;
+    node.attr("r", radius);
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
-    link.style("stroke", function (d) {
-        return nodeColor(d.source.id);
-    });
+    /*link.style("stroke", function (d) {
+        return getNodeColour(d.source.id);
+    });*/
 }
 
+/******************************************MOUSE OVER END**************************************************/
+
+
+/////////////////////////////////////////////DRAGGING/////////////////////////////////////////////
+
+//Function for node dragging start
+const dragstarted = function(d) {
+    toggleNodeDetails(d.id, d.index);
+    if (!d3.event.active)
+        resetSimulation();
+    
+    if (!d.selected && !shiftKey) {
+        // if this node isn't selected, then we have to unselect every other node
+        node.classed("selected", function (p) { return p.selected = p.previouslySelected = false; });
+    }
+
+    d3.select(this).classed("selected", true);
+    d.previouslySelected = d.selected;
+    d.selected = true;
+
+    node.each(function (d) {
+            //d.fixed |= 2;
+            d.fx = d.x;
+            d.fy = d.y;
+        });
+}
 
 //Function for node dragging
-function dragged(d) {
+const dragged = function(d) {
     //d.fx = d3v4.event.x;
     //d.fy = d3v4.event.y;
+    const { dx, dy } = d3.event;
     node.filter(function (d) { return d.selected; })
         .each(function (d) {
-            d.fx += d3.event.dx;
-            d.fy += d3.event.dy;
+            d.x += dx;
+            d.y += dy;
+            d.fx += dx;
+            d.fy += dy;
         })
+    //link.attr("d", positionLink);
+    //node.attr("transform", positionNode);
+    
 }
+
 
 
 //Function for node dragging end
-function dragended(d) {
+const dragended = function(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
+    
     node.filter(function (d) { return d.selected; })
-        .each(function (d) { //d.fixed &= ~6; 
-            d.fx = null;
-            d.fy = null;
+        .each(function (d) { 
+            /*d.fx = null;
+            d.fy = null;*/
         })
+    //link.attr("d", positionLink);
+    //node.attr("transform", positionNode);
 }
 
+/******************************************DRAGGING END**************************************************/
+
+
+////////////////////////////////BRUSHING/////////////////////////////////
 
 //Function for node brushing start
-function brushstarted() {
+const brushstarted = function brushstarted() {
     // keep track of whether we're actively brushing so that we
     // don't remove the brush on keyup in the middle of a selection
     brushing = true;
@@ -547,19 +467,23 @@ function brushstarted() {
     node.each(function (d) {
         d.previouslySelected = shiftKey && d.selected;
     });
+
 }
 
 //Function for node brushing
-function brushed() {
+const brushed = function() {
     if (!d3.event.sourceEvent) return;
     if (!d3.event.selection) return;
 
-    var extent = d3.event.selection;
+    const extent = d3.event.selection;
+    const [[left, top],[right, bottom]] = extent;
+
     
     node.classed("selected", function (d) {
-        d.selected = d.previouslySelected |
-            (extent[0][0] <= ((d.x * scaleK) + transformX) && ((d.x * scaleK) + transformX) < extent[1][0]
-                && extent[0][1] <= ((d.y * scaleK) + transformY) && ((d.y * scaleK) + transformY) < extent[1][1]);
+        const { previouslySelected, x, y } = d;
+        d.selected = previouslySelected |
+            (left <= ((x * scaleK) + transformX) && ((x * scaleK) + transformX) < right
+                && top <= ((y * scaleK) + transformY) && ((y * scaleK) + transformY) < bottom);
         if (d.selected) {
             document.querySelector('#heading-' + d.id).classList.add('node-heading-selected');
         }
@@ -568,7 +492,7 @@ function brushed() {
 }
 
 //Function for node brushing end
-function brushended() {
+const brushended = function() {
     if (!d3.event.sourceEvent) return;
     if (!d3.event.selection) return;
     if (!gBrush) return;
@@ -584,37 +508,8 @@ function brushended() {
     brushing = false;
 }
 
-function deselectAllNodes() {
-    node.each(function (d) {
-        d.selected = false;
-        d.previouslySelected = false;
-    });
-    node.classed("selected", false);
-    document.querySelectorAll('.node-heading-selected').forEach(nodeHeading => {
-        nodeHeading.classList.remove("node-heading-selected");
-    });
-}
-
-
-//Calculate zoom
-function zoomed() {
-    
-    var transform = d3.event.transform;
-    transformX = transform.x;
-    transformY = transform.y;
-    scaleK = transform.k;
-    gDraw.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
-}
-
-
-//Calculate zoom
-
-function selectionZoomed() {
-    selectionDraw.attr("transform", d3.event.transform);
-}
-
 //On shift key event
-function keydown() {
+const keydown = function() {
     shiftKey = d3.event.shiftKey;
 
     if (shiftKey) {
@@ -632,7 +527,7 @@ function keydown() {
 }
 
 //On shift key event
-function keyup() {
+const keyup = function() {
     shiftKey = false;
     brushMode = false;
 
@@ -647,112 +542,286 @@ function keyup() {
     }
 }
 
+const deselectAllNodes = function() {
+    node.each(function (d) {
+        d.selected = false;
+        d.previouslySelected = false;
+    });
+    node.classed("selected", false);
+    document.querySelectorAll('.node-heading-selected').forEach(nodeHeading => {
+        nodeHeading.classList.remove("node-heading-selected");
+    });
+}
 
+/************************************************END BRUSHING **********************************************/
 
-function displayNodeProperties(d) {
-    console.log(d.id);
-    $("#btn_node_" + d.id).removeClass("collapsed");
-        
+///////////////////////////////////////////////ZOOM/////////////////////////////////////////////////
+//Calculate zoom
+const zoomed = function() {
     
+    const {x, y, k} = d3.event.transform;
+    transformX = x;
+    transformY = y;
+    scaleK = k;
+    gDraw.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
 }
 
-function resetSelection() {
-    selectedNode.style("stroke", "black");
-    selectedNode = null;
+
+//Calculate zoom
+
+const selectionZoomed = function () {
+    selectionDraw.attr("transform", d3.event.transform);
 }
+
+
+/************************************************** ZOOM ******************************************************/
+
+///////////////////////////////////////// GRAPH SIMULATION ///////////////////////////////////////////////
 
 //Update graph simulation forces
-function updateForces() {
+const updateForces = function() {
+    const { x, y } = forceProperties.center;
     simulation.force("center")
-        .x(width * forceProperties.center.x)
-        .y(height * forceProperties.center.y);
+        .x(width * x)
+        .y(height * y);
+
+    const { strength: chargeStrength, enabled : chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
     simulation.force("charge")
-        .strength(forceProperties.charge.strength * forceProperties.charge.enabled)
-        .distanceMin(forceProperties.charge.distanceMin)
-        .distanceMax(forceProperties.charge.distanceMax);
+        .strength(chargeStrength * chargeEnabled)
+        .distanceMin(distanceMin)
+        .distanceMax(distanceMax);
+
+    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
     simulation.force("collide")
-        .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
-        .radius(forceProperties.collide.radius)
-        .iterations(forceProperties.collide.iterations);
+        .strength(collideStrength * collideEnabled)
+        .radius(radius)
+        .iterations(collideIterations);
+    node.attr("r", radius);
     /*simulation.force("forceX")
         .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
         .x(width * forceProperties.forceX.x);
     simulation.force("forceY")
         .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
         .y(height * forceProperties.forceY.y);*/
+
+    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
     simulation.force("link")
         .id(function (d) { return d.id; })
-        .links(forceProperties.link.enabled ? graph.links : [])
+        .links(linksEnabled ? graph.links : [])
         .distance(function (l) {
             if (graph.partitions[l.source.id] === graph.partitions[l.target.id]) {
-                return forceProperties.link.distance;
+                return distance;
             }
             else {
-                return forceProperties.link.distance * 4;
+                return distance * 4;
             }
         })
-        .iterations(forceProperties.link.iterations);
-    
+        .iterations(linkIterations);
+
+    node.each(function (d) {
+        d.fx = null;
+        d.fy = null;
+    });
    
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
+    resetSimulation();
+}
+
+const resetSimulation = function() {
+    startTime = Date.now();
+    endTime = startTime + simulationDurationInMs;
+    //simulation.start();
     simulation.alpha(1).restart();
 }
 
+/******************************************END GRAPH SIMULATION ***********************************************/
+
+
+///////////////////////////////////////// SELECTION SIMULATION ///////////////////////////////////////////////
+
 
 //Update selection graph simulation forces
-function updateSelectionForces() {
+const updateSelectionForces = function () {
+
+    const { x, y } = forceProperties.center;
     selectionSimulation.force("center")
-        .x(width * forceProperties.center.x)
-        .y(height * forceProperties.center.y);
+        .x(width * x)
+        .y(height * y);
+
+    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
     selectionSimulation.force("charge")
-        .strength(forceProperties.charge.strength * forceProperties.charge.enabled)
-        .distanceMin(forceProperties.charge.distanceMin)
-        .distanceMax(forceProperties.charge.distanceMax);
+        .strength(chargeStrength * chargeEnabled)
+        .distanceMin(distanceMin)
+        .distanceMax(distanceMax);
+
+    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
     selectionSimulation.force("collide")
-        .strength(forceProperties.collide.strength * forceProperties.collide.enabled)
-        .radius(forceProperties.collide.radius)
-        .iterations(forceProperties.collide.iterations);
+        .strength(collideStrength * collideEnabled)
+        .radius(radius)
+        .iterations(collideIterations);
     selectionSimulation.force("forceX")
         .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
         .x(width * forceProperties.forceX.x);
     selectionSimulation.force("forceY")
         .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
         .y(height * forceProperties.forceY.y);
+
+    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
     selectionSimulation.force("link")
         .id(function (d) { return d.id; })
-        .distance(forceProperties.link.distance * 5)
-        .iterations(forceProperties.link.iterations)
-        .links(forceProperties.link.enabled ? selectionGraph.links : []);
+        .distance(distance * 5)
+        .iterations(linkIterations)
+        .links(linksEnabled ? selectionGraph.links : []);
     
 
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
     selectionSimulation.alpha(1).restart();
-}
 
-
-
-
-
-//Update node colors
-function updateNodeGroups() {
-    /*node.style("fill", function (d) {
-        document.getElementById("panel_" + d.id).style.borderColor = groupColours(graph.partitions[d.id]);
-        if (graph.partitions[d.id] != "") {
-
-            return groupColours(graph.partitions[d.id]);
-
-        }
-        else {
-            return defaultColour;
-        }
-    })*/
     
 }
 
-function updateNodes() {
-    node = node.data(graph.nodes, function (d) { return d.id; });
+/******************************************END SELECTION SIMULATION ***********************************************/
+
+/////////////////////////////////////////GRAPH NODE AND LINK POSITION///////////////////////////////////////////////////
+const ticked = function() {
+    if (Date.now() < endTime) {
+        link.attr("d", positionLink);
+        /*link.attr('x1', function (d) { return d.source.x })
+            .attr('y1', function (d) { return d.source.y })
+            .attr('x2', function (d) { return d.target.x })
+            .attr('y2', function (d) { return d.target.y });*/
+
+        node.attr("transform", positionNode);
+    }
+    else {
+        simulation.stop();
+    }
+
+
+}
+
+const positionLink = function(d) {
+    const offset = 20;
+
+    const { x: sourceX, y: sourceY } = d.source;
+    const { x: targetX, y: targetY } = d.target;
+
+    let x1 = sourceX,
+        y1 = sourceY,
+        x2 = targetX,
+        y2 = targetY;
+
+    const midpoint_x = (x1 + x2) / 2;
+    const midpoint_y = (y1 + y2) / 2;
+
+    const dx = (x2 - x1);
+    const dy = (y2 - y1);
+
+    const normalise = Math.sqrt((dx * dx) + (dy * dy));
+
+
+    // Self edge.
+    if (x1 === x2 && y1 === y2) {
+        // Fiddle with this angle to get loop oriented.
+        const xRotation = -45;
+
+        // Needs to be 1.
+        const largeArc = 1;
+
+        const sweep = 1; // 1 or 0
+
+        // Change sweep to change orientation of loop. 
+        //sweep = 0;
+
+        // Make drx and dry different to get an ellipse
+        // instead of a circle.
+        const drx = 10;
+        const dry = 10;
+
+        // For whatever reason the arc collapses to a point if the beginning
+        // and ending points of the arc are the same, so kludge it.
+        x2 = x2 + 1;
+        y2 = y2 + 1;
+
+        return "M" + sourceX + "," + sourceY + "A" + drx + "," + dry + " " + xRotation + "," + largeArc + "," + sweep + " " + x2 + "," + y2;
+    }
+
+    //var offSetX = midpoint_x + offset * (dy / normalise);
+    //var offSetY = midpoint_y - offset * (dx / normalise);
+
+    const offSetX = midpoint_x;
+    const offSetY = midpoint_y;
+
+    return "M" + sourceX + "," + sourceY +
+        //"S" + offSetX + "," + offSetY +
+        " " + targetX + "," + targetY;
+}
+
+//Update node position when simulation starts
+const positionNode = function(d) {
+    return "translate(" + d.x + "," + d.y + ")";
+}
+
+/****************************************END GRAPH NODE AND LINK POSITION******************************************/
+
+/////////////////////////////////////////SELECTION GRAPH NODE AND LINK POSITION///////////////////////////////////////////////////
+
+//Update node or link position when simulation starts
+const selectionTicked = function() {
+    if (Date.now() < endTime) {
+        selectionLink.attr("d", positionLink);
+        selectionNode.attr("transform", positionNode);
+    }
+    else {
+        selectionSimulation.stop();
+    }
+}
+
+/****************************************END SELECTION GRAPH NODE AND LINK POSITION******************************************/
+
+
+
+/////////////////////////////////////////////// NODE UPDATES////////////////////////////////////////////////
+const updateNodeColour = function() {
+    node.style("fill", function (d) {
+        const { id } = d;
+        let colour = getNodeColour(id)
+        $('#heading-' + id).css("backgroundColor", colour);
+        return colour;
+    });
+}
+
+const updateLinkColour = function() {
+    link.style("stroke", function (l) {
+        const { id } = l.source;
+        return getNodeColour(l.source.id);
+    })
+}
+
+const getNodeColour = function (nodeId) {
+    const { partitions } = graph;
+    if (partitions[nodeId] != "") {
+
+        const colour_input_name = "selection_color_" + partitions[nodeId];
+        const colour_input = document.getElementById(colour_input_name)
+        return colour_input.value;
+        //return groupColours(graph.partitions[nodeId]);
+
+    }
+    else {
+        return defaultColour;
+    }
+}
+
+const getNodeCount = function(graph) {
+    return graph.nodes.length;
+}
+
+const updateNodes = function () {
+    const { nodes } = graph;
+    node = node.data(nodes, function (d) { return d.id; });
     //	EXIT
     node.exit().remove();
 
@@ -762,62 +831,59 @@ function updateNodes() {
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended))
-        .on("click", displayNodeProperties);
 
     newNode.append("title")
         .text(function (d) { return d.id; });
 
     node = node.merge(newNode);
 
-    node.style("fill", function (d) {
-        return nodeColor(d.id);
+    simulation
+        .nodes(nodes)
+        .on("tick", ticked)
+        //.on("end", simulationStop);
 
-    })
-
-    link.style("stroke", function (l) {
-        return nodeColor(l.source.id);
-
-    })
-
-    updateNodeGroups();
+    
 }
 
-function updateLinks() {
-    link = link.data(graph.links, function (d) { d.source });
-    //	EXIT
+const updateLinks = function () {
+    const { links } = graph;
+    link = link.data(links, function (d) { d.source });
+    
     link.exit().remove();
 
     var newLink = link.enter().append("path")
-        .attr("marker-end", "url(#arrow)")
 
 
     link = link.merge(newLink);
 
-    simulation
-        .nodes(graph.nodes)
-        .on("tick", ticked)
-        .on("end", simulationStop);
-
     simulation.force("link")
-        .links(graph.links);
-
-    simulation.alpha(1).restart();
-
-    link.style("stroke", function (l) {
-        return nodeColor(l.source.id);
-    });
+        .links(links);
 }
 
 
 //Update nodes and links after filtration
-function updateNodesAndLinks() {
+const updateNodesAndLinks = function() {
     updateNodes();
     updateLinks();
+    //resetSimulation();
 }
 
+const updateNodeAndLinkColour = function() {
+    updateNodeColour();
+    updateLinkColour();
+}
+
+const updateAll = function() {
+    updateForces(); 
+}
+
+/****************************************END NODE UPDATES******************************************/
+
+//////////////////////////////////////////SELECTION NODE UPDATES//////////////////////////////////////////
 //Update nodes and links after filtration
-function updateSelectionNodesAndLinks() {
-    selectionNode = selectionNode.data(selectionGraph.nodes, function (d) { return d.id; });
+const updateSelectionNodesAndLinks = function () {
+    const { nodes, links } = selectionGraph
+    selectionNode = selectionNode.data(nodes, function (d) { return d.id; });
     //	EXIT
     selectionNode.exit().remove();
 
@@ -844,14 +910,14 @@ function updateSelectionNodesAndLinks() {
 
     selectionNode = selectionNode.merge(newNode);
 
-    selectionLink = selectionLink.data(selectionGraph.links, function (d) { d.source });
+    selectionLink = selectionLink.data(links, function (d) { d.source });
     //	EXIT
     selectionLink.exit().remove();
 
     var newLink = selectionLink.enter().append("path")
-        .attr("marker-end", "url(#selection_arrow)")
         .attr("id", function (l) {
-            return "selection_link_" + l.source + "-" + l.target;
+            const { source, target } = l;
+            return "selection_link_" + source + "-" + target;
         });
 
     newLink.append("title")
@@ -862,49 +928,25 @@ function updateSelectionNodesAndLinks() {
     selectionLink = selectionLink.merge(newLink);
 
     selectionSimulation
-        .nodes(selectionGraph.nodes)
+        .nodes(nodes)
         .on("tick", selectionTicked);
 
     selectionSimulation.force("link")
-        .links(selectionGraph.links);
+        .links(links);
 
     selectionSimulation.alpha(1).restart();
 }
 
-function updateDisplay() {
-    node
-        .attr("r", forceProperties.collide.radius)
-        //.style("stroke", forceProperties.charge.strength > 0 ? "blue" : "red")
-        //.style("stroke-width", forceProperties.charge.enabled == false ? 0 : Math.abs(forceProperties.charge.strength) / 15);
+/****************************************END SELECTION NODE UPDATES******************************************/
 
-    link
-        .style("stroke-width", forceProperties.link.enabled ? 1 : .5)
-        .style("opacity", forceProperties.link.enabled ? 1 : 0);
-}
-
-function updateAll() {
-    updateForces();
-    updateDisplay();
-}
-
-function nodeColor(nodeId) {
+/////////////////////////////////////////METRICS//////////////////////////////////////////////////////
 
 
-    if (graph.partitions[nodeId] != "") {
-
-        return document.getElementById("selection_color_" + graph.partitions[nodeId]).value;
-
-    }
-    else {
-        return defaultColour;
-    }
-}
-
-function calculateMetric(current_graph, metricDiv) {
+const calculateMetric = function(current_graph, metricDiv) {
     metricDiv.querySelector('span').innerHTML = "Calculating...";
 
     const workerName = metricDiv.getAttribute('data-value');
-    const worker = new Worker(jsPath + workerName + '_worker.js?v=2');
+    const worker = new Worker(jsPath + workerName + '_worker.js?v=5');
     const data = {
         'graph': current_graph,
         'linksDict': linkedByIndex
@@ -912,17 +954,18 @@ function calculateMetric(current_graph, metricDiv) {
     worker.postMessage(data);
 
     worker.onmessage = e => {
+        const { properties } = graph;
         metricDiv.querySelector('span').innerHTML = e.data.average.toFixed(3);
-        graph.properties[workerName] = e.data;
+        properties[workerName] = e.data;
+        const nodeDetailElement = document.getElementById('node-detail-container')
+        const nodeId = nodeDetailElement.getAttribute('data-id');
+        nodeDetailElement.querySelector('#display-' + workerName).value = properties[workerName].values[nodeId];
+
     }
     
 }
 
-function getNodeCount(graph) {
-    return graph.nodes.length;
-}
-
-
+/****************************************END METRICS******************************************/
 
 d3.select(window).on("resize", function () {
     width = +svg.node().getBoundingClientRect().width;
@@ -941,12 +984,18 @@ $(document).ready(function () {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
 
-    node.on("click", displayNodeProperties);
-
-    var metricsDivs = document.querySelectorAll('.network-metric-content');
+    const metricsDivs = document.querySelectorAll('.network-metric-content');
     Array.prototype.forEach.call(metricsDivs, function (metricDiv) {
         calculateMetric(graph, metricDiv);
     });
+
+    selectionNode.each(function (d) {
+        setGroupColour(d);
+    });
+
+    updateNodeColour();
+    updateLinkColour();
+
 });
 
 $(function () {

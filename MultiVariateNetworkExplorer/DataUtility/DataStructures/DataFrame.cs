@@ -221,7 +221,7 @@ namespace DataUtility
                             headers = vector;
                             if ((line = sr.ReadLine()) != null)
                             {
-                                vector = line.Trim().Split();
+                                vector = line.Trim().Split(separator);
                             }
                         }
 

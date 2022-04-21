@@ -1,29 +1,30 @@
 ﻿self.importScripts('../algorithms.js', '../queue.js');
 
-function calculateClosenessCentrality(graph, linkedByIndex) {
-    var closeness = {
+const calculateClosenessCentrality = function (graph, linkedByIndex) {
+    const closeness = {
         'average': -1,
         'min': Number.MAX_VALUE,
         'max': Number.MIN_VALUE,
         'values': {}
     };
 
-    let paths = shortestPathsBFS(graph, linkedByIndex);
+    const paths = shortestPathsBFS(graph, linkedByIndex);
     let averageCloseness = 0;
-    for (let i = 0; i < graph.nodes.length; i++) {
-        let node1ID = graph.nodes[i].id;
+    const { nodes: { length }, nodes} = graph;
+    for (const node1 of nodes) {
+        const node1ID = node1.id;
         let nodeCloseness = 0;
-        for (let j = 0; j < graph.nodes.length; j++) {
-            let node2ID = graph.nodes[j].id
+        for (const node2 of nodes) {
+            const node2ID = node2.id;
             if (node1ID !== node2ID) {
                 nodeCloseness += 1 / paths[node1ID][node2ID];
             }
             
         }
 
-        /*nodeCloseness /= graph.nodes.length - 1;*/
+        nodeCloseness /= length - 1;
         averageCloseness += nodeCloseness;
-        closeness.values[node1ID] = nodeCloseness;
+        closeness.values[node1ID] = nodeCloseness.toFixed(3);
         if (nodeCloseness < closeness.min) {
             closeness.min = nodeCloseness;
         }
@@ -33,7 +34,7 @@ function calculateClosenessCentrality(graph, linkedByIndex) {
         }
     }
 
-    averageCloseness /= graph.nodes.length;
+    averageCloseness /= length;
     closeness.average = averageCloseness;
 
     return closeness;

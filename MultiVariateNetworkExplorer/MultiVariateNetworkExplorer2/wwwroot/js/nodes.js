@@ -34,31 +34,34 @@
 
 ////    headingElement.classList.toggle('active-node-heading');
 ////}
-function nodeHeadingClick(event, nodeId) {
+const nodeHeadingClick = function (event, nodeId, nodeIndex) {
     selectNode(event, nodeId);
-    toggleNodeDetails(nodeId);
+    toggleNodeDetails(nodeId, nodeIndex);
 }
 
-function nodeHeadingMouseOver(nodeId, opacity) {
+const nodeHeadingMouseOver = function (nodeId, opacity) {
     fadeDisconnectedNodes(nodeId, opacity);
 }
 
-function selectNode(event, nodeId) {
+const selectNode = function (event, nodeId) {
     if (!event.shiftKey) {
         deselectAllNodes();
     }
 
-    let nodeHeadingElement = document.querySelector('#heading-' + nodeId);
+    const nodeHeadingElement = document.getElementById('heading-' + nodeId);
     nodeHeadingElement.classList.add('node-heading-selected');
     node.classed('selected', function (d) {
         return d.selected = d.selected | d.id == nodeId;
     });
 }
 
-function toggleNodeDetails(nodeId) {
-    let headingElement = document.getElementById('node-detail-heading');
-    let detailsElement = document.getElementById("node-detail-container");
+const toggleNodeDetails = function(nodeId, nodeIndex) {
+    const headingElement = document.getElementById('node-detail-heading');
+    const detailsElement = document.getElementById("node-detail-container");
+    const attributesDiv = document.getElementById("node-attributes");
+    const centralitiesDiv = document.getElementById("node-centralities");
 
+    detailsElement.setAttribute('data-id', nodeId)
 
     headingElement.innerHTML = "Node: " + nodeId;
 
@@ -66,19 +69,29 @@ function toggleNodeDetails(nodeId) {
         detailsElement.style.display = 'block';
     }
 
-    let inputs = detailsElement.querySelectorAll('input');
+    let inputs = attributesDiv.getElementsByTagName('input');
 
-    inputs.forEach((input) => {
+    for (const input of inputs) {
         //let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
-        let attributeName = input.getAttribute('data-attribute');
-        input.value = graph.nodes[nodeId][attributeName];
-    });
+        const attributeName = input.getAttribute('data-attribute');
+        input.value = graph.nodes[nodeIndex][attributeName];
+    };
+
+    inputs = centralitiesDiv.getElementsByTagName('input');
+
+    for (const input of inputs) {
+        //let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
+        const attributeName = input.getAttribute('data-attribute');
+        const { [attributeName]: attributeValues } = graph.properties;
+        input.value = attributeValues !== undefined ? attributeValues.values[nodeId] : "Calculating";
+        
+    };
 }
 
 
 
-function closeNodeDetails(nodeDetailsId) {
-    var nodeDetailsDiv = document.querySelector('#' + nodeDetailsId);
+const closeNodeDetails = function (nodeDetailsId) {
+    const nodeDetailsDiv = document.getElementById(nodeDetailsId);
     nodeDetailsDiv.style.display = "none";
 }
 

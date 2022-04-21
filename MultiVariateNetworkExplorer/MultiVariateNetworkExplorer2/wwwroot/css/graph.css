@@ -35,7 +35,6 @@
 
 
 .navigation div:last-child {
-    flex-grow: 1;
     border-bottom: 2px solid var(--border-color);
 }
 
@@ -126,6 +125,10 @@
     color: black;
 }
 
+#networkGraph {
+    height: 100%;
+}
+
 #networkGraph.graph-content{
     display: block;
 }
@@ -150,13 +153,6 @@ svg {
     height: 100%;
     width: 100%;
 }
-
-
-#networkGraph {
-    height: 100%;
-}
-
-
 
 .links path {
     stroke: lightgray;

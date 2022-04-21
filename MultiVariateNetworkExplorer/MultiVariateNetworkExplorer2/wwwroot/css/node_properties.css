@@ -128,27 +128,21 @@
     flex-direction: column;
 }
 
-.node-detail .node-property-group {
+.node-property-group {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.5rem;
 }
 
-.node-detail .node-property-group label{
+.node-property-group label{
     margin-top: 0.5rem;
 }
 
-.node-detail .node-property-group input {
+.node-property-group input {
     max-width: 40%;
 }
 
-.node-data label {
-    
-}
 
-.node-data input {
-    flex-basis: 50%;
-}
 
 
 

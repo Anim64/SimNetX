@@ -31,8 +31,8 @@
 }
 
 
-<div class="main-div">
-    <div class="column left-col" id="leftpanel">
+<main class="main-div">
+    <section class="column left-col" id="leftpanel">
         <div class="navigation">
             <div class="tab-nav">
                 <a class="tab-link tab-active" href="#" onclick="openTab(event, 'attributes', 'leftpanel', '.column-content')" id="defaultTab">Attributes</a>
@@ -51,10 +51,10 @@
                     <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMinValue(this.value, '@pair.Key');">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
                         </div>
                         <div class="col-md-4 col-md-offset-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByMaxValue(this.value, '@pair.Key');">
+                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
                         </div>
                     </div>
                 </div>
@@ -78,38 +78,38 @@
         <div class="column-content controls" id="settings">
             <div class="force alpha">
                 <p><label>alpha</label> Simulation activity</p>
-                <div class="alpha_bar" onclick="updateAll();"><div id="alpha_value"></div></div>
+                <div class="alpha_bar" onclick="updateForces();"><div id="alpha_value"></div></div>
             </div>
             <div class="force">
                 <p><label>center</label> Shifts the view, so the graph is centered at this location.</p>
                 <label>
                     x
                     <output id="center_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_XSliderOutput').text(value); forceProperties.center.x = value; updateAll();">
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_XSliderOutput').text(value); forceProperties.center.x = value; updateForces();">
                 </label>
                 <label>
                     y
                     <output id="center_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_YSliderOutput').text(value); forceProperties.center.y=value; updateAll();">
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_YSliderOutput').text(value); forceProperties.center.y=value; updateForces();">
                 </label>
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateAll();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+                <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateForces();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
                 <label title="Negative strength repels nodes. Positive strength attracts nodes.">
                     strength
                     <output id="charge_StrengthSliderOutput">-30</output>
-                    <input type="range" min="-200" max="50" value="-30" step=".1" oninput="d3.select('#charge_StrengthSliderOutput').text(value); forceProperties.charge.strength=value; updateAll();">
+                    <input type="range" min="-200" max="50" value="-30" step=".1" oninput="d3.select('#charge_StrengthSliderOutput').text(value); forceProperties.charge.strength=value; updateForces();">
                 </label>
                 <label title="Minimum distance where force is applied">
                     distanceMin
                     <output id="charge_distanceMinSliderOutput">1</output>
-                    <input type="range" min="0" max="50" value="1" step=".1" oninput="d3.select('#charge_distanceMinSliderOutput').text(value); forceProperties.charge.distanceMin=value; updateAll();">
+                    <input type="range" min="0" max="50" value="1" step=".1" oninput="d3.select('#charge_distanceMinSliderOutput').text(value); forceProperties.charge.distanceMin=value; updateForces();">
                 </label>
                 <label title="Maximum distance where force is applied">
                     distanceMax
                     <output id="charge_distanceMaxSliderOutput">2000</output>
-                    <input type="range" min="0" max="2000" value="2000" step=".1" oninput="d3.select('#charge_distanceMaxSliderOutput').text(value); forceProperties.charge.distanceMax=value; updateAll();">
+                    <input type="range" min="0" max="2000" value="2000" step=".1" oninput="d3.select('#charge_distanceMaxSliderOutput').text(value); forceProperties.charge.distanceMax=value; updateForces();">
                 </label>
             </div>
 
@@ -131,45 +131,17 @@
                     <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#collide_iterationsSliderOutput').text(value); forceProperties.collide.iterations=value; updateAll();">
                 </label>
             </div>
-
-            <div class="force">
+            
+            <div class="force" id="color-settings">
                 <label>
                     default node colour
-                    <input type="color" onchange="changeNetworkNodeColour(value)">
+                    <input type="color" value="#FFFFFF" onchange="changeNetworkNodeColour(value)" >
                 </label>
                 <label>
                     background colour
                     <input type="color" onchange="changeNetworkBackgroundColour(value);">
                 </label>
             </div>
-            <!--
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceX.enabled = this.checked; updateAll();"> forceX</label> Acts like gravity. Pulls all points towards an X location.</p>
-                <label>
-                    strength
-                    <output id="forceX_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceX_StrengthSliderOutput').text(value); forceProperties.forceX.strength=value; updateAll();">
-                </label>
-                <label title="The X location that the force will push the nodes to (NOTE: This demo multiplies by the svg width)">
-                    x
-                    <output id="forceX_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceX_XSliderOutput').text(value); forceProperties.forceX.x=value; updateAll();">
-                </label>
-            </div>
-            <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.forceY.enabled = this.checked; updateAll();"> forceY</label> Acts like gravity. Pulls all points towards a Y location.</p>
-                <label>
-                    strength
-                    <output id="forceY_StrengthSliderOutput">.1</output>
-                    <input type="range" min="0" max="1" value=".1" step="0.01" oninput="d3.select('#forceY_StrengthSliderOutput').text(value); forceProperties.forceY.strength=value; updateAll();">
-                </label>
-                <label title="The Y location that the force will push the nodes to (NOTE: This demo multiplies by the svg height)">
-                    y
-                    <output id="forceY_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#forceY_YSliderOutput').text(value); forceProperties.forceY.y=value; updateAll(); ">
-                </label>
-            </div>
-                -->
             <div class="force">
                 <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
@@ -187,9 +159,8 @@
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
                 <label for="project-x-attributes">
                     X Axis
-                    @*@Html.DropDownList("droplist_x", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-x-attributes", @class = "form-control", onchange = "projectAttribute('x', this.value);" })*@
                     <select id="project-x-attributes" class="form-control" name="project-x-attributes" onchange = "projectAttributeXAxis(this);">
-                        <option value=""><None></option>
+                        <option value="">--None--</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
@@ -205,9 +176,8 @@
                 
                 <label for="project-y-attributes">
                     Y Axis
-                    @*@Html.DropDownList("droplist_y", new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys), "<None>", new { @id = "project-y-attributes", @class = "form-control", onchange = "projectAttribute('y', this.value);" })*@
                     <select id="project-y-attributes" class="form-control" name="project-y-attributes" onchange = "projectAttributeYAxis(this);">
-                        <option value=""><None></option>
+                        <option value="">--None--</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
@@ -217,6 +187,39 @@
                         <optgroup label="Centralities">
                             <option value="degree">Degree</option>
                             <option value="closeness">Closeness</option>
+                        </optgroup>
+                    </select>
+                </label>
+                
+            </div>
+            <div class="force">
+                <p><label>Project</label> Modify position of a node based on its attribute value</p>
+                <label for="node-size-setting">
+                    Node size
+                    <select id="node-size-setting" class="form-control" name="node-size-setting" onchange ="setAttributeNodeSizing()">
+                        <option value="">--None--</option>
+                        @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                        {
+                            <option value="@key">@key</option>
+                        }
+                    </select>
+                </label>
+                
+                <label for="node-colouring-setting">
+                    Node colouring
+                    <select id="node-colouring-setting" class="form-control" name="node-colouring-setting" onchange ="setAttributeNodeColouring()">
+                        <option value="">--None--</option>
+                        <optgroup label="Numerical Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Categorical Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.CatAttrValues.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
                         </optgroup>
                     </select>
                 </label>
@@ -256,13 +259,9 @@
                 </div>
             </div>
         </div>
-        <script>
-            // Get the element with id="defaultOpen" and click on it
 
-        </script>
-
-    </div>
-    <div id="graph" class="column graph-col">
+    </section>
+    <section id="graph" class="column graph-col">
         <div class="navigation">
             <div class="tab-nav">
                 <a class="tab-link tab-active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graph-content')" id="defaultGraphTab">Network Graph</a>
@@ -280,7 +279,7 @@
             <script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>
             <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
             <script>
-            drawNetwork(@Html.Raw(Model.Graph));
+                drawNetwork(@Html.Raw(Model.Graph));
             </script>
             <div class="node-detail-container" id="node-detail-container">
                 <div class="node-detail-heading-container">
@@ -288,13 +287,25 @@
                     <button class="close-button" onclick="closeNodeDetails('node-detail-container')">X</button>
                 </div>
                 <div id="node-detail" class="node-detail">
-                    @foreach (var attribute in Model.Mvn.VectorData.Columns)
-                    {
+                    <div id="node-attributes">
+                        @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                        {
+                            <div class="node-property-group">
+                                <label for="@("display-" + attribute)">@(attribute + ":")</label>
+                                <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
+                            </div>
+                        }
+                    </div>
+                    <div id="node-centralities">
                         <div class="node-property-group">
-                            <label for="@("display-" + attribute)">@(attribute + ":")</label>
-                            <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
+                            <label for="display-degree">Degree:</label>
+                            <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
                         </div>
-                    }
+                        <div class="node-property-group">
+                            <label for="display-closeness">Closeness:</label>
+                            <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -302,7 +313,7 @@
             <svg></svg>
             <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
             <script>
-            drawSelectionNetwork(@Html.Raw(Model.Selection));
+                drawSelectionNetwork(@Html.Raw(Model.Selection));
             </script>
         </div>
         <div id="networkMetrics" class="graph-content">
@@ -310,12 +321,12 @@
                 <div class="network-metric-content" data-value="degree">
                     <h4>Average Degree</h4>
                     <span>Calculating...</span>
-                    <button onclick="calculateMetric(graph, this.parentNode);">Recalculate</button>
+                    <button onclick="calculateMetric(graph, this.parentNode);"><i class="fa fa-refresh"></i></button>
                 </div>
                 <div class="network-metric-content" data-value="closeness">
                     <h4>Average Closeness</h4>
                     <span>Calculating...</span>
-                    <button onclick="calculateMetric(graph, this.parentNode);">Recalculate</button>
+                    <button onclick="calculateMetric(graph, this.parentNode);"><i class="fa fa-refresh"></i></button>
                 </div>
             </div>
         </div>
@@ -325,9 +336,9 @@
 
             //$('#defaultGraphTab').click();
         </script>
-    </div>
+    </section>
 
-    <div class="column right-col" id="nodes">
+    <section class="column right-col" id="nodes">
         <div class="navigation">
             <div class="tab-nav">
                 <a class="tab-link tab-active" href="#" onclick="openTab(event, 'accordion', 'nodes', '.column-content')">Node Properties</a>
@@ -340,7 +351,7 @@
             <div class="node-grid">
                 @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
                 {
-                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.IdColumn[node])', .2)" onmouseout="mouseOut()">
+                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, '@(Model.Mvn.IdColumn[node])', @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.IdColumn[node])', .2)" onmouseout="mouseOut()">
                         <h5>@(Model.Mvn.IdColumn[node])</h5>
                     </div>
                     @*<div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
@@ -354,10 +365,7 @@
                         }
                     </div>*@
                 }
-            </div>
-            <script>
-                updateNodeGroups();
-            </script>
+            </div>        
         </div>
         <div class="column-content selections" id="selections">
             <div class="selection-edit">
@@ -369,26 +377,24 @@
                 {
                     foreach (var selection in Model.Mvn.Partition.Values.Distinct())
                     {
-                        
-                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="inputColorClick(this)">
+                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection')">
                             <h4 class="panel-title">
                                 @("Selection " + selection)
                             </h4>
-                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, @selection)" />
-                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, @selection.ToString())"><i class="fa fa-plus-square"></i></button>
-                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, @selection.ToString())"><i class="fa fa-trash"></i></button>
+                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, '@selection')" />
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, '@selection.ToString()')"><i class="fa fa-plus-square"></i></button>
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, '@selection.ToString()')"><i class="fa fa-trash"></i></button>
                         </div>
-                        
                     }
                 }
 
             </div>
         </div>
-    </div>
-</div>
-<div class="bottom-panel">
+    </section>
+</main>
+<footer class="bottom-panel">
     <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities" />
-</div>
+</footer>
 
 
 

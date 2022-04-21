@@ -1,7 +1,105 @@
-﻿function filterByMinValue(value, filteredAttributeName) {
+﻿
+const isLower = function(value1, value2) {
+    return value1 < value2;
+}
+
+const isGreater = function(value1, value2) {
+    return value1 > value2;
+}
+
+
+class FilterCondition {
+    static lower = new FilterCondition(isLower);
+    static greater = new FilterCondition(isGreater);
+
+    constructor(booleanFunction) {
+        this.booleanFunction = booleanFunction;
+    }
+}
+
+
+const filterByValue = function (input, filteredAttributeName, filterCondition, minmax) {
     //var value = event.currentTarget.value;
 
-    var minValue = document.getElementById(filteredAttributeName + "-sliderOutputMin").min;
+    const value = input.value;
+    const extremeValue = !minmax ? input.min : input.max;
+    const filterSuffix = !minmax ? "_min" : "_max";
+    const attributeFilterType = !minmax ? "low" : "high";
+    if (filterCondition.booleanFunction(value, extremeValue)) {
+        value = extremeValue;
+        input.value = extremeValue;
+    }
+
+    if (!attributefilter[filteredAttributeName]) {
+        attributefilter[filteredAttributeName] = {};
+    }
+    attributefilter[filteredAttributeName][attributeFilterType] = value;
+
+
+    const { nodes: storeNodes, links: storeLinks } = store;
+    const { nodes: graphNodes, links: graphLinks } = graph;
+
+    //for (const n of graphNodes) {
+    storeNodes.forEach(function (n) {
+        const { [filteredAttributeName]: filAttrVal } = n;
+
+        if (filAttrVal === "")
+            return;
+        if (filterCondition.booleanFunction(filAttrVal, value)) {
+            if (!n.filters) {
+                n.filters = [];
+                for (const [i, d] of graphNodes.entries()) {
+                    if (n.id === d.id) {
+                        graphNodes.splice(i, 1);
+                    }
+                };
+                filterNodeList.push(n.id);
+            }
+
+            if (!n.filters.includes(filteredAttributeName + filterSuffix)) {
+                n.filters.push(filteredAttributeName + filterSuffix);
+            }
+
+        }
+
+        else if (!filterCondition.booleanFunction(filAttrVal, value) && n.filters) {
+            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + filterSuffix)) {
+                n.filters.splice(n.filters.indexOf(filteredAttributeName + filterSuffix), 1);
+                if (n.filters.length === 0) {
+                    graphNodes.push($.extend(true, {}, n));
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    delete n.filters;
+                }
+            }
+        }
+    });
+
+    storeLinks.forEach(function (l) {
+        const { source, target } = l;
+        if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
+            l.filtered = false;
+            graphLinks.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
+            l.filtered = true;
+            for (const [i, d] of graphLinks.entries()) {
+                if (l.id === d.id) {
+                    graphLinks.splice(i, 1);
+                }
+            };
+        }
+    });
+
+    updateNodesAndLinks();
+    updateNodeAndLinkColour();
+    updateForces();
+
+
+}
+
+const filterByMinValue = function (value, filteredAttributeName) {
+    //var value = event.currentTarget.value;
+
+    const minValue = document.getElementById(filteredAttributeName + "-sliderOutputMin").min;
     if (value < minValue) {
         value = minValue;
         document.getElementById(filteredAttributeName + "-sliderOutputMin").value = minValue;
@@ -12,17 +110,24 @@
     }
     attributefilter[filteredAttributeName].low = value;
 
-    store.nodes.forEach(function (n) {
-        if (n[filteredAttributeName] === "")
+
+    const { nodes: storeNodes, links: storeLinks } = store;
+    const { nodes: graphNodes, links: graphLinks } = graph;
+
+    //for (const n of graphNodes) {
+    storeNodes.forEach(function (n) {
+        const { [filteredAttributeName]: filAttrVal } = n;
+
+        if (filAttrVal === "")
             return;
-        if (n[filteredAttributeName] < value) {
+        if (filAttrVal < value) {
             if (!n.filters) {
                 n.filters = [];
-                graph.nodes.forEach(function (d, i) {
+                for (const [i, d] of graphNodes.entries()) {
                     if (n.id === d.id) {
-                        graph.nodes.splice(i, 1);
+                        graphNodes.splice(i, 1);
                     }
-                });
+                };
                 filterNodeList.push(n.id);
             }
 
@@ -32,11 +137,11 @@
 
         }
 
-        else if (n[filteredAttributeName] >= value && n.filters) {
+        else if (filAttrVal >= value && n.filters) {
             if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_min")) {
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + "_min"), 1);
                 if (n.filters.length === 0) {
-                    graph.nodes.push($.extend(true, {}, n));
+                    graphNodes.push($.extend(true, {}, n));
                     filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
                     delete n.filters;
                 }
@@ -70,21 +175,23 @@
 
     });
 
-    store.links.forEach(function (l) {
-        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
+    storeLinks.forEach(function (l) {
+        const { source, target } = l;
+        if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
             l.filtered = false;
-            graph.links.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
+            graphLinks.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
             l.filtered = true;
-            graph.links.forEach(function (d, i) {
+            for (const [i, d] of graphLinks.entries()) {
                 if (l.id === d.id) {
-                    graph.links.splice(i, 1);
+                    graphLinks.splice(i, 1);
                 }
-            });
+            };
         }
     });
 
     updateNodesAndLinks();
+    updateNodeAndLinkColour();
     updateForces();
 
 
@@ -92,7 +199,7 @@
 
 function filterByMaxValue(value, filteredAttributeName) {
     //var value = event.currentTarget.value;
-    var maxValue = document.getElementById(filteredAttributeName + "-sliderOutputMax").max;
+    const maxValue = document.getElementById(filteredAttributeName + "-sliderOutputMax").max;
     if (value > maxValue) {
         value = maxValue;
         document.getElementById(filteredAttributeName + "-sliderOutputMax").value = maxValue;
@@ -105,6 +212,7 @@ function filterByMaxValue(value, filteredAttributeName) {
 
 
     store.nodes.forEach(function (n) {
+        const { [filteredAttributeName]: filAttrVal } = n;
         if (n[filteredAttributeName] === "")
             return;
         if (n[filteredAttributeName] > value) {
@@ -112,7 +220,7 @@ function filterByMaxValue(value, filteredAttributeName) {
                 n.filters = [];
                 graph.nodes.forEach(function (d, i) {
                     if (n.id === d.id) {
-                        graph.nodes.splice(i, 1);
+                        graph.nodes.splice(i, 1); 
                     }
                 });
                 filterNodeList.push(n.id);
@@ -151,23 +259,27 @@ function filterByMaxValue(value, filteredAttributeName) {
     });
 
     updateNodesAndLinks();
+    updateNodeAndLinkColour();
     updateForces();
 }
 
-function filterByCategory(filteredAttributeName, category, checked) {
-    store.nodes.forEach(function (n) {
-        if (n[filteredAttributeName] === "")
+const filterByCategory = function (filteredAttributeName, category, checked) {
+    const { nodes: storeNodes, links: storeLinks } = store;
+    //const { }
+    storeNodes.forEach(function (n) {
+        const { [filteredAttributeName]: filAttrVal } = n;
+        if (filAttrVal === "")
             return;
-        if (!checked && n[filteredAttributeName] === category) {
+        if (!checked && filAttrVal === category) {
             if (!attributefilter[filteredAttributeName]) {
                 attributefilter[filteredAttributeName] = {};
             }
             attributefilter[filteredAttributeName].cat = category;
             if (!n.filters) {
                 n.filters = [];
-                graph.nodes.forEach(function (d, i) {
+                graphNodes.forEach(function (d, i) {
                     if (n.id === d.id) {
-                        graph.nodes.splice(i, 1);
+                        graphNodes.splice(i, 1);
                     }
                 });
                 filterNodeList.push(n.id);
@@ -179,12 +291,12 @@ function filterByCategory(filteredAttributeName, category, checked) {
 
         }
 
-        else if (checked && n[filteredAttributeName] === category && n.filters) {
+        else if (checked && filAttrVal === category && n.filters) {
             delete (attributefilter[filteredAttributeName]);
             if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_" + category)) {
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
                 if (n.filters.length === 0) {
-                    graph.nodes.push($.extend(true, {}, n));
+                    graphNodes.push($.extend(true, {}, n));
                     filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
                     delete n.filters;
                 }
@@ -192,13 +304,14 @@ function filterByCategory(filteredAttributeName, category, checked) {
         }
     });
 
-    store.links.forEach(function (l) {
-        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
+    storeLinks.forEach(function (l) {
+        const { source, target } = l;
+        if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
             l.filtered = false;
-            graph.links.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
+            graphLinks.push($.extend(true, {}, l));
+        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
             l.filtered = true;
-            graph.links.forEach(function (d, i) {
+            graphLinks.forEach(function (d, i) {
                 if (l.id === d.id) {
                     graph.links.splice(i, 1);
                 }
@@ -207,116 +320,130 @@ function filterByCategory(filteredAttributeName, category, checked) {
     });
 
     updateNodesAndLinks();
+    updateNodeAndLinkColour();
     updateForces();
 }
 
-function projectAttributeXAxis(selectElement) {
-    var attributeName = selectElement.value;
+const setAttributeNodeSizing = function(selectElement) {
+    const attributeName = selectElement.value;
 
     if (attributeName === "") {
-        simulation.force("forceX")
-            .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
-            .x(width * forceProperties.forceX.x);
+        simulation.force("collide")
+            .radius(forceProperties.forceX.radius);
     }
+}
 
-    else {
+const setAttributeNodeColouring = function(selectElement) {
+
+}
+
+const projectAttributeXAxis = function(selectElement) {
+    const attributeName = selectElement.value;
+    const { strength, enabled, x } = forceProperties.forceX;
+    const forceName = "forceX";
+
+    const getNodeAttribute = function (d, attributeName) { return d[attributeName]; };
+    const getNodeProperty = function (d, attributeName) { return graph.properties[attributeName].values[d.id] };
+
+    simulation.force(forceName)
+        .strength(strength * enabled);
+
+    if (attributeName !== "") {
 
         forceProperties.forceX.enabled = true;
-        //forceProperties.charge.enabled = false;
-        //simulation.force("link").strength(0);
-        var optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
-
+        const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+        let attributeMax = null;
+        let attributeMin = null;
+        let getValueFunction = null;
 
         if (optgroup === "Attributes") {
-            var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
-            var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
-
-            simulation.force("forceX")
-                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
-                .x(function (d) {
-                    if (d[attributeName] == "") {
-                        return width / 2;
-                    }
-
-                    var value = width * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
-                    return value;
-                });
+            attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
+            attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+            getValueFunction = getNodeAttribute;
         }
 
         else if (optgroup === "Centralities"){
-            var attributeMax = graph.properties[attributeName].max;
-            var attributeMin = graph.properties[attributeName].min;
-
-            simulation.force("forceX")
-                .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
-                .x(function (d) {
-                    if (graph.properties[attributeName].values[d.id] == "") {
-                        return width / 2;
-                    }
-
-                    var value = width * ((parseFloat(graph.properties[attributeName].values[d.id]) - attributeMin) / (attributeMax - attributeMin));
-                    return value;
-                });
+            attributeMax = graph.properties[attributeName].max;
+            attributeMin = graph.properties[attributeName].min;
+            getValueFunction = getNodeProperty;
         }
+
+        simulation.force(forceName)
+            .x(function (d) {
+                const attributeValue = getValueFunction(d, attributeName);
+                if (attributeValue == "") {
+                    return width / 2;
+                }
+
+                const resultXCoord = width * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
+                return resultXCoord;
+            });
+
+        updateForces();
+        return;
     }
+
+    simulation.force(forceName)
+        .x(width * x);
 
     updateForces();
 }
 
+
 function projectAttributeYAxis(selectElement) {
-    var attributeName = selectElement.value;
+    const attributeName = selectElement.value;
+    const { strength, enabled, y } = forceProperties.forceY;
+    const forceName = "forceY";
 
-    if (attributeName === "") {
-        simulation.force("forceY")
-            .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
-            .y(height * forceProperties.forceY.y);
-    }
+    const getNodeAttribute = function (d, attributeName) { return d[attributeName]; };
+    const getNodeProperty = function (d, attributeName) { return graph.properties[attributeName].values[d.id] };
 
-    else {
+    simulation.force(forceName)
+        .strength(strength * enabled);
+
+    if (attributeName !== "") {
 
         forceProperties.forceY.enabled = true;
-        //forceProperties.charge.enabled = false;
-        //simulation.force("link").strength(0);
-        var optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
-
+        const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+        let attributeMax = null;
+        let attributeMin = null;
+        let getValueFunction = null;
 
         if (optgroup === "Attributes") {
-            var attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
-            var attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
-
-            simulation.force("forceY")
-                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
-                .y(function (d) {
-                    if (d[attributeName] == "") {
-                        return height / 2;
-                    }
-
-                    var value = height * ((parseFloat(d[attributeName]) - attributeMin) / (attributeMax - attributeMin));
-                    return value;
-                });
+            attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
+            attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+            getValueFunction = getNodeAttribute;
         }
 
         else if (optgroup === "Centralities") {
-            var attributeMax = graph.properties[attributeName].max;
-            var attributeMin = graph.properties[attributeName].min;
-
-            simulation.force("forceY")
-                .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
-                .y(function (d) {
-                    if (graph.properties[attributeName].values[d.id] == "") {
-                        return height / 2;
-                    }
-
-                    var value = height - (height * ((parseFloat(graph.properties[attributeName].values[d.id]) - attributeMin) / (attributeMax - attributeMin)));
-                    return value;
-                });
+            attributeMax = graph.properties[attributeName].max;
+            attributeMin = graph.properties[attributeName].min;
+            getValueFunction = getNodeProperty;
         }
+
+        simulation.force(forceName)
+            .y(function (d) {
+                const attributeValue = getValueFunction(d, attributeName);
+                if (attributeValue == "") {
+                    return height / 2;
+                }
+
+                const resultYCoord = height - (height * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)));
+                return resultYCoord;
+            });
+
+        updateForces();
+        return;
     }
 
+    simulation.force(forceName)
+        .y(height * y);
+
     updateForces();
+    
 }
 
-function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue) {
+const createDoubleSlider = function(sliderId, minValueId, maxValueId, minValue, maxValue) {
     $("#" + sliderId).slider({
         range: true,
         min: minValue,
@@ -328,10 +455,10 @@ function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue
             $("#" + maxValueId).val(ui.values[1]);
 
             if (ui.handleIndex === 0) {
-                filterByMinValue(ui.value, minValueId.split("-")[0])
+                filterByValue(ui, minValueId.split("-")[0], FilterCondition.lower, false)
             }
             else if (ui.handleIndex === 1) {
-                filterByMaxValue(ui.value, maxValueId.split("-")[0])
+                filterByValue(ui, maxValueId.split("-")[0], FilterCondition.greater, true)
             }
         }
     });
@@ -340,41 +467,39 @@ function createDoubleSlider(sliderId, minValueId, maxValueId, minValue, maxValue
 
 }
 
-function hideConversionParameters() {
-    var conversion_parameters_divs = document.getElementsByClassName("remodel-parameters-div");
-    Array.prototype.forEach.call(conversion_parameters_divs, function (conversion_parameters_div) {
-        conversion_parameters_div.style.display = "none";
-    });
+const hideConversionParameters = function () {
+    $(".remodel-parameters-div").css("display", "none");
 }
 
 function displayConversionParameters(conversion_alg) {
 
     hideConversionParameters();
-    var remodel_parameters_headline = document.getElementById("remodel-parameters-headline");
+    const remodelParametersHeadline = document.getElementById("remodel-parameters-headline");
 
     if (conversion_alg === "Epsilon") {
-        var epsilon_parameters_div = document.getElementById("epsilon-parameters");
-        epsilon_parameters_div.style.display = "grid";
-        remodel_parameters_headline.style.display = "block";
+        const epsilonParametersDiv = document.getElementById("epsilon-parameters");
+        epsilonParametersDiv.style.display = "grid";
+        remodelParametersHeadline.style.display = "block";
     }
 
     else {
-        remodel_parameters_headline.style.display = "none";
+        remodelParametersHeadline.style.display = "none";
     }
 
-    remodel_parameters_headline.parentElement.style.height = "auto";
+    remodelParametersHeadline.parentElement.style.height = "auto";
 }
 
-function remodelNetwork(checkboxesDivId, algorithmSelectId) {
-    var attributeCheckboxDiv = document.querySelector('#' + checkboxesDivId);
-    var selectedAlgorithm = document.querySelector('#' + algorithmSelectId).value;
+const remodelNetwork = function (checkboxesDivId, algorithmSelectId) {
+    const attributeCheckboxDiv = document.getElementById(checkboxesDivId);
+    const selectedAlgorithm = document.getElementById(algorithmSelectId).value;
 
-    var checkboxes = attributeCheckboxDiv.querySelectorAll("input[type='checkbox']:checked");
-    var selected_attributes = Array.prototype.map.call(checkboxes, function (checkbox) {
+    const checkboxes = $(attributeCheckboxDiv).find("input[type='checkbox']:checked");
+    const selected_attributes = checkboxes.map((index, checkbox) => {
         return checkbox.value;
     });
+    
 
-    var newNet;
+    let newNet = null;
 
     switch (selectedAlgorithm) {
         default:
@@ -384,79 +509,92 @@ function remodelNetwork(checkboxesDivId, algorithmSelectId) {
         
 
         case 'Epsilon':
-            var epsilonRadius = parseFloat(document.querySelector('#epsilonRadius').value);
-            var k = parseInt(document.querySelector('#kNNmin').value);
+            const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
+            const k = parseInt(document.getElementById('kNNmin').value);
             newNet = EpsilonAndkNN(graph.nodes, selected_attributes, gaussianKernel, epsilonRadius, k);
             break;
     }
 
     graph.links = newNet;
     updateLinks();
-    
+    updateLinkColour();
+    resetSimulation();
 }
 
-function gaussianKernel(nodes, attributes, sigma = 1) {
-    var gaussianKernel = new Array(nodes.length * nodes.length);
-    let nodeCount = nodes.length;
-    nodes.forEach(function (node, index) {
-        for (let i = index; i < nodes.length; i++){
-            
+const gaussianKernel = function(nodes, attributes, sigma = 1) {
+    const gaussianKernel = new Array(nodes.length * nodes.length);
+    const nodeCount = nodes.length;
+
+    for (const [index, node] of nodes.entries()) {
+        for (let i = index; i < nodeCount; i++) {
+
             if (i === index) {
                 gaussianKernel[index * nodeCount + i] = 1
             }
             else {
-                let distance = euclideanDistance(node, nodes[i], attributes);
-                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
+                const distance = euclideanDistance(node, nodes[i], attributes);
+                const similarity = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
+                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = similarity;
             }
-            
+
         }
-    });
+    }
 
     return gaussianKernel;
 }
 
 
 
-function euclideanDistance(node1, node2, attributes) {
+const euclideanDistance = function(node1, node2, attributes) {
     let result = 0;
-    attributes.forEach(function (attribute) {
-        if (typeof node1[attribute] == 'number' && typeof node2[attribute] == 'number') {
-            result += Math.pow(node1[attribute] - node2[attribute], 2);
+    for (const attribute of attributes) {
+        const { [attribute]: node1Value } = node1;
+        const { [attribute]: node2Value } = node2;
+        if (typeof node1Value == 'number' && typeof node2Value == 'number') {
+            result += Math.pow(node1Value - node2Value, 2);
         }
-    });
+    }
 
     return result;
 }
 
-function EpsilonAndkNN(nodes, attributes, kernelMatrixFunction, similarity_threshold = 0.5, k = 1) {
-    let resultNet = new Array();
-    let kernel = kernelMatrixFunction(nodes, attributes);
-    let potentialNeighbours = Array.from(Array(nodes.length).keys());
-    let nodeCount = nodes.length;
-    var duplicateCheckDict = {};
+
+
+const EpsilonAndkNN = function(nodes, attributes, kernelMatrixFunction, similarityThreshold = 0.5, k = 1) {
+    const resultNet = new Array();
+    const kernel = kernelMatrixFunction(nodes, attributes);
+    const potentialNeighbours = Array.from(Array(nodes.length).keys());
+    const nodeCount = nodes.length;
+    const duplicateCheckDict = {};
     let edgeId = -1;
-    nodes.forEach(function (node, index) {
-        
-        
-        potentialNeighbours.sort(function (node1, node2) {
-            if (kernel[index * nodeCount + node1] < kernel[index * nodeCount + node2]) {
+    for (const [index, node] of nodes.entries()) {
+    
+        potentialNeighbours.sort((node1, node2) => {
+            const node1KernelIndex = index * nodeCount + node1;
+            const node2KernelIndex = index * nodeCount + node2;
+
+            if (kernel[node1KernelIndex] < kernel[node2KernelIndex]) {
                 return 1;
             }
 
-            if (kernel[index * nodeCount + node1] > kernel[index * nodeCount + node2]) {
+            else if (kernel[node1KernelIndex] > kernel[node2KernelIndex]) {
                 return -1;
             }
 
             return 0;
         });
 
-        var edgeCount = 0;
+        let edgeCount = 0;
         let n = 0;
-        while ((edgeCount < k || kernel[index * nodeCount + potentialNeighbours[n]] > similarity_threshold) && n < nodeCount) {
-            if (index !== potentialNeighbours[n] && (duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] == undefined || duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] == undefined)) {
-                duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
-                duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
-                let newLink = {
+
+        while ((edgeCount < k || kernel[index * nodeCount + potentialNeighbours[n]] > similarityThreshold) && n < nodeCount) {
+            const index1 = String(node.index);
+            const index2 = String(nodes[potentialNeighbours[n]].index);
+            const concatIndeces = index1 + index2;
+            const concatIndecesReverse = index2 + index1;
+            if (index !== potentialNeighbours[n] && (duplicateCheckDict[concatIndeces] == undefined || duplicateCheckDict[concatIndecesReverse] == undefined)) {
+                duplicateCheckDict[concatIndeces] = duplicateCheckDict[concatIndecesReverse] = 1;
+                const newLink = {
                     source: node.id,
                     target: nodes[potentialNeighbours[n]].id,
                     value: 1,
@@ -468,87 +606,90 @@ function EpsilonAndkNN(nodes, attributes, kernelMatrixFunction, similarity_thres
             }
             n++;
         }
-    });
+    }
 
     return resultNet;
 }
 
-function LRNet(nodes, attributes, kernelMatrixFunction) {
-    let resultNet = new Array();
-    let kernel = kernelMatrixFunction(nodes, attributes);
-    let degrees = {};
-    let significances = {};
-    let representativeness = {};
-    let nodeCount = nodes.length;
+const LRNet = function(nodes, attributes, kernelMatrixFunction) {
+    const resultNet = new Array();
+    const kernel = kernelMatrixFunction(nodes, attributes);
+    const degrees = {};
+    const significances = {};
+    const representativeness = {};
+    const nodeCount = nodes.length;
     let edgeId = -1;
 
-    nodes.forEach(function (node1, index1) {
+    for (let index1 = 0; index1 < nodeCount; index1++) {
+    
         let nearestNeighbour = -1;
         let maxSimilarity = -1;
-        nodes.forEach(function (node2, index2) {
+        //degrees[index1] = 0;
+        //significances[index1] = 0;
+
+        for (let index2 = 0; index2 < nodeCount; index2++) {
             if (index1 === index2) {
-                return;
+                continue;
             }
 
             if (!degrees.hasOwnProperty(index1)) {
-                degrees[index1] = 0;
-                significances[index1] = 0;
+               degrees[index1] = 0;
+               significances[index1] = 0;
             }
+            const kernelValue = kernel[index1 * nodeCount + index2];
 
-            if (kernel[index1 * nodeCount + index2] > 0) {
+            if (kernelValue > 0) {
                 degrees[index1]++;
             }
 
-            if (kernel[index1 * nodeCount + index2] > maxSimilarity) {
-                maxSimilarity = kernel[index1 * nodes.length + index2];
+            if (kernelValue > maxSimilarity) {
+                maxSimilarity = kernelValue;
                 nearestNeighbour = index2;
             }
-        });
-
-        if (!significances.hasOwnProperty(nearestNeighbour)) {
-            significances[nearestNeighbour] = 0;
         }
 
-        significances[nearestNeighbour]++;
-    });
-    var duplicateCheckDict = {};
-    nodes.forEach(function (node, index) {
-        if (significances[index] > 0) {
-            representativeness[index] = 1.0 / (Math.pow((1 + degrees[index]), (1.0 / significances[index])));
-        }
+        significances[nearestNeighbour] = !significances.hasOwnProperty(nearestNeighbour)
+            ? 0
+            : significances[nearestNeighbour] + 1;
 
-        else {
-            representativeness[index] = 0;
-        }
+        
+    }
+    const duplicateCheckDict = {};
 
-        let k = parseInt(Math.round(representativeness[index] * degrees[index]), 10);
+    for (const [index, node] of nodes.entries()) {
+        representativeness[index] = significances[index] > 0
+            ? 1.0 / (Math.pow((1 + degrees[index]), (1.0 / significances[index])))
+            : 0;
+        
+        const k = parseInt(Math.round(representativeness[index] * degrees[index]), 10);
 
-        let potentialNeighbours = Array.from(Array(nodeCount).keys());
+        const potentialNeighbours = Array.from(Array(nodeCount).keys());
         potentialNeighbours.sort(function (node1, node2) {
-            if (kernel[index * nodeCount + node1] < kernel[index * nodeCount + node2]) {
+            const node1KernelIndex = index * nodeCount + node1;
+            const node2KernelIndex = index * nodeCount + node2;
+
+            if (kernel[node1KernelIndex] < kernel[node2KernelIndex]) {
                 return 1;
             }
 
-            if (kernel[index * nodeCount + node1] > kernel[index * nodeCount + node2]) {
+            else if (kernel[node1KernelIndex] > kernel[node2KernelIndex]) {
                 return -1;
             }
-    
+
             return 0;
         });
-        let l;
-        if (k > 0) {
-            l = k + 1;
-        }
 
-        else {
-            l = 2;
-        }
+        let l = k > 0 ? k + 1 : 2;
 
         for (let n = 0; n < l; n++) {
-            if (index !== potentialNeighbours[n] && (duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] == undefined || duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] == undefined)) {
-                duplicateCheckDict[String(node.index) + String(nodes[potentialNeighbours[n]].index)] = 1;
-                duplicateCheckDict[String(nodes[potentialNeighbours[n]].index) + String(node.index)] = 1;
-                let newLink = {
+            const index1 = String(node.index);
+            const index2 = String(nodes[potentialNeighbours[n]].index);
+            const concatIndeces = index1 + index2;
+            const concatIndecesReverse = index2 + index1;
+
+            if (index !== potentialNeighbours[n] && (duplicateCheckDict[concatIndeces] == undefined || duplicateCheckDict[concatIndecesReverse] == undefined)) {
+                duplicateCheckDict[concatIndeces] = duplicateCheckDict[concatIndecesReverse] = 1;
+                const newLink = {
                     source: node.id,
                     target: nodes[potentialNeighbours[n]].id,
                     value: 1,
@@ -557,25 +698,16 @@ function LRNet(nodes, attributes, kernelMatrixFunction) {
                 resultNet.push(newLink);
             }
         }
-    });
+    }
 
     return resultNet;
 }
 
-function changeNetworkNodeColour(colour) {
+const changeNetworkNodeColour = function(colour) {
     defaultColour = colour;
-    node.style("fill", function (d) {
-        return nodeColor(d.id);
-
-    });
-
-    link.style("stroke", function (l) {
-        return nodeColor(l.source.id);
-
-    });
+    updateNodeAndLinkColour();
 }
 
-function changeNetworkBackgroundColour(colour) {
-    var i = d3.select('#network-background-rect.background').style("fill", colour);
-    var p = 0;
+const changeNetworkBackgroundColour = function (colour) {
+    $('#network-background-rect.background').css("fill", colour);
 }

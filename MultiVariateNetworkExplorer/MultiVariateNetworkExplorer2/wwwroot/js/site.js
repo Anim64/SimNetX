@@ -6,18 +6,16 @@
 
 
 
-function openTab(event, contentId, divId, contentClass) {
-    var i, tabcontent, tablinks;
-
-    //tabcontent = document.getElementsByClassName("tabcontent");
-    tabcontent = document.getElementById(divId).querySelectorAll(contentClass);
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
+const openTab = function (event, contentId, divId, contentClass) {
+    
+    const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
+    for (const tabcontent of tabcontents) {
+        tabcontent.style.display = "none";
     }
 
-    tablinks = document.getElementById(divId).querySelectorAll(".tab-link");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" tab-active", "");
+    const tablinks = document.getElementById(divId).querySelectorAll(".tab-link");
+    for (const tablink of tablinks) {
+        tablink.className = tablink.className.replace(" tab-active", "");
     }
 
     document.getElementById(contentId).style.display = "block";
