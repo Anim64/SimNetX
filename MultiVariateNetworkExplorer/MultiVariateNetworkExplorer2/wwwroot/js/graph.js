@@ -115,8 +115,12 @@ let forceProperties = {
         distance: 75,
         iterations: 1
     },
-
-
+    sizing: {
+        enabled: false
+    },
+    colouring: {
+        enabled: false
+    }
 };
 
 
@@ -356,9 +360,13 @@ const fadeDisconnectedNodes = function(nodeId, opacity) {
     // fade
 
     const { radius } = forceProperties.collide;
-    node.attr("r", function (d) {
-        return nodeId === d.id ? radius * 2 : radius;
-    });
+    const { enabled: sizingEnabled } = forceProperties.sizing;
+
+    if (!sizingEnabled) {
+        node.attr("r", function (d) {
+            return nodeId === d.id ? radius * 2 : radius;
+        });
+    }
 
     node.style("stroke-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
@@ -385,7 +393,10 @@ const nodeMouseOver = function(opacity) {
 
 const mouseOut = function() {
     const { radius } = forceProperties.collide;
-    node.attr("r", radius);
+    const { enabled: sizingEnabled } = forceProperties.sizing;
+    if (!sizingEnabled) {
+        node.attr("r", radius);
+    }
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
@@ -784,8 +795,9 @@ const selectionTicked = function() {
 
 
 /////////////////////////////////////////////// NODE UPDATES////////////////////////////////////////////////
-const updateNodeColour = function() {
-    node.style("fill", function (d) {
+const updateNodeColour = function (nodes) {
+
+    nodes.style("fill", function (d) {
         const { id } = d;
         let colour = getNodeColour(id)
         $('#heading-' + id).css("backgroundColor", colour);
@@ -793,7 +805,7 @@ const updateNodeColour = function() {
     });
 }
 
-const updateLinkColour = function() {
+const updateLinkColour = function(links) {
     link.style("stroke", function (l) {
         const { id } = l.source;
         return getNodeColour(l.source.id);
@@ -802,7 +814,7 @@ const updateLinkColour = function() {
 
 const getNodeColour = function (nodeId) {
     const { partitions } = graph;
-    if (partitions[nodeId] != "") {
+    if (partitions[nodeId] !== "") {
 
         const colour_input_name = "selection_color_" + partitions[nodeId];
         const colour_input = document.getElementById(colour_input_name)
@@ -825,7 +837,7 @@ const updateNodes = function () {
     //	EXIT
     node.exit().remove();
 
-    var newNode = node.enter().append("circle")
+    const newNode = node.enter().append("circle")
         .attr("r", forceProperties.collide.radius)
         .call(d3.drag()
             .on("start", dragstarted)
@@ -834,6 +846,8 @@ const updateNodes = function () {
 
     newNode.append("title")
         .text(function (d) { return d.id; });
+
+    updateNodeColour(newNode);
 
     node = node.merge(newNode);
 
@@ -851,8 +865,9 @@ const updateLinks = function () {
     
     link.exit().remove();
 
-    var newLink = link.enter().append("path")
+    const newLink = link.enter().append("path")
 
+    updateLinkColour(newLink);
 
     link = link.merge(newLink);
 
@@ -868,9 +883,9 @@ const updateNodesAndLinks = function() {
     //resetSimulation();
 }
 
-const updateNodeAndLinkColour = function() {
-    updateNodeColour();
-    updateLinkColour();
+const updateNodeAndLinkColour = function(nodes, links) {
+    updateNodeColour(nodes);
+    updateLinkColour(links);
 }
 
 const updateAll = function() {
@@ -887,7 +902,7 @@ const updateSelectionNodesAndLinks = function () {
     //	EXIT
     selectionNode.exit().remove();
 
-    var newNode = selectionNode.enter().append("circle")
+    const newNode = selectionNode.enter().append("circle")
         .style("fill", function (d) {  
              return groupColours(d.id);
         })
@@ -914,7 +929,7 @@ const updateSelectionNodesAndLinks = function () {
     //	EXIT
     selectionLink.exit().remove();
 
-    var newLink = selectionLink.enter().append("path")
+    const newLink = selectionLink.enter().append("path")
         .attr("id", function (l) {
             const { source, target } = l;
             return "selection_link_" + source + "-" + target;
@@ -993,8 +1008,8 @@ $(document).ready(function () {
         setGroupColour(d);
     });
 
-    updateNodeColour();
-    updateLinkColour();
+    updateNodeColour(node);
+    updateLinkColour(link);
 
 });
 

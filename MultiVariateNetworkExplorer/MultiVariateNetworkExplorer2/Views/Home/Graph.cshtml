@@ -132,16 +132,7 @@
                 </label>
             </div>
             
-            <div class="force" id="color-settings">
-                <label>
-                    default node colour
-                    <input type="color" value="#FFFFFF" onchange="changeNetworkNodeColour(value)" >
-                </label>
-                <label>
-                    background colour
-                    <input type="color" onchange="changeNetworkBackgroundColour(value);">
-                </label>
-            </div>
+            
             <div class="force">
                 <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
@@ -157,9 +148,9 @@
             </div>
             <div class="force">
                 <p><label>Project</label> Modify position of a node based on its attribute value</p>
-                <label for="project-x-attributes">
+                <label class="attribute-selection-label" for="project-x-attributes">
                     X Axis
-                    <select id="project-x-attributes" class="form-control" name="project-x-attributes" onchange = "projectAttributeXAxis(this);">
+                    <select id="project-x-attributes" class="attribute-select" name="project-x-attributes" onchange = "projectAttributeXAxis(this);">
                         <option value="">--None--</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
@@ -174,9 +165,9 @@
                     </select>
                 </label>
                 
-                <label for="project-y-attributes">
+                <label class="attribute-selection-label" for="project-y-attributes">
                     Y Axis
-                    <select id="project-y-attributes" class="form-control" name="project-y-attributes" onchange = "projectAttributeYAxis(this);">
+                    <select id="project-y-attributes" class="attribute-select" name="project-y-attributes" onchange = "projectAttributeYAxis(this);">
                         <option value="">--None--</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
@@ -193,21 +184,42 @@
                 
             </div>
             <div class="force">
-                <p><label>Project</label> Modify position of a node based on its attribute value</p>
-                <label for="node-size-setting">
-                    Node size
-                    <select id="node-size-setting" class="form-control" name="node-size-setting" onchange ="setAttributeNodeSizing()">
+                <p><label>Attribute Node Sizing</label> Modify size of node based on its attribute value</p>
+                <label class="attribute-selection-label" for="attribute-node-sizing">
+                    Choose Attribute:
+                    <select id="attribute-node-sizing" class="attribute-select" name="attribute-node-sizing" onchange ="setAttributeNodeSizing(this)">
                         <option value="">--None--</option>
-                        @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
-                        {
-                            <option value="@key">@key</option>
-                        }
+                        <optgroup label="Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Centralities">
+                            <option value="degree">Degree</option>
+                            <option value="closeness">Closeness</option>
+                        </optgroup>
                     </select>
                 </label>
                 
-                <label for="node-colouring-setting">
-                    Node colouring
-                    <select id="node-colouring-setting" class="form-control" name="node-colouring-setting" onchange ="setAttributeNodeColouring()">
+            </div>
+            <div class="force" id="color-settings">
+                <div class="colour-row">
+                    <label class="colouring">
+                        Default node colour
+                        <input type="color" value="#FFFFFF" onchange="changeNetworkNodeColour(value)" >
+                    </label>
+                    <label class="colouring">
+                        Background colour
+                        <input type="color" onchange="changeNetworkBackgroundColour(value);">
+                    </label>
+                </div>
+            </div>
+            <div class="force">
+                <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
+                <label class="attribute-selection-label" for="attribute-node-colouring">
+                    Choose Attribute:
+                    <select id="attribute-node-colouring" class="attribute-select" name="attribute-node-colouring" onchange ="setAttributeNodeColouring(this)">
                         <option value="">--None--</option>
                         <optgroup label="Numerical Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
@@ -221,8 +233,22 @@
                                 <option value="@key">@key</option>
                             }
                         </optgroup>
+                        <optgroup label="Centralities">
+                            <option value="degree">Degree</option>
+                            <option value="closeness">Closeness</option>
+                        </optgroup>
                     </select>
                 </label>
+                <div class="colour-row">
+                    <label class="colouring" for="low-value-colour">
+                        Low value colour
+                        <input  type="color" id="low-value-colour" value="#0000FF">
+                    </label>
+                    <label class="colouring" for="high-value-colour">
+                        High value colour
+                        <input class="coloring-input" type="color" id="high-value-colour" value="#FF0000">
+                    </label>
+                </div>
                 
             </div>
             <div class="force">

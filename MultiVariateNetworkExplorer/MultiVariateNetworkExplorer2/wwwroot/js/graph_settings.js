@@ -90,7 +90,6 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
     });
 
     updateNodesAndLinks();
-    updateNodeAndLinkColour();
     updateForces();
 
 
@@ -191,7 +190,6 @@ const filterByMinValue = function (value, filteredAttributeName) {
     });
 
     updateNodesAndLinks();
-    updateNodeAndLinkColour();
     updateForces();
 
 
@@ -259,7 +257,6 @@ function filterByMaxValue(value, filteredAttributeName) {
     });
 
     updateNodesAndLinks();
-    updateNodeAndLinkColour();
     updateForces();
 }
 
@@ -320,30 +317,111 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
     });
 
     updateNodesAndLinks();
-    updateNodeAndLinkColour();
     updateForces();
 }
 
-const setAttributeNodeSizing = function(selectElement) {
+const getNodeAttribute = function (d, attributeName) {
+    return d[attributeName];
+};
+const getNodeProperty = function (d, attributeName) {
+    return graph.properties[attributeName].values[d.id];
+};
+
+const setAttributeNodeSizing = function (selectElement) {
     const attributeName = selectElement.value;
 
-    if (attributeName === "") {
-        simulation.force("collide")
-            .radius(forceProperties.forceX.radius);
+    const { radius: defaultRadius } = forceProperties.collide;
+
+    if (attributeName !== "") {
+        forceProperties.sizing.enabled = true;
+        const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+        let attributeMax = null;
+        let attributeMin = null;
+        let getValueFunction = null;
+
+        if (optgroup === "Attributes") {
+            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            getValueFunction = getNodeAttribute;
+        }
+
+        else if (optgroup === "Centralities") {
+            attributeMax = graph.properties[attributeName].max;
+            attributeMin = graph.properties[attributeName].min;
+            getValueFunction = getNodeProperty;
+        }
+
+        node.attr("r", function (d) {
+            const attributeValue = getValueFunction(d, attributeName);
+            if (attributeValue == "") {
+                return defaultRadius / 2;
+            }
+
+            const resultRadius = (defaultRadius * 2) * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
+            return resultRadius;
+        });
+        return;
     }
+
+    forceProperties.sizing.enabled = false;
+    node.attr("r", defaultRadius);
 }
 
-const setAttributeNodeColouring = function(selectElement) {
+const pickHex = function(color1, color2, weight) {
+    var w1 = weight;
+    var w2 = 1 - w1; 
+    var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2) + ', '
+    + Math.round(color1.g * w1 + color2.g * w2) + ', '
+        + Math.round(color1.r * w1 + color2.r * w2) + ')';
+    return rgb;
+}
 
+const setAttributeNodeColouring = function (selectElement) {
+    const lowValueColour = hexToRgb(document.getElementById('low-value-colour').value);
+    const highValueColour = hexToRgb(document.getElementById('high-value-colour').value);
+
+    const attributeName = selectElement.value;
+
+    if (attributeName !== "") {
+        forceProperties.colouring.enabled = true;
+        const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+        let attributeMax = null;
+        let attributeMin = null;
+        let getValueFunction = null;
+
+        if (optgroup === "Numerical Attributes") {
+            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            getValueFunction = getNodeAttribute;
+        }
+
+        else if (optgroup === "Centralities") {
+            attributeMax = graph.properties[attributeName].max;
+            attributeMin = graph.properties[attributeName].min;
+            getValueFunction = getNodeProperty;
+        }
+
+        node.style("fill", function (d) {
+            const attributeValue = getValueFunction(d, attributeName);
+            if (attributeValue == "") {
+                return defaultColour;
+            }
+
+            const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
+            const resultColour = pickHex(lowValueColour, highValueColour, resultValue);
+            return resultColour;
+        });
+        return;
+    }
+
+    forceProperties.colouring.enabled = false;
+    updateNodeAndLinkColour(node, link);
 }
 
 const projectAttributeXAxis = function(selectElement) {
     const attributeName = selectElement.value;
     const { strength, enabled, x } = forceProperties.forceX;
     const forceName = "forceX";
-
-    const getNodeAttribute = function (d, attributeName) { return d[attributeName]; };
-    const getNodeProperty = function (d, attributeName) { return graph.properties[attributeName].values[d.id] };
 
     simulation.force(forceName)
         .strength(strength * enabled);
@@ -357,8 +435,8 @@ const projectAttributeXAxis = function(selectElement) {
         let getValueFunction = null;
 
         if (optgroup === "Attributes") {
-            attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
-            attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
             getValueFunction = getNodeAttribute;
         }
 
@@ -368,6 +446,7 @@ const projectAttributeXAxis = function(selectElement) {
             getValueFunction = getNodeProperty;
         }
 
+        
         simulation.force(forceName)
             .x(function (d) {
                 const attributeValue = getValueFunction(d, attributeName);
@@ -410,8 +489,8 @@ function projectAttributeYAxis(selectElement) {
         let getValueFunction = null;
 
         if (optgroup === "Attributes") {
-            attributeMax = $("#" + attributeName + "-sliderOutputMin").attr("max");
-            attributeMin = $("#" + attributeName + "-sliderOutputMin").attr("min");
+            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
             getValueFunction = getNodeAttribute;
         }
 
@@ -626,16 +705,18 @@ const LRNet = function(nodes, attributes, kernelMatrixFunction) {
         let maxSimilarity = -1;
         //degrees[index1] = 0;
         //significances[index1] = 0;
+        degrees[index1] = 0;
+        significances[index1] = 0;
 
         for (let index2 = 0; index2 < nodeCount; index2++) {
             if (index1 === index2) {
                 continue;
             }
 
-            if (!degrees.hasOwnProperty(index1)) {
-               degrees[index1] = 0;
-               significances[index1] = 0;
-            }
+            //if (!degrees.hasOwnProperty(index1)) {
+            //    degrees[index1] = 0;
+            //    significances[index1] = 0;
+            //}
             const kernelValue = kernel[index1 * nodeCount + index2];
 
             if (kernelValue > 0) {
@@ -705,7 +786,7 @@ const LRNet = function(nodes, attributes, kernelMatrixFunction) {
 
 const changeNetworkNodeColour = function(colour) {
     defaultColour = colour;
-    updateNodeAndLinkColour();
+    updateNodeAndLinkColour(node, link);
 }
 
 const changeNetworkBackgroundColour = function (colour) {

@@ -344,7 +344,7 @@ const requestCommunityDetection = function () {
                 addSelectionDiv(d);
             });
 
-            updateNodeAndLinkColour();
+            updateNodeAndLinkColour(node, link);
             updateSelectionNodesAndLinks();
             //updateSelectionForces();
 

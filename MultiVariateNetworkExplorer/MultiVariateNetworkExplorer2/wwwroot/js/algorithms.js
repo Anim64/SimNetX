@@ -1,13 +1,13 @@
 ﻿const shortestPathsBFS = function (graph, linkedByIndex) {
     const paths = {};
     const visited = {};
-    const graphLength = graph.length;
+    const { nodes, nodes: { length } } = graph;
 
-    for (const node1 of graph.nodes) {
+    for (const node1 of nodes) {
 
         const node1Id = node1.id;
-        paths[nodeId] = {}
-        visited[nodeId] = {};
+        paths[node1Id] = {}
+        visited[node1Id] = {};
 
         for (const node2 of graph.nodes) {
 
@@ -17,7 +17,7 @@
         }
     }
 
-    for (const [node] of graph.nodes) {
+    for (const [i, node] of nodes.entries()) {
         const src = node.id;
         paths[src][src] = 0;
         visited[src][src] = true;
@@ -28,8 +28,8 @@
         while (!q.isEmpty) {
             const u = q.dequeue();
 
-            for (let j = i; j < graphLength; j++) {
-                const v = graph.nodes[j].id;
+            for (let j = i; j < length; j++) {
+                const v = nodes[j].id;
                 if (visited[src][v] === false &&
                     (linkedByIndex[u + "," + v] ||
                         linkedByIndex[v + "," + u] ||
