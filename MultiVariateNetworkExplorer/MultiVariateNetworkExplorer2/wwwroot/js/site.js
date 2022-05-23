@@ -6,7 +6,7 @@
 
 
 
-const openTab = function (event, contentId, divId, contentClass) {
+const openTab = (event, contentId, divId, contentClass) => {
     
     const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
     for (const tabcontent of tabcontents) {

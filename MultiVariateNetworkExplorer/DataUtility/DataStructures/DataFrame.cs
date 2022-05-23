@@ -193,6 +193,155 @@ namespace DataUtility
 
         }
 
+
+        /// <summary>
+        /// Creates attribute headers
+        /// </summary>
+        /// <param name="sr"></param>
+        /// <param name="hasHeaders"></param>
+        /// <param name="vector"></param>
+        /// <param name="separator"></param>
+        /// <returns></returns>
+        private string[] PrepareHeaders(StreamReader sr, bool hasHeaders, ref string[] vector, params char[] separator)
+        {
+            string[] headers;
+            string line;
+            if (hasHeaders)
+            {
+                headers = vector;
+                if ((line = sr.ReadLine()) != null)
+                {
+                    vector = line.Trim().Split(separator);
+                }
+                return headers;
+            }
+
+            int columnCount = vector.Length;
+            headers = new string[columnCount];
+            for (int j = 0; j < columnCount; j++)
+            {
+                headers[j] = $"Attr{(j + 1)}";
+            }
+
+            return headers;
+
+            
+        }
+
+
+        /// <summary>
+        /// Determines the column data types based on the first column
+        /// </summary>
+        /// <param name="headers"></param>
+        /// <param name="vector"></param>
+        /// <param name="emptyAtrributeCount"></param>
+        /// <param name="nullIndeces"></param>
+        /// <param name="averages"></param>
+        private void PrepareColumns(string[] headers, string[] vector, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
+            Dictionary<string, double> averages)
+        {
+            int columnCount = vector.Length;
+            for (int i = 0; i < columnCount; i++)
+            {
+
+                nullIndeces[headers[i]] = new List<int>();
+                averages[headers[i]] = 0;
+                if (String.IsNullOrEmpty(vector[i]))
+                {
+                    emptyAtrributeCount[headers[i]] = 1;
+                    continue;
+                }
+
+                bool isParsable = (double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !headers[i].Contains("ID"));
+                if (isParsable)
+                {
+                    this.Data[headers[i]] = new ColumnDouble();
+                    this.Data[headers[i]].AddData(resultFloat);
+                    averages[headers[i]] += resultFloat;
+                    continue;
+
+                }
+
+                this.Data[headers[i]] = new ColumnString();
+                this.Data[headers[i]].AddData(vector[i]);
+
+
+
+            }
+        }
+
+        /// <summary>
+        /// Adds data from file line to DataFrame
+        /// </summary>
+        /// <param name="headers"></param>
+        /// <param name="vector"></param>
+        /// <param name="missingValues"></param>
+        /// <param name="emptyAtrributeCount"></param>
+        /// <param name="nullIndeces"></param>
+        /// <param name="averages"></param>
+        private void AddDataFromLine(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, 
+            Dictionary<string, List<int>> nullIndeces, Dictionary<string, double> averages)
+        {
+            for (int i = 0; i < headers.Length; i++)
+            {
+                //keys.MoveNext();
+                /*if (this.Data[headers[i]] is List<int>)
+                    this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
+                string header = headers[i];
+                string vectorValue = vector[i];
+                bool isParsable;
+                if (emptyAtrributeCount.ContainsKey(header))
+                {
+
+                    if (String.IsNullOrEmpty(vectorValue))
+                    {
+                        emptyAtrributeCount[header]++;
+                        continue;
+
+                    }
+
+                    isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultValue);
+                    if (isParsable)
+                    {
+                        this.Data[header] = new ColumnDouble();
+
+                    }
+                    else
+                    {
+                        this.Data[header] = new ColumnString();
+                    }
+
+                    for (int j = 0; j < emptyAtrributeCount[header]; j++)
+                    {
+                        nullIndeces[header].Add(j);
+                        this.Data[header].AddData(null);
+                    }
+
+                    emptyAtrributeCount.Remove(header);
+
+
+                }
+
+                if (vectorValue == "" || vectorValue == missingValues)
+                {
+                    this.Data[header].AddData(null);
+                    nullIndeces[header].Add(DataCount);
+                    continue;
+                }
+
+                isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
+                if (isParsable)
+                {
+                    this.Data[header].AddData(resultFloat);
+                    averages[header] += resultFloat;
+                    continue;
+
+                }
+
+                this.Data[header].AddData(vectorValue);
+            }
+        }
+
         /// <summary>
         /// Reads vector data from a file and saves them to Dataframe
         /// </summary>
@@ -201,7 +350,7 @@ namespace DataUtility
         /// <param name="separator"></param>
         public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
         {
-            Dictionary<int, int> emptyAtrributeCount = new Dictionary<int, int>();
+            Dictionary<string, int> emptyAtrributeCount = new Dictionary<string, int>();
             Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
             Dictionary<string, double> averages = new Dictionary<string, double>();
             try
@@ -210,59 +359,14 @@ namespace DataUtility
                 {
 
                     string[] headers = null;
-                    string[] vector;
-                    string line;
+                    string[] vector = null;
+                    string line = null;
 
                     if ((line = sr.ReadLine()) != null)
                     { 
                         vector = line.Trim().Split(separator);
-                        if (header)
-                        {
-                            headers = vector;
-                            if ((line = sr.ReadLine()) != null)
-                            {
-                                vector = line.Trim().Split(separator);
-                            }
-                        }
-
-                        else
-                        {
-                            headers = new string[vector.Length];
-                            for(int j = 0; j < headers.Length; j++)
-                            {
-                                headers[j] = $"Attr{(j + 1)}";
-                            }
-               
-                        }
-
-                        for (int i = 0; i < headers.Length; i++)
-                        {
-                            
-                            nullIndeces[headers[i]] = new List<int>();
-                            averages[headers[i]] = 0;
-                            if (String.IsNullOrEmpty(vector[i]))
-                            {
-                                emptyAtrributeCount[i] = 1;
-                                continue;
-                            }
-
-                            if (double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !headers[i].Contains("ID"))
-                            {
-                                this.Data[headers[i]] = new ColumnDouble();
-                                this.Data[headers[i]].AddData(resultFloat);
-                                averages[headers[i]] += resultFloat;
-
-                            }
-                            else
-                            {
-                                this.Data[headers[i]] = new ColumnString();
-                                this.Data[headers[i]].AddData(vector[i]);
-
-                            }
-
-                        }
-
-
+                        headers = PrepareHeaders(sr, header, ref vector, separator);
+                        PrepareColumns(headers, vector, emptyAtrributeCount, nullIndeces, averages);
                         DataCount++;
                     }
                
@@ -277,76 +381,14 @@ namespace DataUtility
                         }
 
                         vector = line.Split(separator);
-                        //var keys = this.Data.Keys.GetEnumerator();
+
+                        AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
                         
-
-                        for(int i = 0; i < headers.Length; i++)
-                        {
-                            //keys.MoveNext();
-                            /*if (this.Data[headers[i]] is List<int>)
-                                this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
-
-                            if (emptyAtrributeCount.ContainsKey(i)) {
-
-                                if (!String.IsNullOrEmpty(vector[i]))
-                                {
-                                    if (double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultValue))
-                                    {
-                                        this.Data[headers[i]] = new ColumnDouble();
-
-                                    }
-                                    else
-                                    {
-                                        this.Data[headers[i]] = new ColumnString();
-                                    }
-
-                                    for (int j = 0; j < emptyAtrributeCount[i]; j++)
-                                    {
-                                        nullIndeces[headers[i]].Add(j);
-                                        this.Data[headers[i]].AddData(null);
-                                    }
-
-                                    emptyAtrributeCount.Remove(i);
-
-                                }
-
-                                else
-                                {
-                                    emptyAtrributeCount[i]++;
-                                    continue;
-                                }
-
-                            }
-
-                            /*if(vector[i].Equals(missingvalues))
-                            {
-                                this.Data[headers[i]].Add(null);
-                                continue;
-                            }*/
-                            
-                            
-                            if(double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat))
-                            {
-                                this.Data[headers[i]].AddData(resultFloat);
-                                averages[headers[i]] += resultFloat;
-
-                            }
-
-                            else if(vector[i] == "" || vector[i] == missingvalues)
-                            {
-                                nullIndeces[headers[i]].Add(DataCount);
-                                this.Data[headers[i]].AddData(null);
-                            }
-                            
-                            else
-                            {
-                                this.Data[headers[i]].AddData(vector[i]);
-                            }
-
-                        }
-
                         DataCount++;
                     }
+
+                    
+                    
                 }
             }
             catch(FileNotFoundException fe)
