@@ -470,7 +470,7 @@ const dragended = function(d) {
 ////////////////////////////////BRUSHING/////////////////////////////////
 
 //Function for node brushing start
-const brushstarted = function brushstarted() {
+const brushstarted = function() {
     // keep track of whether we're actively brushing so that we
     // don't remove the brush on keyup in the middle of a selection
     brushing = true;
@@ -521,7 +521,7 @@ const brushended = function() {
 
 //On shift key event
 const keydown = function() {
-    shiftKey = d3.event.shiftKey;
+    shiftKey = d3.event.ctrlKey;
 
     if (shiftKey) {
         // if we already have a brush, don't do anything

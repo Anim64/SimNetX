@@ -12,14 +12,15 @@
 .node-container a:hover,
 .node-container a:active {
     outline: 0;
+    -webkit-text-decoration: none;
     text-decoration: none;
 }
 
 .node-container {
-    border-width: 2px;
-    border-style: solid;
-    border-color: #333333;
+    border: 0.2rem solid #333333;
     background: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
     box-shadow: none;
 }
 
@@ -32,58 +33,83 @@
 
 .node-heading {
     background-color: white;
-    border-radius: 4px;
-    border: 1px solid black;
+    -moz-border-radius: 0.4em;
+    -webkit-border-radius: 0.4em;
+    border-radius: 0.4rem;
+    border: 0.1em solid black;
     color: #333333;
     padding: 0;
     font-size: 2rem;
     height: 40px;
     display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
     flex-direction: column;
+    -webkit-justify-content: center;
     justify-content: center;
+    -webkit-align-items: center;
     align-items: center;
+    -moz-transition: all 0.1s;
+    -o-transition: all 0.1s;
+    -webkit-transition: all 0.1s;
     transition: all 0.1s;
 }
 
 .node-heading-selected {
-    border: 2px solid black;
+    border: 0.2rem solid black;
+    -moz-transform: scale(0.9);
+    -ms-transform: scale(0.9);
+    -o-transform: scale(0.9);
+    -webkit-transform: scale(0.9);
     transform: scale(0.9);
 }
 
 .node-heading:hover {
+    -moz-filter: brightness(0.9);
+    -webkit-filter: brightness(0.9);
     filter: brightness(0.9);
     cursor: pointer;
 }
 
-.node-heading:active{
+.node-heading:active {
+    -moz-transform: scale(0.95);
+    -ms-transform: scale(0.95);
+    -o-transform: scale(0.95);
+    -webkit-transform: scale(0.95);
     transform: scale(0.95);
 }
 
 .node-heading a {
     text-align: center;
-    line-height: 4rem;
+    line-height: 3rem;
+    -webkit-flex-grow: 1;
     flex-grow: 1;
-    font-size: 16px;
+    font-size: 1.6rem;
     font-weight: 400;
 }
 
-.node-heading.active-node-heading{
+.node-heading.active-node-heading {
     border-bottom: none;
+    -webkit-border-bottom-left-radius: 0;
     border-bottom-left-radius: 0;
+    -webkit-border-bottom-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
 .node-data {
     display: none;
     background-color: #fff;
+    -ms-grid-column: 1 / 6;
     grid-column: 1 / 6;
-    border: 1px solid black;
+    border: 0.1rem solid black;
     border-top: none;
 }
 
 .node-data .node-property-group {
     display: flex;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
+    -webkit-align-items: center;
     align-items: center;
     margin: 0.5rem 0.5rem;
 }
@@ -94,20 +120,30 @@
     top: 0;
     right: 0;
     background-color: #fff;
-    border: 1px solid black;
+    border: 0.1rem solid black;
     border-top: none;
-    border-bottom-left-radius: 10px;
+    -webkit-border-bottom-left-radius: 1rem;
+    border-bottom-left-radius: 1rem;
     max-width: 100%;
     max-height: 50%;
     overflow-y: scroll;
+    -webkit-scrollbar-width: thin;
+    -ms-scrollbar-width: thin;
+    -o-scrollbar-width: thin;
     scrollbar-width: thin;
+    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
     padding: 0.5rem 1rem;
 }
 
 .node-detail-heading-container {
     display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
 }
 
@@ -125,11 +161,14 @@
 
 .node-detail {
     display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
     flex-direction: column;
 }
 
 .node-property-group {
     display: flex;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
     margin-bottom: 0.5rem;
 }
@@ -150,6 +189,13 @@
 
 
 #accordion .node-heading.active a:before {
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
     transform: rotate(0deg);
+    -moz-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    -webkit-transition: all 0.5s;
     transition: all 0.5s;
 }

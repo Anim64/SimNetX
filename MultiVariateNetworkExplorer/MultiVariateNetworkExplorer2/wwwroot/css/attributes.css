@@ -8,6 +8,7 @@
 .attributes h4 {
     margin: 1rem 0.5rem;
     width: 100%;
+    -webkit-text-decoration: underline;
     text-decoration: underline;
 }
 
@@ -36,7 +37,13 @@
 .categorical {
     overflow-y: scroll;
     max-height: 300px;
+    -webkit-scrollbar-width: thin;
+    -ms-scrollbar-width: thin;
+    -o-scrollbar-width: thin;
     scrollbar-width: thin;
+    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
 }
 

@@ -1,0 +1,55 @@
+﻿@model MultiVariateNetworkExplorer2.Models.GraphModel
+
+<section class="column right-col" id="nodes">
+        <div class="navigation">
+            <div class="tab-nav">
+                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'accordion', 'nodes', '.column-content')">Node Properties</a>
+            </div>
+            <div class="tab-nav">
+                <a class="tab-link" href="#" onclick="openTab(event, 'selections', 'nodes', '.column-content')">Selection properties</a>
+            </div>
+        </div>
+        <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="node-grid">
+                @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
+                {
+                    <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, '@(Model.Mvn.IdColumn[node])', @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.IdColumn[node])', .2)" onmouseout="mouseOut()">
+                        <h5>@(Model.Mvn.IdColumn[node])</h5>
+                    </div>
+                    @*<div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
+                        @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                        {
+
+                            <div class="node-property-group">
+                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)">@(attribute + ":")</label>
+                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly/>
+                            </div>
+                        }
+                    </div>*@
+                }
+            </div>        
+        </div>
+        <div class="column-content selections" id="selections">
+            <div class="selection-edit">
+                <input type="button" onclick="addNewSelection()" value="Add New Selection" />
+                <input type="button" onclick="deleteAllSelections()" value="Delete All Selection" />
+            </div>
+            <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
+                @if (Model.Mvn.Partition != null)
+                {
+                    foreach (var selection in Model.Mvn.Partition.Values.Distinct())
+                    {
+                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection')">
+                            <h4 class="panel-title">
+                                @("Selection " + selection)
+                            </h4>
+                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, '@selection')" />
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, '@selection.ToString()')"><i class="fa fa-plus-square"></i></button>
+                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, '@selection.ToString()')"><i class="fa fa-trash"></i></button>
+                        </div>
+                    }
+                }
+
+            </div>
+        </div>
+</section>

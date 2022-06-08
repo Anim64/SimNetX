@@ -28,6 +28,10 @@
 }
 
 .controls input[type="checkbox"] {
+    -moz-transform: scale(1.2, 1.2);
+    -ms-transform: scale(1.2, 1.2);
+    -o-transform: scale(1.2, 1.2);
+    -webkit-transform: scale(1.2, 1.2);
     transform: scale(1.2, 1.2);
 }
 
@@ -61,20 +65,25 @@
 
 .controls input[type="color"]::-moz-color-swatch {
     border: none;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
     border-radius: 10px;
     border: 0.125rem solid black;
 }
 
 .controls .colouring {
     text-align: center;
+    -webkit-flex-grow: 1;
     flex-grow: 1;
 }
 
-.controls .colour-row{
+.controls .colour-row {
     display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-justify-content: stretch;
     justify-content: stretch;
-    
 }
 
 .attribute-selection-label {
@@ -89,6 +98,8 @@
     font-size: 1.2rem;
     padding: 0 1em;
     border: 0.125em solid #ccc;
+    -moz-border-radius: 0.50em;
+    -webkit-border-radius: 0.50em;
     border-radius: 0.50em;
     line-height: 1.42857143;
     background-image: none;
@@ -103,6 +114,8 @@
 .controls .alpha .alpha_bar {
     height: .5em;
     border: 1px #777 solid;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
     border-radius: 2px;
     padding: 1px;
     display: flex;
@@ -110,8 +123,10 @@
 
 .controls .alpha .alpha_bar #alpha_value {
     background-color: #555;
+    -moz-border-radius: 1px;
+    -webkit-border-radius: 1px;
     border-radius: 1px;
-    flex-basis: 100%
+    flex-basis: 100%;
 }
 
 .controls .alpha .alpha_bar:hover {
@@ -125,7 +140,13 @@
 
 .remodel-div {
     overflow-y: scroll;
+    -webkit-scrollbar-width: thin;
+    -ms-scrollbar-width: thin;
+    -o-scrollbar-width: thin;
     scrollbar-width: thin;
+    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
     width: contain;
     height: 0;
@@ -150,6 +171,7 @@
     height: 100%;
     margin: auto;
     display: flex;
+    -webkit-align-items: center;
     align-items: center;
 }
 
@@ -161,6 +183,7 @@
 }
 
 .remodel-div h4 {
+    -ms-grid-column: 1 / 3;
     grid-column: 1 / 3;
     text-align: left;
     display: none;
@@ -172,6 +195,7 @@
     grid-template-columns: 3fr 2fr;
     grid-row-gap: 1rem;
     grid-column-gap: 0.5rem;
+    -webkit-align-items: center;
     align-items: center;
 }
 
@@ -185,8 +209,12 @@
 
 #remodel-attribute-checkboxes div {
     display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-justify-content: space-between;
     justify-content: space-between;
+    -webkit-align-items: center;
     align-items: center;
     flex-shrink: 1;
     margin-bottom: 0.5rem;
@@ -200,7 +228,10 @@
 
 .align-right-div {
     display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
     flex-direction: row;
+    -webkit-justify-content: flex-end;
     justify-content: flex-end;
 }
 

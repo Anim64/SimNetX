@@ -370,7 +370,7 @@ const setAttributeNodeSizing = function (selectElement) {
 const pickHex = function(color1, color2, weight) {
     var w1 = weight;
     var w2 = 1 - w1; 
-    var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2) + ', '
+    var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2)  + ', '
     + Math.round(color1.g * w1 + color2.g * w2) + ', '
         + Math.round(color1.r * w1 + color2.r * w2) + ')';
     return rgb;
@@ -403,7 +403,7 @@ const setAttributeNodeColouring = function (selectElement) {
 
         node.style("fill", function (d) {
             const attributeValue = getValueFunction(d, attributeName);
-            if (attributeValue == "") {
+            if (attributeValue === "") {
                 return defaultColour;
             }
 
