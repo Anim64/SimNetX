@@ -112,15 +112,21 @@
         </div>
         <div id="networkMetrics" class="graph-content">
             <div class="network-metrics-container">
-                <div class="network-metric-content" data-value="degree">
-                    <h4>Average Degree</h4>
-                    <span>Calculating...</span>
-                    <button onclick="calculateMetric(graph, this.parentNode);"><i class="fa fa-refresh"></i></button>
+                <div class="network-metric-sync-content" data-value="getNodeCount(graph)">
+                    <h5>Number of Nodes:</h5>
+                    <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
                 </div>
-                <div class="network-metric-content" data-value="closeness">
-                    <h4>Average Closeness</h4>
-                    <span>Calculating...</span>
-                    <button onclick="calculateMetric(graph, this.parentNode);"><i class="fa fa-refresh"></i></button>
+                <div class="network-metric-sync-content" data-value="getLinkCount(graph)">
+                    <h5>Number of Links:</h5>
+                    <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
+                </div>
+                <div class="network-metric-async-content" data-value="degree">
+                    <h5>Average Degree:</h5>
+                    <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
+                </div>
+                <div class="network-metric-async-content" data-value="closeness">
+                    <h5>Average Closeness:</h5>
+                    <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
                 </div>
             </div>
         </div>

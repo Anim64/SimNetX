@@ -827,9 +827,7 @@ const getNodeColour = function (nodeId) {
     }
 }
 
-const getNodeCount = function(graph) {
-    return graph.nodes.length;
-}
+
 
 const updateNodes = function () {
     const { nodes } = graph;
@@ -957,8 +955,26 @@ const updateSelectionNodesAndLinks = function () {
 /////////////////////////////////////////METRICS//////////////////////////////////////////////////////
 
 
-const calculateMetric = function(current_graph, metricDiv) {
-    metricDiv.querySelector('span').innerHTML = "Calculating...";
+const getNodeCount = function (graph) {
+    return graph.nodes.length;
+}
+
+const getLinkCount = function (graph) {
+    return graph.links.length;
+}
+
+const getGraphProperty = function (graph, metricDiv)
+{
+    const metricDivSpan = metricDiv.querySelector('span');
+    const functionName = metricDiv.getAttribute('data-value');
+    metricDivSpan.innerHTML = "Calculating...";
+    const result = eval(functionName);
+    metricDivSpan.innerHTML = result;
+}
+
+const calculateMetricAsync = function (current_graph, metricDiv) {
+    const metricDivSpan = metricDiv.querySelector('span');
+    metricDivSpan.innerHTML = "Calculating...";
 
     const workerName = metricDiv.getAttribute('data-value');
     const worker = new Worker(jsPath + workerName + '_worker.js?v=5');
@@ -970,7 +986,7 @@ const calculateMetric = function(current_graph, metricDiv) {
 
     worker.onmessage = e => {
         const { properties } = graph;
-        metricDiv.querySelector('span').innerHTML = e.data.average.toFixed(3);
+        metricDivSpan.innerHTML = e.data.average.toFixed(3);
         properties[workerName] = e.data;
         const nodeDetailElement = document.getElementById('node-detail-container')
         const nodeId = nodeDetailElement.getAttribute('data-id');
@@ -978,6 +994,17 @@ const calculateMetric = function(current_graph, metricDiv) {
 
     }
     
+}
+
+const calculateAllMetrics = function () {
+    const syncMetricsDivs = document.querySelectorAll('.network-metric-sync-content');
+    for (let metricDiv of syncMetricsDivs) {
+        getGraphProperty(graph, metricDiv);
+    }
+    const asyncMetricsDivs = document.querySelectorAll('.network-metric-async-content');
+    for (let metricDiv of asyncMetricsDivs) {
+        calculateMetricAsync(graph, metricDiv);
+    }
 }
 
 /****************************************END METRICS******************************************/
@@ -999,10 +1026,8 @@ $(document).ready(function () {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
 
-    const metricsDivs = document.querySelectorAll('.network-metric-content');
-    Array.prototype.forEach.call(metricsDivs, function (metricDiv) {
-        calculateMetric(graph, metricDiv);
-    });
+    
+    calculateAllMetrics();
 
     selectionNode.each(function (d) {
         setGroupColour(d);

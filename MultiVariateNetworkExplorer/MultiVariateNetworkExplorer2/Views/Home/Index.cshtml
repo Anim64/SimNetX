@@ -103,6 +103,12 @@
                 <option value="1">Epsilon and kNN</option>
             </select>
 
+            <label for="convert">Choose a metric:</label>
+            <select name="metric" id="metric" onchange="displayConversionParameters(this.value)">
+                <option value="0">Eucli</option>
+                <option value="1">Epsilon and kNN</option>
+            </select>
+
             <h4 id="conversion-parameters-headline">Algorithm Parameters</h4>
             <div class="conversion-parameters-div" id="epsilon-parameters">
                 <label for="epsilonRadius">Choose a radius</label>

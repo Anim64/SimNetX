@@ -22,7 +22,9 @@ namespace DataUtility.DataStructures.Metrics
 
                         if (!(pair.Value is ColumnString))
                         {
-                            euclideanDistance += pair.Value.Data[i] != null && pair.Value.Data[j] != null ? Math.Pow((double)(Convert.ToDouble(pair.Value.Data[i]) - Convert.ToDouble(pair.Value.Data[j])), 2) : 0;
+                            double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : 0;
+                            double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : 0;
+                            euclideanDistance += Math.Pow((vectorValueA - vectorValueB), 2);
                         }
 
                     }
