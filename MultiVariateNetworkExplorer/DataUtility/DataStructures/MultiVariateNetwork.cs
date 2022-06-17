@@ -33,7 +33,7 @@ namespace DataUtility
             RealClasses = new Dictionary<string, string>();
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg,  bool grouping, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, IMetric chosenMetric,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
             VectorData = new DataFrame(paths.ElementAt(0), missingvalues, header, separator);
             Directed = directed;
@@ -82,7 +82,7 @@ namespace DataUtility
             else
             {
 
-                this.Network = convertAlg.ConvertToNetwork(this.VectorData, new GaussKernel(), IdColumn);
+                this.Network = convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, IdColumn);
                 
             }
 

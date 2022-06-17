@@ -568,36 +568,51 @@ function displayConversionParameters(conversion_alg) {
     remodelParametersHeadline.parentElement.style.height = "auto";
 }
 
-const remodelNetwork = function (checkboxesDivId, algorithmSelectId) {
+const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId) {
     const attributeCheckboxDiv = document.getElementById(checkboxesDivId);
     const selectedAlgorithm = document.getElementById(algorithmSelectId).value;
+    const selectedMetric = document.getElementById(metricSelectId).value;
+
 
     const checkboxes = $(attributeCheckboxDiv).find("input[type='checkbox']:checked");
     const selected_attributes = checkboxes.map((index, checkbox) => {
         return checkbox.value;
     });
     
-
+    let metricFunction = null;
+    switch (selectedMetric) {
+        case 'Gaussian':
+            metricFunction = gaussianKernel;
+            break;
+        case 'Cosine':
+            metricFunction = cosineKernel;
+            break;
+        case 'Euclidean':
+            metricFunction = euclideanKernel;
+        default:
+            metricFunction = gaussianKernel;
+            break;
+    }
     let newNet = null;
 
     switch (selectedAlgorithm) {
         default:
         case 'LRNet':
-            newNet = LRNet(graph.nodes, selected_attributes, gaussianKernel);
+            newNet = LRNet(graph.nodes, selected_attributes, metricFunction);
             break;
         
 
         case 'Epsilon':
             const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
             const k = parseInt(document.getElementById('kNNmin').value);
-            newNet = EpsilonAndkNN(graph.nodes, selected_attributes, gaussianKernel, epsilonRadius, k);
+            newNet = EpsilonAndkNN(graph.nodes, selected_attributes, metricFunction, epsilonRadius, k);
             break;
     }
 
     graph.links = newNet;
     updateLinks();
-    updateLinkColour();
     resetSimulation();
+   
 }
 
 const gaussianKernel = function(nodes, attributes, sigma = 1) {
@@ -608,7 +623,7 @@ const gaussianKernel = function(nodes, attributes, sigma = 1) {
         for (let i = index; i < nodeCount; i++) {
 
             if (i === index) {
-                gaussianKernel[index * nodeCount + i] = 1
+                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = 1
             }
             else {
                 const distance = euclideanDistance(node, nodes[i], attributes);
@@ -622,7 +637,54 @@ const gaussianKernel = function(nodes, attributes, sigma = 1) {
     return gaussianKernel;
 }
 
+const cosineKernel = function (nodes, attributes) {
+    const cosineKernel = new Array(nodes.length * nodes.length);
+    const nodeCount = nodes.length;
 
+    for (const [index, node] of nodes.entries()) {
+        const vectorMagnitudeA = calcVectorMagnitude(node, attributes);
+        for (let i = index; i < nodeCount; i++) {
+
+            if (i === index) {
+                cosineKernel[index * nodeCount + i] = cosineKernel[i * nodeCount + index] = 1
+                continue;
+            }
+            
+            const vectorMagnitudeB = calcVectorMagnitude(nodes[i], attributes);
+            const dotProduct = calcDotProduct(node, nodes[i], attributes);
+            const similarity = dotProduct / (vectorMagnitudeA * vectorMagnitudeB);
+            cosineKernel[index * nodeCount + i] = cosineKernel[i * nodeCount + index] = similarity;
+        }
+    }
+
+    return cosineKernel;
+}
+
+const calcDotProduct = function (node1, node2, attributes) {
+    let result = 0;
+    for (const attribute of attributes) {
+        const { [attribute]: node1Value } = node1;
+        const { [attribute]: node2Value } = node2;
+        if (typeof node1Value == 'number' && typeof node2Value == 'number') {
+            result += node1Value * node2Value;
+        }
+    }
+
+    return result;
+}
+
+const calcVectorMagnitude = function(node, attributes){
+    let result = 0;
+    for (const attribute of attributes) {
+        const { [attribute]: nodeValue } = node;
+        if (typeof nodeValue == 'number') {
+            result += Math.pow(nodeValue, 2);
+        }
+    }
+
+    result = Math.sqrt(result);
+    return result;
+}
 
 const euclideanDistance = function(node1, node2, attributes) {
     let result = 0;

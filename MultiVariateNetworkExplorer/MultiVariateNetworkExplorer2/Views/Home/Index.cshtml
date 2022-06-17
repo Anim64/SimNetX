@@ -104,9 +104,10 @@
             </select>
 
             <label for="convert">Choose a metric:</label>
-            <select name="metric" id="metric" onchange="displayConversionParameters(this.value)">
-                <option value="0">Eucli</option>
-                <option value="1">Epsilon and kNN</option>
+            <select name="metric" id="metric">
+                <option value="0">Gaussian Kernel</option>
+                <option value="1">Cosine Similarity</option>
+                <option value="2">Euclidean Distance</option>
             </select>
 
             <h4 id="conversion-parameters-headline">Algorithm Parameters</h4>

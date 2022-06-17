@@ -9,6 +9,7 @@ namespace DataUtility.DataStructures.Metrics
         public enum Metric
         {
             GaussKernel,
+            CosineKernel,
             EuclideanKernel
         }
     }

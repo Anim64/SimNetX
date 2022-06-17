@@ -29,7 +29,7 @@ namespace DataUtility.DataStructures.Metrics
 
                     }
 
-                    kernelMatrix[i, j] = kernelMatrix[j, i] = Math.Sqrt(euclideanDistance);
+                    kernelMatrix[i, j] = kernelMatrix[j, i] = 1 / Math.Sqrt(euclideanDistance);
                 }
             }
 

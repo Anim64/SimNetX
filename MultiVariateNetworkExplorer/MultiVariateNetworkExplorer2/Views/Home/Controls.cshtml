@@ -232,9 +232,15 @@
                     }
                 </div>
                 <div id="remodel-div">
-                    <label for="remodel-select">Choose a conversion algorithm:</label>
+                    <label for="remodel-metric-select">Choose a conversion algorithm:</label>
+                    <select name="remodel-metric-select" id="remodel-metric-select" onchange="displayConversionParameters(this.value)">
+                        <option value="Gaussian" selected>Gaussian Kernel</option>
+                        <option value="Cosine">Cosine Similarity</option>
+                        <option value="Euclidean">Euclidean Kernel</option>
+                    </select>
                     <div class="remodel-algorithm">
-                        <select name="remodel-select" id="remodel-selection" onchange="displayConversionParameters(this.value)">
+                        <label for="remodel-algorithm-select">Choose a conversion algorithm:</label>
+                        <select name="remodel-algorithm-select" id="remodel-algorithm-select" onchange="displayConversionParameters(this.value)">
                             <option value="LRNet" selected>LRNet</option>
                             <option value="Epsilon">Epsilon and kNN</option>
                         </select>
@@ -250,7 +256,7 @@
                     </div>
                 </div>
                 <div class="align-right-div">
-                    <button type="button" class="settings-submit-btn" onclick="remodelNetwork('remodel-attribute-checkboxes', 'remodel-selection')">Remodel</button>
+                    <button type="button" class="settings-submit-btn" onclick="remodelNetwork('remodel-attribute-checkboxes', 'remodel-algorithm-select', 'remodel-metric-select')">Remodel</button>
                 </div>
             </div>
         </div>

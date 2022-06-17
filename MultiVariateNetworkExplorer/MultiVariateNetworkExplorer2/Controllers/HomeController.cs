@@ -17,6 +17,7 @@ using MultiVariateNetworkExplorer2;
 using MultiVariateNetworkExplorer2.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static DataUtility.DataStructures.Metrics.MetricEnums;
 using static DataUtility.DataStructures.Metrics.ParameterEnums;
 using static DataUtility.DataStructures.VectorDataConversion.ConversionEnums;
 
@@ -31,7 +32,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Graph(List<IFormFile> files, string separators, string missingvalues,
-            ConversionAlgorithm convert, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False, 
+            ConversionAlgorithm convert, Metric metric, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False, 
             BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
         {
             
@@ -84,31 +85,56 @@ namespace MultiVariateNetworkExplorer.Controllers
             bool doCommunityDetection = grouping == BooleanParameter.True;
             //try
             //{
-            IVectorConversion conversionAlg;
+
+            IMetric chosenMetric = null;
+            switch (metric)
+            {
+                case Metric.GaussKernel:
+                    {
+                        chosenMetric = new GaussKernel();
+                        break;
+                    }
+                case Metric.CosineKernel:
+                    {
+                        chosenMetric = new CosineSimilarity();
+                        break;
+                    }
+                case Metric.EuclideanKernel:
+                    {
+                        chosenMetric = new EuclideanKernel();
+                        break;
+                    }
+                default:
+                    {
+                        chosenMetric = new GaussKernel();
+                        break;
+                    }
+            }
+            IVectorConversion conversionAlg = null;
             switch (convert)
             {
                 case ConversionAlgorithm.LRNet:
-                {
-                    conversionAlg = new LRNet();
-                    break;
-                }
+                    {
+                        conversionAlg = new LRNet();
+                        break;
+                    }
                     
                 case ConversionAlgorithm.Epsilon:
-                {
-                    conversionAlg = new EpsilonKNN((double)epsilonRadius, (int)kNNmin);
-                    break;
-                }
+                    {
+                        conversionAlg = new EpsilonKNN((double)epsilonRadius, (int)kNNmin);
+                        break;
+                    }
                     
                 default:
-                {
-                    conversionAlg = new LRNet();
-                    break;
-                }
+                    {
+                        conversionAlg = new LRNet();
+                        break;
+                    }
                 
             }
 
 
-            multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, conversionAlg, doCommunityDetection, isDirected, hasHeaders, separatorArray);
+            multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, conversionAlg, chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
             gm.Graph = multiVariateNetwork.ToD3Json();
             gm.Selection = multiVariateNetwork.PartitionsToD3Json();
             gm.Mvn = multiVariateNetwork;

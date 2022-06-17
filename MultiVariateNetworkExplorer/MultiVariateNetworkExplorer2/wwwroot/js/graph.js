@@ -806,9 +806,9 @@ const updateNodeColour = function (nodes) {
 }
 
 const updateLinkColour = function(links) {
-    link.style("stroke", function (l) {
+    links.style("stroke", function (l) {
         const { id } = l.source;
-        return getNodeColour(l.source.id);
+        return getNodeColour(id);
     })
 }
 
@@ -845,7 +845,6 @@ const updateNodes = function () {
     newNode.append("title")
         .text(function (d) { return d.id; });
 
-    updateNodeColour(newNode);
 
     node = node.merge(newNode);
 
@@ -854,7 +853,7 @@ const updateNodes = function () {
         .on("tick", ticked)
         //.on("end", simulationStop);
 
-    
+    updateNodeColour(newNode);
 }
 
 const updateLinks = function () {
@@ -865,12 +864,12 @@ const updateLinks = function () {
 
     const newLink = link.enter().append("path")
 
-    updateLinkColour(newLink);
-
     link = link.merge(newLink);
 
     simulation.force("link")
         .links(links);
+
+    updateLinkColour(newLink);
 }
 
 
@@ -1033,8 +1032,7 @@ $(document).ready(function () {
         setGroupColour(d);
     });
 
-    updateNodeColour(node);
-    updateLinkColour(link);
+    updateNodeAndLinkColour(node, link);
 
 });
 
