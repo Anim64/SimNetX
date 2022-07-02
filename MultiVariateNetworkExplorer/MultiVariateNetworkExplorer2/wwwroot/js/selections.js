@@ -28,7 +28,12 @@ const changeGroupColour = function(input, selectionId) {
     });
 
     selectionNodes.style("fill", function (d) {
-        $('#heading-' + d.id).css("backgroundColor", newBackgroundColour);
+        const nodeHeading = document.getElementById('heading-' + d.id);
+        const lightness = fontLightness(newBackgroundColour);
+        nodeHeading.style.color = 'hsl(0, 0%, ' + String(lightness) + '%)';
+        nodeHeading.style.backgroundColor = ("backgroundColor", newBackgroundColour);
+        
+        
         link.filter(function (l) { return l.source === d.id || l.source.id === d.id })
             .style("stroke", newBackgroundColour);
         return newBackgroundColour;
@@ -148,7 +153,10 @@ const hexToRgb = function (hex) {
 
 const fontLightness = function (newColour) {
     const threshold = 0.5;
-    const rgbRepresentation = hexToRgb(newColour);
+    let rgbRepresentation = newColour;
+    if (typeof newColour !== 'object') {
+        rgbRepresentation = hexToRgb(newColour);
+    }
     const { r, g, b } = rgbRepresentation;
 
     const lumaRed = r * 0.2126;

@@ -47,72 +47,72 @@
         <div class="column-content controls" id="settings">
             <div class="force alpha">
                 <p><label>alpha</label> Simulation activity</p>
-                <div class="alpha_bar" onclick="updateForces();"><div id="alpha_value"></div></div>
+                <div class="alpha_bar" onclick="resetSimulation();"><div id="alpha_value"></div></div>
             </div>
             <div class="force">
-                <p><label>center</label> Shifts the view, so the graph is centered at this location.</p>
+                <p><label>Center</label> Shifts the view, so the graph is centered at this location.</p>
                 <label>
                     x
                     <output id="center_XSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_XSliderOutput').text(value); forceProperties.center.x = value; updateForces();">
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="handleForceChange(this.value, 'center_XSliderOutput', 'center', 'x', updateCenterForce);">
                 </label>
                 <label>
                     y
                     <output id="center_YSliderOutput">.5</output>
-                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="d3.select('#center_YSliderOutput').text(value); forceProperties.center.y=value; updateForces();">
+                    <input type="range" min="0" max="1" value=".5" step="0.01" oninput="handleForceChange(this.value, 'center_YSliderOutput', 'center', 'y', updateCenterForce);">
                 </label>
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateForces();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+                <p><label><input type="checkbox" checked onchange="handleForceEnablement(this.checked, 'charge', updateChargeForce);"> Charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
                 <label title="Negative strength repels nodes. Positive strength attracts nodes.">
                     strength
-                    <output id="charge_StrengthSliderOutput">-30</output>
-                    <input type="range" min="-200" max="50" value="-30" step=".1" oninput="d3.select('#charge_StrengthSliderOutput').text(value); forceProperties.charge.strength=value; updateForces();">
+                    <output id="charge_StrengthSliderOutput">-80</output>
+                    <input type="range" min="-200" max="50" value="-80" step=".1" oninput="handleForceChange(this.value, 'charge_StrengthSliderOutput', 'charge', 'strength', updateChargeForce);">
                 </label>
                 <label title="Minimum distance where force is applied">
                     distanceMin
                     <output id="charge_distanceMinSliderOutput">1</output>
-                    <input type="range" min="0" max="50" value="1" step=".1" oninput="d3.select('#charge_distanceMinSliderOutput').text(value); forceProperties.charge.distanceMin=value; updateForces();">
+                    <input type="range" min="0" max="50" value="1" step=".1" oninput="handleForceChange(this.value, 'charge_DistanceMinSliderOutput', 'charge', 'distanceMin', updateChargeForce);">
                 </label>
                 <label title="Maximum distance where force is applied">
                     distanceMax
                     <output id="charge_distanceMaxSliderOutput">2000</output>
-                    <input type="range" min="0" max="2000" value="2000" step=".1" oninput="d3.select('#charge_distanceMaxSliderOutput').text(value); forceProperties.charge.distanceMax=value; updateForces();">
+                    <input type="range" min="0" max="2000" value="2000" step=".1" oninput="handleForceChange(this.value, 'charge_DistanceMaxSliderOutput', 'charge', 'distanceMax', updateChargeForce);">
                 </label>
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.collide.enabled = this.checked; updateAll();"> collide</label> Prevents nodes from overlapping</p>
+                <p><label><input type="checkbox" checked onchange="handleForceEnablement(this.checked, 'collide', updateCollideForce);"> Collide</label> Prevents nodes from overlapping</p>
                 <label>
                     strength
                     <output id="collide_StrengthSliderOutput">.7</output>
-                    <input type="range" min="0" max="2" value=".7" step=".1" oninput="d3.select('#collide_StrengthSliderOutput').text(value); forceProperties.collide.strength=value; updateAll();">
+                    <input type="range" min="0" max="2" value=".7" step=".1" oninput="handleForceChange(this.value, 'collide_StrengthSliderOutput', 'collide', 'strength', updateCollideForce);">
                 </label>
                 <label title="Size of nodes">
                     radius
                     <output id="collide_radiusSliderOutput">8</output>
-                    <input type="range" min="0" max="100" value="5" step="1" oninput="d3.select('#collide_radiusSliderOutput').text(value); forceProperties.collide.radius=value; updateAll();">
+                    <input type="range" min="0" max="100" value="8" step="1" oninput="forceProperties.collide.previousRadius = forceProperties.collide.radius; handleForceChange(this.value, 'collide_radiusSliderOutput', 'collide', 'radius', updateCollideForce); setNodeFontSize();">
                 </label>
                 <label title="Higher values increase rigidity of the nodes (WARNING: high values are computationally expensive)">
                     iterations
                     <output id="collide_iterationsSliderOutput">1</output>
-                    <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#collide_iterationsSliderOutput').text(value); forceProperties.collide.iterations=value; updateAll();">
+                    <input type="range" min="1" max="10" value="1" step="1" oninput="handleForceChange(this.value, 'collide_iterationsSliderOutput', 'collide', 'iterations', updateCollideForce);">
                 </label>
             </div>
             
             
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll();"> link</label> Sets link length</p>
+                <p><label><input type="checkbox" checked onchange="    handleForceEnablement(this.checked, 'link', updateLinkForce);"> Link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
                     distance
-                    <output id="link_DistanceSliderOutput">30</output>
-                    <input type="range" min="0" max="100" value="30" step="1" oninput="d3.select('#link_DistanceSliderOutput').text(value); forceProperties.link.distance=value; updateAll();">
+                    <output id="link_DistanceSliderOutput">75</output>
+                    <input type="range" min="0" max="100" value="75" step="1" oninput="handleForceChange(this.value, 'link_DistanceSliderOutput', 'link', 'distance', updateLinkForce);">
                 </label>
                 <label title="Higher values increase rigidity of the links (WARNING: high values are computationally expensive)">
                     iterations
                     <output id="link_IterationsSliderOutput">1</output>
-                    <input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#link_IterationsSliderOutput').text(value); forceProperties.link.iterations=value; updateAll();">
+                    <input type="range" min="1" max="10" value="1" step="1" oninput="handleForceChange(this.value, 'link_IterationsSliderOutput', 'link', 'iterations', updateLinkForce);">
                 </label>
             </div>
             <div class="force">
@@ -152,6 +152,25 @@
                 </label>
                 
             </div>
+             <div class="force">
+                <p><label><input type="checkbox" checked onchange="forceProperties.labels.enabled = this.checked; enableNodeLabels();"> Node Label</label>Set a node label based on chosen attribute</p>
+                <label class="attribute-selection-label" for="node-label-select">
+                    Choose Attribute:
+                    <select id="node-label-select" class="attribute-select" name="node-label-select" onchange ="setNodeLabel(this)">
+                        <option value="id">Id</option>
+                        <optgroup label="Attributes">
+                            @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Centralities">
+                            <option value="degree">Degree</option>
+                            <option value="closeness">Closeness</option>
+                        </optgroup>
+                    </select>
+                </label>
+            </div>
             <div class="force">
                 <p><label>Attribute Node Sizing</label> Modify size of node based on its attribute value</p>
                 <label class="attribute-selection-label" for="attribute-node-sizing">
@@ -170,7 +189,6 @@
                         </optgroup>
                     </select>
                 </label>
-                
             </div>
             <div class="force" id="color-settings">
                 <div class="colour-row">

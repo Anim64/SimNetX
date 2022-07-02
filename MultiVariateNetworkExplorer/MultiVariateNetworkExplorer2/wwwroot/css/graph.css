@@ -197,14 +197,20 @@ svg {
 }
 
 
-.nodes .selected {
+.selected circle, .selected text{
     stroke: black;
 }
+
+
 
 .brush .extent {
     fill-opacity: .1;
     stroke: #fff;
     shape-rendering: crispEdges;
+}
+
+.invisible {
+    display: none;
 }
 
 @keyframes circleScale {

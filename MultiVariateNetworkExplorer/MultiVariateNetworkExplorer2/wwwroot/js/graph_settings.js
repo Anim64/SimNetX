@@ -320,6 +320,19 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
     updateForces();
 }
 
+const handleForceEnablement = function(value, force, forceUpdateDelegate){
+    forceProperties[force].enabled = value;
+    forceUpdateDelegate();
+    resetSimulation();
+}
+
+const handleForceChange = function (value, sliderOutputId, force, property, forceUpdateDelegate) {
+    d3.select('#' + sliderOutputId).text(value);
+    forceProperties[force][property] = Number(value);
+    forceUpdateDelegate();
+    resetSimulation();
+}
+
 const getNodeAttribute = function (d, attributeName) {
     return d[attributeName];
 };
@@ -327,6 +340,27 @@ const getNodeProperty = function (d, attributeName) {
     return graph.properties[attributeName].values[d.id];
 };
 
+const enableNodeLabels = function () {
+    nodeText.classed('invisible', !forceProperties.labels.enabled);
+}
+
+const setNodeLabel = function (selectElement) {
+    const attributeName = selectElement.value;
+    const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+
+    if (optgroup === "Attributes") {
+        getValueFunction = getNodeAttribute;
+    }
+
+    else if (optgroup === "Centralities") {
+        getValueFunction = getNodeProperty;
+    }
+        
+    nodeText.text(function (d) {
+        const attributeValue = getValueFunction(d, attributeName);
+        return attributeValue;
+    });
+}
 const setAttributeNodeSizing = function (selectElement) {
     const attributeName = selectElement.value;
 
@@ -354,25 +388,44 @@ const setAttributeNodeSizing = function (selectElement) {
         node.attr("r", function (d) {
             const attributeValue = getValueFunction(d, attributeName);
             if (attributeValue == "") {
-                return defaultRadius / 2;
+                
+                return d.r = defaultRadius / 2;
             }
 
-            const resultRadius = (defaultRadius * 2) * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
-            return resultRadius;
+            const resultRadius = (defaultRadius * 2) * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)) + 1;
+            return d.r = resultRadius;
         });
+
+        setNodeFontSize();
         return;
+
+        
     }
 
     forceProperties.sizing.enabled = false;
-    node.attr("r", defaultRadius);
+    node.attr("r", function (d) {
+        return d.r = defaultRadius;
+    });
+    setNodeFontSize();
 }
 
+const rgbObjectToString = function (rgbObject) {
+    const rgb = 'rgb(' + rgbObject.b + ', '
+        + rgbObject.g + ', '
+        + rgbObject.r + ')';
+    return rgb;
+}
 const pickHex = function(color1, color2, weight) {
-    var w1 = weight;
-    var w2 = 1 - w1; 
-    var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2)  + ', '
-    + Math.round(color1.g * w1 + color2.g * w2) + ', '
-        + Math.round(color1.r * w1 + color2.r * w2) + ')';
+    const w1 = weight;
+    const w2 = 1 - w1; 
+    const rgb = {
+        r: Math.round(color1.r * w1 + color2.r * w2),
+        g: Math.round(color1.g * w1 + color2.g * w2),
+        b: Math.round(color1.b * w1 + color2.b * w2)
+    };
+    //var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2)  + ', '
+    //+ Math.round(color1.g * w1 + color2.g * w2) + ', '
+    //    + Math.round(color1.r * w1 + color2.r * w2) + ')';
     return rgb;
 }
 
@@ -406,11 +459,15 @@ const setAttributeNodeColouring = function (selectElement) {
             if (attributeValue === "") {
                 return defaultColour;
             }
-
+            
             const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
             const resultColour = pickHex(lowValueColour, highValueColour, resultValue);
-            return resultColour;
+            const lightness = fontLightness(resultColour);
+            const node_text = $('#' + d.id + '_node_text');
+            node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
+            return rgbObjectToString(resultColour);
         });
+        link.style("stroke", 'white');
         return;
     }
 
@@ -616,29 +673,29 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 }
 
 const gaussianKernel = function(nodes, attributes, sigma = 1) {
-    const gaussianKernel = new Array(nodes.length * nodes.length);
+    const gaussianKernelMat = new Array(nodes.length * nodes.length);
     const nodeCount = nodes.length;
 
     for (const [index, node] of nodes.entries()) {
         for (let i = index; i < nodeCount; i++) {
 
             if (i === index) {
-                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = 1
+                gaussianKernelMat[index * nodeCount + i] = gaussianKernelMat[i * nodeCount + index] = 1
             }
             else {
                 const distance = euclideanDistance(node, nodes[i], attributes);
                 const similarity = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
-                gaussianKernel[index * nodeCount + i] = gaussianKernel[i * nodeCount + index] = similarity;
+                gaussianKernelMat[index * nodeCount + i] = gaussianKernelMat[i * nodeCount + index] = similarity;
             }
 
         }
     }
 
-    return gaussianKernel;
+    return gaussianKernelMat;
 }
 
 const cosineKernel = function (nodes, attributes) {
-    const cosineKernel = new Array(nodes.length * nodes.length);
+    const cosineKernelMat = new Array(nodes.length * nodes.length);
     const nodeCount = nodes.length;
 
     for (const [index, node] of nodes.entries()) {
@@ -646,18 +703,18 @@ const cosineKernel = function (nodes, attributes) {
         for (let i = index; i < nodeCount; i++) {
 
             if (i === index) {
-                cosineKernel[index * nodeCount + i] = cosineKernel[i * nodeCount + index] = 1
+                cosineKernelMat[index * nodeCount + i] = cosineKernelMat[i * nodeCount + index] = 1
                 continue;
             }
             
             const vectorMagnitudeB = calcVectorMagnitude(nodes[i], attributes);
             const dotProduct = calcDotProduct(node, nodes[i], attributes);
             const similarity = dotProduct / (vectorMagnitudeA * vectorMagnitudeB);
-            cosineKernel[index * nodeCount + i] = cosineKernel[i * nodeCount + index] = similarity;
+            cosineKernelMat[index * nodeCount + i] = cosineKernelMat[i * nodeCount + index] = similarity;
         }
     }
 
-    return cosineKernel;
+    return cosineKernelMat;
 }
 
 const calcDotProduct = function (node1, node2, attributes) {
@@ -684,6 +741,27 @@ const calcVectorMagnitude = function(node, attributes){
 
     result = Math.sqrt(result);
     return result;
+}
+
+const euclideanKernel = function (nodes, attributes) {
+    const euclideanKernelMat = new Array(nodes.length * nodes.length);
+    const nodeCount = nodes.length;
+
+    for (const [index, node] of nodes.entries()) {
+        for (let i = index; i < nodeCount; i++) {
+
+            if (i === index) {
+                euclideanKernelMat[index * nodeCount + i] = euclideanKernelMat[i * nodeCount + index] = 1;
+                continue;
+            }
+
+            const euclideanDis = Math.sqrt(euclideanDistance(node, nodes[i], attributes));
+            const similarity = 1 / euclideanDis;
+            euclideanKernelMat[index * nodeCount + i] = euclideanKernelMat[i * nodeCount + index] = similarity;
+        }
+    }
+
+    return euclideanKernelMat;
 }
 
 const euclideanDistance = function(node1, node2, attributes) {

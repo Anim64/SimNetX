@@ -20,7 +20,10 @@ let brushMode = false;
 let brushing = false;
 let brush = null;
 let gDraw = null;
+let gNodes = null;
 let gMain = null;
+let nodeGroups = null;
+let nodeText = null;
 let grads = null;
 let transformX = 0;
 let transformY = 0;
@@ -120,6 +123,9 @@ let forceProperties = {
     },
     colouring: {
         enabled: false
+    },
+    labels: {
+        enabled: true
     }
 };
 
@@ -150,23 +156,58 @@ const prepareNodes = function() {
     const { nodes } = graph;
     const { radius } = forceProperties.collide;
 
-    node = gDraw.append("g")
+    gNodes = gDraw.append("g")
         .attr("class", "nodes")
+        .attr("id", "nodes")
         .selectAll("circle")
-        .data(nodes)
-        .enter().append("circle")
-        .attr("r", radius)
+        .data(nodes);
+
+    nodeGroups = gNodes.enter()
+        .append("g")
+        .attr("class", "node-group")
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
-            .on("end", dragended))
+            .on("end", dragended));
+
+    node = nodeGroups.append("circle")
+        .attr("r", radius)
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
+
+    
 
     //Add nodes to simulation
     simulation
         .nodes(nodes)
-        .on("tick", ticked)
+        .on("tick", ticked);
+
+    
+        
+}
+
+
+const prepareText = function () {
+    nodeText = nodeGroups.append("text")
+        .text(function (d) { return d.id; })
+        .attr("id", function (d) { return d.id + '_node_text'; })
+        .attr("text-anchor", "middle")
+        .on("mouseover", nodeMouseOver(.2))
+        .on("mouseout", mouseOut);
+    setNodeFontSize(forceProperties.collide.radius);
+        
+}
+
+const setNodeFontSize = function (r = null) {
+    nodeText
+        .attr("font-size", function (d) {
+            const resultR = r === null ? d.r : r;
+            return resultR * 0.85;
+        })
+        .attr("dy", function (d) {
+            const resultR = r === null ? d.r : r;
+            return resultR / 3;
+        });
 }
 
 const prepareBrush = function() {
@@ -206,7 +247,6 @@ const prepareNetworkBackground = function() {
 //Draw graph of the network
 const drawNetwork = function(data) {
 //function drawNetwork(data) {
-
     graph = data;
     graph.properties = {};
 
@@ -246,8 +286,8 @@ const drawNetwork = function(data) {
     //Store graph for filtration
     store = $.extend(true, {}, data);
 
-    resetSimulation();
     updateForces();
+    prepareText();
 }
 
 
@@ -359,14 +399,10 @@ const fadeDisconnectedNodes = function(nodeId, opacity) {
     // to this one. if so, keep the opacity at 1, otherwise
     // fade
 
-    const { radius } = forceProperties.collide;
-    const { enabled: sizingEnabled } = forceProperties.sizing;
-
-    if (!sizingEnabled) {
-        node.attr("r", function (d) {
-            return nodeId === d.id ? radius * 2 : radius;
-        });
-    }
+    
+    node.attr("r", function (d) {
+        return nodeId === d.id ? d.r * 2 : d.r;
+    });
 
     node.style("stroke-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
@@ -392,11 +428,10 @@ const nodeMouseOver = function(opacity) {
 }
 
 const mouseOut = function() {
-    const { radius } = forceProperties.collide;
-    const { enabled: sizingEnabled } = forceProperties.sizing;
-    if (!sizingEnabled) {
-        node.attr("r", radius);
-    }
+    node.attr("r", function (d) {
+        return d.r;
+    });
+    
     node.style("stroke-opacity", 1);
     node.style("fill-opacity", 1);
     link.style("stroke-opacity", 1);
@@ -418,7 +453,7 @@ const dragstarted = function(d) {
     
     if (!d.selected && !shiftKey) {
         // if this node isn't selected, then we have to unselect every other node
-        node.classed("selected", function (p) { return p.selected = p.previouslySelected = false; });
+        nodeGroups.classed("selected", function (p) { return p.selected = p.previouslySelected = false; });
     }
 
     d3.select(this).classed("selected", true);
@@ -437,13 +472,20 @@ const dragged = function(d) {
     //d.fx = d3v4.event.x;
     //d.fy = d3v4.event.y;
     const { dx, dy } = d3.event;
-    node.filter(function (d) { return d.selected; })
+    d3.selectAll('.selected')
         .each(function (d) {
             d.x += dx;
             d.y += dy;
             d.fx += dx;
             d.fy += dy;
-        })
+        });
+    //node.filter(function (d) { return d.selected; })
+    //    .each(function (d) {
+    //        d.x += dx;
+    //        d.y += dy;
+    //        d.fx += dx;
+    //        d.fy += dy;
+    //    })
     //link.attr("d", positionLink);
     //node.attr("transform", positionNode);
     
@@ -455,13 +497,11 @@ const dragged = function(d) {
 const dragended = function(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
     
-    node.filter(function (d) { return d.selected; })
-        .each(function (d) { 
-            /*d.fx = null;
-            d.fy = null;*/
-        })
-    //link.attr("d", positionLink);
-    //node.attr("transform", positionNode);
+    //node.filter(function (d) { return d.selected; })
+    //    .each(function (d) { 
+    //        d.fx = null;
+    //        d.fy = null;
+    //    })
 }
 
 /******************************************DRAGGING END**************************************************/
@@ -489,8 +529,8 @@ const brushed = function() {
     const extent = d3.event.selection;
     const [[left, top],[right, bottom]] = extent;
 
-    
-    node.classed("selected", function (d) {
+
+    nodeGroups.classed("selected", function (d) {
         const { previouslySelected, x, y } = d;
         d.selected = previouslySelected |
             (left <= ((x * scaleK) + transformX) && ((x * scaleK) + transformX) < right
@@ -558,7 +598,9 @@ const deselectAllNodes = function() {
         d.selected = false;
         d.previouslySelected = false;
     });
-    node.classed("selected", false);
+    nodeGroups.classed("selected", function (d) {
+        return d.selected = d.previouslySelected = false;
+    });
     document.querySelectorAll('.node-heading-selected').forEach(nodeHeading => {
         nodeHeading.classList.remove("node-heading-selected");
     });
@@ -591,23 +633,12 @@ const selectionZoomed = function () {
 
 //Update graph simulation forces
 const updateForces = function() {
-    const { x, y } = forceProperties.center;
-    simulation.force("center")
-        .x(width * x)
-        .y(height * y);
 
-    const { strength: chargeStrength, enabled : chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
-    simulation.force("charge")
-        .strength(chargeStrength * chargeEnabled)
-        .distanceMin(distanceMin)
-        .distanceMax(distanceMax);
-
-    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
-    simulation.force("collide")
-        .strength(collideStrength * collideEnabled)
-        .radius(radius)
-        .iterations(collideIterations);
-    node.attr("r", radius);
+    updateCenterForce();
+    updateChargeForce();
+    updateCollideForce();
+    updateLinkForce();
+    
     /*simulation.force("forceX")
         .strength(forceProperties.forceX.strength * forceProperties.forceX.enabled)
         .x(width * forceProperties.forceX.x);
@@ -615,20 +646,7 @@ const updateForces = function() {
         .strength(forceProperties.forceY.strength * forceProperties.forceY.enabled)
         .y(height * forceProperties.forceY.y);*/
 
-    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
-    simulation.force("link")
-        .id(function (d) { return d.id; })
-        .links(linksEnabled ? graph.links : [])
-        .distance(function (l) {
-            if (graph.partitions[l.source.id] === graph.partitions[l.target.id]) {
-                return distance;
-            }
-            else {
-                return distance * 4;
-            }
-        })
-        .iterations(linkIterations);
-
+    
     node.each(function (d) {
         d.fx = null;
         d.fy = null;
@@ -637,6 +655,62 @@ const updateForces = function() {
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
     resetSimulation();
+}
+
+const updateCenterForce = function () {
+    const { x, y } = forceProperties.center;
+    simulation.force("center")
+        .x(width * x)
+        .y(height * y);
+}
+
+const updateChargeForce = function () {
+    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
+    simulation.force("charge")
+        .strength(chargeStrength * chargeEnabled)
+        .distanceMin(distanceMin)
+        .distanceMax(distanceMax);
+}
+
+const updateCollideForce = function () {
+    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
+    simulation.force("collide")
+        .strength(collideStrength * collideEnabled)
+        .radius(radius)
+        .iterations(collideIterations);
+
+    if (forceProperties.sizing.enabled) {
+        node.attr("r", function (d) {
+            const { previousRadius } = forceProperties.collide;
+            const resultRadius = ((d.r - 1) / (previousRadius)) * (radius) + 1;
+            return d.r = resultRadius;
+        });
+        return;
+    }
+    node.attr("r", function (d) {
+        return d.r = radius;
+    });
+}
+
+const updateLinkForce = function () {
+    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
+    const chosenLinks = linksEnabled ? graph.links : [];
+    simulation.force("link")
+        .id(function (d) { return d.id; })
+        .distance(function (l) {
+            if (graph.partitions[l.source.id] === graph.partitions[l.target.id]) {
+                return distance;
+            }
+            else {
+                return distance * 4;
+            }
+        })
+        .iterations(linkIterations)
+        .links(chosenLinks);
+        //linksEnabled ? graph.links : []
+    link
+        .attr("stroke-width", forceProperties.link.enabled ? 1 : .5)
+        .attr("opacity", forceProperties.link.enabled ? 1 : 0);
 }
 
 const resetSimulation = function() {
@@ -704,7 +778,8 @@ const ticked = function() {
             .attr('x2', function (d) { return d.target.x })
             .attr('y2', function (d) { return d.target.y });*/
 
-        node.attr("transform", positionNode);
+        //node.attr("transform", positionNode);
+        nodeGroups.attr("transform", positionNode);
     }
     else {
         simulation.stop();
@@ -771,7 +846,8 @@ const positionLink = function(d) {
 }
 
 //Update node position when simulation starts
-const positionNode = function(d) {
+const positionNode = function (d) {
+    //d.select(this.parentNode).attr("transform", positionNode);
     return "translate(" + d.x + "," + d.y + ")";
 }
 
@@ -799,8 +875,13 @@ const updateNodeColour = function (nodes) {
 
     nodes.style("fill", function (d) {
         const { id } = d;
-        let colour = getNodeColour(id)
-        $('#heading-' + id).css("backgroundColor", colour);
+        const colour = getNodeColour(id);
+        const lightness = fontLightness(colour);
+        const nodeHeading = $('#heading-' + id);
+        const text = $(id + '_node_text');
+        nodeHeading.css("backgroundColor", colour);
+        nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
+        text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
         return colour;
     });
 }

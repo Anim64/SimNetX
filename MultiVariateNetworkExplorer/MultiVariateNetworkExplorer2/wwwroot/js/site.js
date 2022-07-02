@@ -22,6 +22,13 @@ const openTab = (event, contentId, divId, contentClass) => {
     event.currentTarget.className += " tab-active";
 }
 
+const getJsonValue = function (obj, stringPath) {
+    let result = stringPath.split('.').reduce(function (o, k) {
+        return o && o[k];
+    }, obj);
+    return result;
+}
+
 
 
 

@@ -18,7 +18,9 @@ footer {
     text-align: right;
 }
 
-
+.invisible {
+    opacity: 0;
+}
 
 .page-section {
     position: relative;
