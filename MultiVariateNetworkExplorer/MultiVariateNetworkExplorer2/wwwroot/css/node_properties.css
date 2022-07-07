@@ -96,6 +96,21 @@
     border-bottom-right-radius: 0;
 }
 
+.node-heading-disabled {
+    pointer-events: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -moz-filter: brightness(20%);
+    -webkit-filter: brightness(20%);
+    filter: brightness(20%);
+}
+
+.node-heading-disabled h5 {
+    visibility: hidden;
+}
+
 .node-data {
     display: none;
     background-color: #fff;

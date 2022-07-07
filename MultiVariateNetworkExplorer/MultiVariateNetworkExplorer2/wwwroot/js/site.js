@@ -6,8 +6,9 @@
 
 
 
-const openTab = (event, contentId, divId, contentClass) => {
-    
+const openTab = function (event, contentId, divId, contentClass) {
+
+    const hello = document.getElementById(divId);
     const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
     for (const tabcontent of tabcontents) {
         tabcontent.style.display = "none";

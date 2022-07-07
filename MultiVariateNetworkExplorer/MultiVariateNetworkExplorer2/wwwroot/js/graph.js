@@ -878,7 +878,7 @@ const updateNodeColour = function (nodes) {
         const colour = getNodeColour(id);
         const lightness = fontLightness(colour);
         const nodeHeading = $('#heading-' + id);
-        const text = $(id + '_node_text');
+        const text = $('#' + id + '_node_text');
         nodeHeading.css("backgroundColor", colour);
         nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
         text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
@@ -912,29 +912,42 @@ const getNodeColour = function (nodeId) {
 
 const updateNodes = function () {
     const { nodes } = graph;
-    node = node.data(nodes, function (d) { return d.id; });
+    nodeGroups = nodeGroups.data(nodes, function (d) { return d.id; });
     //	EXIT
-    node.exit().remove();
+    nodeGroups.exit().remove();
+    
 
-    const newNode = node.enter().append("circle")
-        .attr("r", forceProperties.collide.radius)
+    const newNodeGroups = nodeGroups.enter()
+        .append("g")
+        .attr("class", "node-group")
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
-            .on("end", dragended))
+            .on("end", dragended));
 
-    newNode.append("title")
-        .text(function (d) { return d.id; });
+    const newNode = newNodeGroups.append("circle")
+        .attr("r", forceProperties.collide.radius)
+        .on("mouseover", nodeMouseOver(.2))
+        .on("mouseout", mouseOut);
+
+    const newNodeText = newNodeGroups.append("text")
+        .attr("id", function (d) { return d.id + '_node_text'; })
+        .attr("text-anchor", "middle")
+        .on("mouseover", nodeMouseOver(.2))
+        .on("mouseout", mouseOut);
 
 
-    node = node.merge(newNode);
-
+    nodeGroups = nodeGroups.merge(newNodeGroups);
+    node = nodeGroups.selectAll("circle");
+    nodeText = nodeGroups.selectAll("text");
     simulation
         .nodes(nodes)
         .on("tick", ticked)
         //.on("end", simulationStop);
 
-    updateNodeColour(newNode);
+    
+
+
 }
 
 const updateLinks = function () {
@@ -949,8 +962,6 @@ const updateLinks = function () {
 
     simulation.force("link")
         .links(links);
-
-    updateLinkColour(newLink);
 }
 
 
@@ -959,6 +970,15 @@ const updateNodesAndLinks = function() {
     updateNodes();
     updateLinks();
     //resetSimulation();
+
+    const sizingSelect = document.getElementById('attribute-node-sizing');
+    setAttributeNodeSizing(sizingSelect);
+
+    const colouringSelect = document.getElementById('attribute-node-colouring');
+    setAttributeNodeColouring(colouringSelect);
+
+    const labelSelect = document.getElementById('node-label-select');
+    setNodeLabel(labelSelect);
 }
 
 const updateNodeAndLinkColour = function(nodes, links) {

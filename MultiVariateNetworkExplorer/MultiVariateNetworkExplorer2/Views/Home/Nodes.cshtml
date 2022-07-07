@@ -1,31 +1,21 @@
 ﻿@model MultiVariateNetworkExplorer2.Models.GraphModel
 
-<section class="column right-col" id="nodes">
+<section class="column right-col" id="rightpanel">
         <div class="navigation">
             <div class="tab-nav">
-                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'accordion', 'nodes', '.column-content')">Node Properties</a>
+                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'accordion', 'rightpanel', '.column-content')">Node Properties</a>
             </div>
             <div class="tab-nav">
-                <a class="tab-link" href="#" onclick="openTab(event, 'selections', 'nodes', '.column-content')">Selection properties</a>
+                <a class="tab-link" href="#" onclick="openTab(event, 'selections', 'rightpanel', '.column-content')">Selection properties</a>
             </div>
         </div>
-        <div class="nodes column-content" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="column-content nodes" id="accordion">
             <div class="node-grid">
                 @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
                 {
                     <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.IdColumn[node])" onclick="nodeHeadingClick(event, '@(Model.Mvn.IdColumn[node])', @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.IdColumn[node])', .2)" onmouseout="mouseOut()">
                         <h5>@(Model.Mvn.IdColumn[node])</h5>
                     </div>
-                    @*<div id="@($"node-detail-{node}")" class="node-data" aria-labelledby="@($"heading-{ Model.Mvn.IdColumn[node] }")">
-                        @foreach (var attribute in Model.Mvn.VectorData.Columns)
-                        {
-
-                            <div class="node-property-group">
-                                <label for="@(Model.Mvn.IdColumn[node] + "-" + attribute)">@(attribute + ":")</label>
-                                <input type="text" id="@(Model.Mvn.IdColumn[node] + "-" + attribute)" value="" readonly/>
-                            </div>
-                        }
-                    </div>*@
                 }
             </div>        
         </div>

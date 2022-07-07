@@ -42,7 +42,7 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
     //for (const n of graphNodes) {
     storeNodes.forEach(function (n) {
         const { [filteredAttributeName]: filAttrVal } = n;
-
+        const nodeHeading = $('#heading-' + n.id);
         if (filAttrVal === "")
             return;
         if (filterCondition.booleanFunction(filAttrVal, value)) {
@@ -54,6 +54,7 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
                     }
                 };
                 filterNodeList.push(n.id);
+                nodeHeading.addClass('node-heading-disabled');
             }
 
             if (!n.filters.includes(filteredAttributeName + filterSuffix)) {
@@ -69,6 +70,7 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
                     graphNodes.push($.extend(true, {}, n));
                     filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
                     delete n.filters;
+                    nodeHeading.removeClass('node-heading-disabled');
                 }
             }
         }
@@ -90,179 +92,14 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
     });
 
     updateNodesAndLinks();
-    updateForces();
+    resetSimulation();
 
-
-}
-
-const filterByMinValue = function (value, filteredAttributeName) {
-    //var value = event.currentTarget.value;
-
-    const minValue = document.getElementById(filteredAttributeName + "-sliderOutputMin").min;
-    if (value < minValue) {
-        value = minValue;
-        document.getElementById(filteredAttributeName + "-sliderOutputMin").value = minValue;
-    }
-
-    if (!attributefilter[filteredAttributeName]) {
-        attributefilter[filteredAttributeName] = {};
-    }
-    attributefilter[filteredAttributeName].low = value;
-
-
-    const { nodes: storeNodes, links: storeLinks } = store;
-    const { nodes: graphNodes, links: graphLinks } = graph;
-
-    //for (const n of graphNodes) {
-    storeNodes.forEach(function (n) {
-        const { [filteredAttributeName]: filAttrVal } = n;
-
-        if (filAttrVal === "")
-            return;
-        if (filAttrVal < value) {
-            if (!n.filters) {
-                n.filters = [];
-                for (const [i, d] of graphNodes.entries()) {
-                    if (n.id === d.id) {
-                        graphNodes.splice(i, 1);
-                    }
-                };
-                filterNodeList.push(n.id);
-            }
-
-            if (!n.filters.includes(filteredAttributeName + "_min")) {
-                n.filters.push(filteredAttributeName + "_min");
-            }
-
-        }
-
-        else if (filAttrVal >= value && n.filters) {
-            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_min")) {
-                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_min"), 1);
-                if (n.filters.length === 0) {
-                    graphNodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
-                    delete n.filters;
-                }
-            }
-        }
-
-
-        /*else if (n.filtered) {
-            var isNotFilteredByAnyAtrribute = true;
-            var numericDivs = $(".numeric");
-            console.log(numericDivs);
-            for (var i = 0; i < numericDivs.length; i++) {
-                var attrName = numericDivs[i].querySelector("label").innerHTML;
-                var minValue = numericDivs[i].querySelector("[id$=sliderOutputMin]").value;
-
-                if (minValue > n[attrName]) {
-                    isNotFilteredByAnyAtrribute = false;
-                    break;
-                }
-            }
-
-            if (isNotFilteredByAnyAtrribute) {
-                delete n.filtered;
-                graph.nodes.push($.extend(true, {}, n));
-                filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
-            }
-
-        
-        }*/
-
-
-    });
-
-    storeLinks.forEach(function (l) {
-        const { source, target } = l;
-        if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
-            l.filtered = false;
-            graphLinks.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
-            l.filtered = true;
-            for (const [i, d] of graphLinks.entries()) {
-                if (l.id === d.id) {
-                    graphLinks.splice(i, 1);
-                }
-            };
-        }
-    });
-
-    updateNodesAndLinks();
-    updateForces();
-
-
-}
-
-function filterByMaxValue(value, filteredAttributeName) {
-    //var value = event.currentTarget.value;
-    const maxValue = document.getElementById(filteredAttributeName + "-sliderOutputMax").max;
-    if (value > maxValue) {
-        value = maxValue;
-        document.getElementById(filteredAttributeName + "-sliderOutputMax").value = maxValue;
-    }
-
-    if (!attributefilter[filteredAttributeName]) {
-        attributefilter[filteredAttributeName] = {};
-    }
-    attributefilter[filteredAttributeName].high = value;
-
-
-    store.nodes.forEach(function (n) {
-        const { [filteredAttributeName]: filAttrVal } = n;
-        if (n[filteredAttributeName] === "")
-            return;
-        if (n[filteredAttributeName] > value) {
-            if (!n.filters) {
-                n.filters = [];
-                graph.nodes.forEach(function (d, i) {
-                    if (n.id === d.id) {
-                        graph.nodes.splice(i, 1); 
-                    }
-                });
-                filterNodeList.push(n.id);
-            }
-
-            if (!n.filters.includes(filteredAttributeName + "_max")) {
-                n.filters.push(filteredAttributeName + "_max");
-            }
-
-        }
-
-        else if (n[filteredAttributeName] <= value && n.filters) {
-            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_max")) {
-                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_max"), 1);
-                if (n.filters.length === 0) {
-                    graph.nodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
-                    delete n.filters;
-                }
-            }
-        }
-    });
-
-    store.links.forEach(function (l) {
-        if (!(filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && l.filtered) {
-            l.filtered = false;
-            graph.links.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(l.source) || filterNodeList.includes(l.target)) && !l.filtered) {
-            l.filtered = true;
-            graph.links.forEach(function (d, i) {
-                if (l.id === d.id) {
-                    graph.links.splice(i, 1);
-                }
-            });
-        }
-    });
-
-    updateNodesAndLinks();
-    updateForces();
 }
 
 const filterByCategory = function (filteredAttributeName, category, checked) {
     const { nodes: storeNodes, links: storeLinks } = store;
-    //const { }
+    const { nodes: graphNodes, links: graphLinks } = graph;
+
     storeNodes.forEach(function (n) {
         const { [filteredAttributeName]: filAttrVal } = n;
         if (filAttrVal === "")
@@ -317,7 +154,8 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
     });
 
     updateNodesAndLinks();
-    updateForces();
+    resetSimulation();
+   
 }
 
 const handleForceEnablement = function(value, force, forceUpdateDelegate){
@@ -346,16 +184,19 @@ const enableNodeLabels = function () {
 
 const setNodeLabel = function (selectElement) {
     const attributeName = selectElement.value;
-    const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
+    const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup')
 
-    if (optgroup === "Attributes") {
-        getValueFunction = getNodeAttribute;
-    }
+    if (optgroup !== null) {
+        const optGroupLabel = optgroup.getAttribute('label');
+        if (optGroupLabel === "Attributes") {
+            getValueFunction = getNodeAttribute;
+        }
 
-    else if (optgroup === "Centralities") {
-        getValueFunction = getNodeProperty;
+        else if (optGroupLabel === "Centralities") {
+            getValueFunction = getNodeProperty;
+        }
     }
-        
+    
     nodeText.text(function (d) {
         const attributeValue = getValueFunction(d, attributeName);
         return attributeValue;
@@ -410,9 +251,9 @@ const setAttributeNodeSizing = function (selectElement) {
 }
 
 const rgbObjectToString = function (rgbObject) {
-    const rgb = 'rgb(' + rgbObject.b + ', '
+    const rgb = 'rgb(' + rgbObject.r + ', '
         + rgbObject.g + ', '
-        + rgbObject.r + ')';
+        + rgbObject.b + ')';
     return rgb;
 }
 const pickHex = function(color1, color2, weight) {
@@ -667,7 +508,9 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     }
 
     graph.links = newNet;
+    store.links = newNet.map(a => { return { ...a } })
     updateLinks();
+    updateLinkColour(link);
     resetSimulation();
    
 }
