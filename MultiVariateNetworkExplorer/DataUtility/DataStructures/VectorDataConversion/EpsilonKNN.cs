@@ -17,7 +17,7 @@ namespace DataUtility.DataStructures.VectorDataConversion
             this.K = k;
         }
        
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric)
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IEnumerable<string> exclude = null)
         {
             ColumnString idColumn = vectorData.IdColumn;
             Network result = new Network(idColumn);

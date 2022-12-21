@@ -178,6 +178,35 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
+        public JsonResult RemodelNetwork(string nodes, string attributes, string excludedAttributes, string attributeTransform, string networkRemodelParams)
+        {
+            JArray jNodes = JArray.Parse(nodes);
+            JObject jAttributes = JObject.Parse(attributes);
+            JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
+            //JObject jAttributeTransform = JObject.Parse(attributeTransform);
+            JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
+
+
+
+            DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
+
+            JToken jMetric = jNetworkRemodelParams["metric"];
+            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
+            object[] metricParams = jMetric["params"].ToObject<object[]>();
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams);
+
+            JToken jAlgorithm = jNetworkRemodelParams["algorithm"];
+            Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == jAlgorithm["name"].ToString());
+            object[] algorithmParams = jAlgorithm["params"].ToObject<object[]>();
+            IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
+
+            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, jExcludedAttributes.ToObject<IEnumerable<string>>());
+
+            return Json(new { newNetwork = remodeledNetwork.ToD3Json().ToString() }); 
+            
+        }
+
+        [HttpPost]
         public JsonResult GraphCommunityDetection(string graphNodes, string graphLinks)
         {
           

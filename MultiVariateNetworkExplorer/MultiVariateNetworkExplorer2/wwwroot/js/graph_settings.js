@@ -457,314 +457,91 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const selectedMetric = document.getElementById(metricSelectId).value;
 
 
-    const checkboxes = $(attributeCheckboxDiv).find("input[type='checkbox']:checked");
-    const selected_attributes = checkboxes.map((index, checkbox) => {
+    const checkboxes = $(attributeCheckboxDiv).find("input:checkbox:not(:checked)");
+    const excludedAttributes = $.makeArray(checkboxes.map((index, checkbox) => {
         return checkbox.value;
-    });
-    
-    let metricFunction = null;
+    }));
+
+    const networkRemodelParams =
+    {
+        "metric": {
+            "name": selectedMetric,
+            "params": []
+            
+            
+        },
+        "algorithm": {
+            "name": selectedAlgorithm,
+            "params": []
+        }
+    };
+   
     switch (selectedMetric) {
         default:
+            break;
         case 'GaussKernel':
-            metricFunction = gaussianKernel;
+            const metricParams = networkRemodelParams["metric"]["params"];
+            const sigma = parseFloat(document.getElementById('sigma').value);
+            metricParams.push(sigma);
             break;
-        case 'CosineSimilarity':
-            metricFunction = cosineKernel;
-            break;
-        case 'EuclideanKernel':
-            metricFunction = euclideanKernel;
-            break;
-            
     }
-    let newNet = null;
-
+    
     switch (selectedAlgorithm) {
         default:
-        case 'LRNet':
-            newNet = LRNet(graph.nodes, selected_attributes, metricFunction);
             break;
-        
-
         case 'EpsilonKNN':
             const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
             const k = parseInt(document.getElementById('kNNmin').value);
-            newNet = EpsilonAndkNN(graph.nodes, selected_attributes, metricFunction, epsilonRadius, k);
+            const algorithmParams = networkRemodelParams["algorithm"]["params"];
+            algorithmParams.push(epsilonRadius);
+            algorithmParams.push(k);
             break;
     }
 
-    graph.links = newNet;
-    store.links = newNet.map(a => { return { ...a } });
-
-    linkedByIndex = {};
-    for (let l of graph.links) {
-        const index = l.source + "," + l.target
-        linkedByIndex[index] = 1;
-    }
-
+    const nodes_string = JSON.stringify(graph.nodes);
+    const attributes_string = JSON.stringify(graph.attributes);
+    const excluded_attributes_string = JSON.stringify(excludedAttributes);
+    const network_remodel_params_string = JSON.stringify(networkRemodelParams);
     
-    updateLinks();
-    requestCommunityDetection();
-    updateLinkColour(link);
-    calculateAllMetrics();
-    resetSimulation();
-   
-}
+    $.ajax({
+        url: '/Home/RemodelNetwork',
+        type: 'POST',
+        //dataType: 'json',
+        // It is important to set the content type
+        // request header to application/json because
+        // that's how the client will send the request
+        //contentType: 'application/json',
+        data: {
+            nodes: nodes_string,
+            attributes: attributes_string,
+            excludedAttributes: excluded_attributes_string,
+            attributeTransform: "",
+            networkRemodelParams: network_remodel_params_string
+        },
+        //cache: false,
+        success: function (result) {
+            const newNet = JSON.parse(result.newNetwork);
+            graph.links = newNet;
+            store.links = newNet.map(a => { return { ...a } });
 
-const gaussianKernel = function (nodes, attributes) {
-    const sigma = parseInt(document.getElementById('sigma').value);
-    const gaussianKernelMat = new Array(nodes.length * nodes.length);
-    const nodeCount = nodes.length;
-
-    for (const [index, node] of nodes.entries()) {
-        for (let i = index; i < nodeCount; i++) {
-
-            if (i === index) {
-                gaussianKernelMat[index * nodeCount + i] = gaussianKernelMat[i * nodeCount + index] = 1
-            }
-            else {
-                const distance = euclideanDistance(node, nodes[i], attributes);
-                const gauss1 = 1.0 / (sigma * Math.sqrt(2 * Math.PI));
-                const gauss2 = (-distance) / (2 * Math.pow(sigma, 2));
-                const gauss3 = Math.pow(Math.E, (gauss2));
-                const gauss4 = gauss1 * gauss3;
-                const similarity = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
-                gaussianKernelMat[index * nodeCount + i] = gaussianKernelMat[i * nodeCount + index] = similarity;
+            linkedByIndex = {};
+            for (let l of graph.links) {
+                const index = l.source + "," + l.target
+                linkedByIndex[index] = 1;
             }
 
+
+            updateLinks();
+            requestCommunityDetection();
+            updateLinkColour(link);
+            calculateAllMetrics();
+            resetSimulation();
+
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(thrownError);
         }
-    }
-
-    return gaussianKernelMat;
-}
-
-const cosineKernel = function (nodes, attributes) {
-    const cosineKernelMat = new Array(nodes.length * nodes.length);
-    const nodeCount = nodes.length;
-
-    for (const [index, node] of nodes.entries()) {
-        const vectorMagnitudeA = calcVectorMagnitude(node, attributes);
-        for (let i = index; i < nodeCount; i++) {
-
-            if (i === index) {
-                cosineKernelMat[index * nodeCount + i] = cosineKernelMat[i * nodeCount + index] = 1
-                continue;
-            }
-            
-            const vectorMagnitudeB = calcVectorMagnitude(nodes[i], attributes);
-            const dotProduct = calcDotProduct(node, nodes[i], attributes);
-            const similarity = dotProduct / (vectorMagnitudeA * vectorMagnitudeB);
-            cosineKernelMat[index * nodeCount + i] = cosineKernelMat[i * nodeCount + index] = similarity;
-        }
-    }
-
-    return cosineKernelMat;
-}
-
-const calcDotProduct = function (node1, node2, attributes) {
-    let result = 0;
-    for (const attribute of attributes) {
-        const { [attribute]: node1Value } = node1;
-        const { [attribute]: node2Value } = node2;
-        if (typeof node1Value == 'number' && typeof node2Value == 'number') {
-            result += node1Value * node2Value;
-        }
-    }
-
-    return result;
-}
-
-const calcVectorMagnitude = function(node, attributes){
-    let result = 0;
-    for (const attribute of attributes) {
-        const { [attribute]: nodeValue } = node;
-        if (typeof nodeValue == 'number') {
-            result += Math.pow(nodeValue, 2);
-        }
-    }
-
-    result = Math.sqrt(result);
-    return result;
-}
-
-const euclideanKernel = function (nodes, attributes) {
-    const euclideanKernelMat = new Array(nodes.length * nodes.length);
-    const nodeCount = nodes.length;
-
-    for (const [index, node] of nodes.entries()) {
-        for (let i = index; i < nodeCount; i++) {
-
-            if (i === index) {
-                euclideanKernelMat[index * nodeCount + i] = euclideanKernelMat[i * nodeCount + index] = 1;
-                continue;
-            }
-
-            const euclideanDis = Math.sqrt(euclideanDistance(node, nodes[i], attributes));
-            const similarity = 1 / euclideanDis;
-            euclideanKernelMat[index * nodeCount + i] = euclideanKernelMat[i * nodeCount + index] = similarity;
-        }
-    }
-
-    return euclideanKernelMat;
-}
-
-const euclideanDistance = function(node1, node2, attributes) {
-    let result = 0;
-    for (const attribute of attributes) {
-        const { [attribute]: node1Value } = node1;
-        const { [attribute]: node2Value } = node2;
-        if (typeof node1Value == 'number' && typeof node2Value == 'number') {
-            result += Math.pow(node1Value - node2Value, 2);
-        }
-    }
-
-    return result;
-}
-
-
-
-const EpsilonAndkNN = function(nodes, attributes, kernelMatrixFunction, similarityThreshold = 0.5, k = 1) {
-    const resultNet = new Array();
-    const kernel = kernelMatrixFunction(nodes, attributes);
-    const potentialNeighbours = Array.from(Array(nodes.length).keys());
-    const nodeCount = nodes.length;
-    const duplicateCheckDict = {};
-    let edgeId = -1;
-    for (const [index, node] of nodes.entries()) {
-    
-        potentialNeighbours.sort((node1, node2) => {
-            const node1KernelIndex = index * nodeCount + node1;
-            const node2KernelIndex = index * nodeCount + node2;
-
-            if (kernel[node1KernelIndex] < kernel[node2KernelIndex]) {
-                return 1;
-            }
-
-            else if (kernel[node1KernelIndex] > kernel[node2KernelIndex]) {
-                return -1;
-            }
-
-            return 0;
-        });
-
-        let edgeCount = 0;
-        let n = 0;
-
-        while ((edgeCount < k || kernel[index * nodeCount + potentialNeighbours[n]] > similarityThreshold) && n < nodeCount) {
-            const index1 = String(node.index);
-            const index2 = String(nodes[potentialNeighbours[n]].index);
-            const concatIndeces = index1 + index2;
-            const concatIndecesReverse = index2 + index1;
-            if (index !== potentialNeighbours[n] && (duplicateCheckDict[concatIndeces] == undefined || duplicateCheckDict[concatIndecesReverse] == undefined)) {
-                duplicateCheckDict[concatIndeces] = duplicateCheckDict[concatIndecesReverse] = 1;
-                const newLink = {
-                    source: node.id,
-                    target: nodes[potentialNeighbours[n]].id,
-                    value: 1,
-                    id: ++edgeId
-                };
-                resultNet.push(newLink);
-                edgeCount++;
-                
-            }
-            n++;
-        }
-    }
-
-    return resultNet;
-}
-
-const LRNet = function(nodes, attributes, kernelMatrixFunction) {
-    const resultNet = new Array();
-    const kernel = kernelMatrixFunction(nodes, attributes);
-    const degrees = {};
-    const significances = {};
-    const representativeness = {};
-    const nodeCount = nodes.length;
-    let edgeId = -1;
-
-    for (let index1 = 0; index1 < nodeCount; index1++) {
-    
-        let nearestNeighbour = -1;
-        let maxSimilarity = -1;
-        //degrees[index1] = 0;
-        //significances[index1] = 0;
-        degrees[index1] = 0;
-        significances[index1] = 0;
-
-        for (let index2 = 0; index2 < nodeCount; index2++) {
-            if (index1 === index2) {
-                continue;
-            }
-
-            //if (!degrees.hasOwnProperty(index1)) {
-            //    degrees[index1] = 0;
-            //    significances[index1] = 0;
-            //}
-            const kernelValue = kernel[index1 * nodeCount + index2];
-
-            if (kernelValue > 0) {
-                degrees[index1]++;
-            }
-
-            if (kernelValue > maxSimilarity) {
-                maxSimilarity = kernelValue;
-                nearestNeighbour = index2;
-            }
-        }
-
-        significances[nearestNeighbour] = !significances.hasOwnProperty(nearestNeighbour)
-            ? 0
-            : significances[nearestNeighbour] + 1;
-
-        
-    }
-    const duplicateCheckDict = {};
-
-    for (const [index, node] of nodes.entries()) {
-        representativeness[index] = significances[index] > 0
-            ? 1.0 / (Math.pow((1 + degrees[index]), (1.0 / significances[index])))
-            : 0;
-        
-        const k = parseInt(Math.round(representativeness[index] * degrees[index]), 10);
-
-        const potentialNeighbours = Array.from(Array(nodeCount).keys());
-        potentialNeighbours.sort(function (node1, node2) {
-            const node1KernelIndex = index * nodeCount + node1;
-            const node2KernelIndex = index * nodeCount + node2;
-
-            if (kernel[node1KernelIndex] < kernel[node2KernelIndex]) {
-                return 1;
-            }
-
-            else if (kernel[node1KernelIndex] > kernel[node2KernelIndex]) {
-                return -1;
-            }
-
-            return 0;
-        });
-
-        let l = k > 0 ? k + 1 : 2;
-
-        for (let n = 0; n < l; n++) {
-            const index1 = String(node.index);
-            const index2 = String(nodes[potentialNeighbours[n]].index);
-            const concatIndeces = index1 + index2;
-            const concatIndecesReverse = index2 + index1;
-
-            if (index !== potentialNeighbours[n] && (duplicateCheckDict[concatIndeces] == undefined || duplicateCheckDict[concatIndecesReverse] == undefined)) {
-                duplicateCheckDict[concatIndeces] = duplicateCheckDict[concatIndecesReverse] = 1;
-                const newLink = {
-                    source: node.id,
-                    target: nodes[potentialNeighbours[n]].id,
-                    value: 1,
-                    id: ++edgeId
-                };
-                resultNet.push(newLink);
-            }
-        }
-    }
-
-    return resultNet;
+    });
 }
 
 const changeNetworkNodeColour = function(colour) {

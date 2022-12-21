@@ -181,7 +181,7 @@ namespace DataUtility
                 jNodes.Add(jNode);
 
 
-                foreach (var target in this.Network[source].Where(kv => string.Compare(source, kv.Key) < 0))
+                foreach (var target in links.Where(kv => string.Compare(source, kv.Key) < 0))
                 {
 
                     JObject newLink = new JObject

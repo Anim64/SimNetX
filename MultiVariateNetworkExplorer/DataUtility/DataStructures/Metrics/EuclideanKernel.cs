@@ -7,23 +7,36 @@ namespace DataUtility.DataStructures.Metrics
 {
     public class EuclideanKernel : IMetric
     {
-        public Matrix<double> GetMetricMatrix(DataFrame vectorData)
+        public Matrix<double> GetMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
-            int dataCount = vectorData.First().Value.Data.Count;
+            int dataCount = vectorData.DataCount;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
 
             for (int i = 0; i < dataCount; i++)
             {
-                for (int j = i + 1; j < dataCount; j++)
+                for (int j = i; j < dataCount; j++)
                 {
-                    double euclideanDistance = 0;
-                    foreach (var pair in vectorData)
+                    if (i == j)
                     {
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = 1;
+                        continue;
 
-                        if (!(pair.Value is ColumnString))
+                    }
+
+                    double euclideanDistance = 0;
+                    var columnNames = vectorData.Columns;
+                    if (exclude != null)
+                    {
+                        columnNames = columnNames.Except(exclude);
+                    }
+
+                    foreach (var columnName in columnNames)
+                    {
+                        var column = vectorData[columnName];
+                        if (!(column is ColumnString))
                         {
-                            double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : vectorData.Averages[pair.Key];
-                            double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : vectorData.Averages[pair.Key];
+                            double vectorValueA = column.Data[i] != null ? Convert.ToDouble(column.Data[i]) : vectorData.Averages[columnName];
+                            double vectorValueB = column.Data[j] != null ? Convert.ToDouble(column.Data[j]) : vectorData.Averages[columnName];
                             euclideanDistance += Math.Pow((vectorValueA - vectorValueB), 2);
                         }
 

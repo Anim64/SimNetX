@@ -8,9 +8,9 @@ namespace DataUtility.DataStructures.Metrics
 {
     public class CosineSimilarity : IMetric
     {
-        public Matrix<double> GetMetricMatrix(DataFrame vectorData)
+        public Matrix<double> GetMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
-            int dataCount = vectorData.First().Value.DataCount;
+            int dataCount = vectorData.DataCount;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
             Dictionary<int, double> magnitudes = new Dictionary<int, double>();
             for (int i = 0; i < dataCount; i++)
@@ -29,20 +29,26 @@ namespace DataUtility.DataStructures.Metrics
                     {
                         kernelMatrix[i, j] = kernelMatrix[j, i] = 1;
                         continue;
-
                     }
 
                     bool isVectorMagnitudeBNotCalc = magnitudes[j] == -1;
                     double vectorMagnitudeB = isVectorMagnitudeBNotCalc ? 0 : magnitudes[j];
                     double dotProduct = 0;
 
-                    foreach (var pair in vectorData)
-                    {
 
-                        if (!(pair.Value is ColumnString))
+                    var columnNames = vectorData.Columns;
+                    if(exclude != null)
+                    {
+                        columnNames = columnNames.Except(exclude);
+                    }
+
+                    foreach (var columnName in columnNames)
+                    {
+                        var column = vectorData[columnName];
+                        if (!(column is ColumnString))
                         {
-                            double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : vectorData.Averages[pair.Key];
-                            double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : vectorData.Averages[pair.Key];
+                            double vectorValueA = column.Data[i] != null ? Convert.ToDouble(column.Data[i]) : vectorData.Averages[columnName];
+                            double vectorValueB = column.Data[j] != null ? Convert.ToDouble(column.Data[j]) : vectorData.Averages[columnName];
 
                             if (isVectorMagnitudeANotCalc)
                             {

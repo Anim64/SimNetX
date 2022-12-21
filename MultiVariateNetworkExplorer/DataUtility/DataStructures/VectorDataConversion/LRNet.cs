@@ -9,7 +9,7 @@ namespace DataUtility.DataStructures.VectorDataConversion
     public class LRNet : IVectorConversion
     {
         
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric)
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IEnumerable<string> exclude = null)
         {
             ColumnString idColumn = vectorData.IdColumn;
             Network resultNet = new Network(idColumn);

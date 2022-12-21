@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DataUtility.Network;
 
 namespace DataUtility
 {
@@ -33,7 +34,13 @@ namespace DataUtility
         /// <summary>
         /// The total weight of all edges.
         /// </summary>
-        public double TotalWeight { get; private set; }
+        public double TotalWeight { 
+            get
+            {
+                return this.Data.Sum(fromNode => fromNode.Value.Sum(toNode => toNode.Value)) / 2;
+            }
+            //private set; 
+        }
 
         /// <summary>
         /// Return the total number of edges that exist in network.
@@ -43,7 +50,11 @@ namespace DataUtility
         {
             get
             {
-                return this.Data.Sum(kv => kv.Value.Count(kv1 => String.Compare(kv.Key, kv1.Key) < 0));
+                if (numberOfEdges < 0)
+                {
+                    numberOfEdges = this.Data.Sum(kv => kv.Value.Count) / 2;
+                }
+                return numberOfEdges;
             }
         }
             
@@ -169,7 +180,7 @@ namespace DataUtility
         {
             this.Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             this.NumberOfVertices = json["nodes"].Count();
-            this.TotalWeight = 0;
+            //this.TotalWeight = 0;
             foreach(var node in json["nodes"])
             {
                 this.Data[(string)node["id"]] = new SortedDictionary<string, double>();
@@ -177,11 +188,7 @@ namespace DataUtility
             foreach(var link in json["links"])
             {
                 this.SetIndirectedEdge((string)link["source"]["id"], (string)link["target"]["id"], (double)link["value"]);
-                TotalWeight += (double)link["value"];
-                
             }
-
-            TotalWeight = TotalWeight / 2;
             
 
         }
@@ -194,7 +201,7 @@ namespace DataUtility
         {
             Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             
-            this.TotalWeight = net.TotalWeight;
+            //this.TotalWeight = net.TotalWeight;
             this.NumberOfVertices = net.NumberOfVertices;
             foreach(var pair in net.Data)
             {
@@ -292,7 +299,8 @@ namespace DataUtility
             var outdict = EnsureIncidenceList(fromNode);
             outdict.TryGetValue(toNode, out double oldWeight);
             outdict[toNode] = oldWeight + weight;
-            
+            this.numberOfEdges = -1;
+
 
         }
         /// <summary>
@@ -308,7 +316,7 @@ namespace DataUtility
             {
                 AddDirectedEdge(toNode, fromNode, weight);
             }
-            TotalWeight += weight;
+            //TotalWeight += weight;
             
         }
 
@@ -322,6 +330,7 @@ namespace DataUtility
         {
             var outdict = EnsureIncidenceList(fromNode);
             outdict[toNode] = weight;
+            this.numberOfEdges = -1;
         }
 
         /// <summary>
@@ -337,7 +346,8 @@ namespace DataUtility
             {
                 SetDirectedEdge(toNode, fromNode, weight);
             }
-            TotalWeight += weight;
+
+            //TotalWeight += weight;
         }
 
 
@@ -493,7 +503,31 @@ namespace DataUtility
 
         public JArray ToD3Json()
         {
-            return null;
+            JArray jLinks = new JArray();
+            int edgeId = -1;
+
+            foreach (var source in this)
+            {
+                string sourceId = source.Key;
+                var links = source.Value;
+
+                foreach (var target in links.Where(node => string.Compare(sourceId, node.Key) < 0))
+                {
+                    string targetId = target.Key;
+                    double weight = target.Value;
+                    JObject newLink = new JObject
+                    {
+                        [jsonLinkSourceName] = sourceId,
+                        [jsonLinkTargetName] = target.Key,
+                        [jsonLinkValueName] = target.Value,
+                        [jsonLinkIdName] = ++edgeId
+                    };
+                    jLinks.Add(newLink);
+                }
+            }
+
+            return jLinks;
+
         }
 
         public static Network FromD3Json(JArray jlinks)
