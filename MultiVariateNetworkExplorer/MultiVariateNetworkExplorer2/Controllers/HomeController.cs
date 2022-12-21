@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DataUtility;
+using DataUtility.DataStructures;
+using DataUtility.DataStructures.DataFrameExceptions;
 using DataUtility.DataStructures.Metrics;
 using DataUtility.DataStructures.VectorDataConversion;
 using Microsoft.AspNetCore.Http;
@@ -25,22 +27,44 @@ namespace MultiVariateNetworkExplorer.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private bool GraphErrorHandling(out ErrorInputModel eim, List<IFormFile> files, string separators, string missingvalues,
+            string convert, string metric, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed,
+            BooleanParameter header, BooleanParameter grouping)
         {
-            return View();
+            eim = new ErrorInputModel();
+            if (files.Count == 0)
+            {
+
+                eim.ErrorMessage = "Please insert your data file";
+                eim.Separators = separators;
+                eim.MissingValues = missingvalues;
+                eim.IdColumn = idColumn;
+                eim.GroupColumn = groupColumn;
+
+                return false;
+            }
+
+            return true;
+
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Graph(List<IFormFile> files, string separators, string missingvalues,
-            ConversionAlgorithm convert, Metric metric, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False, 
+        
+        public IActionResult Graph()
+        {
+            GraphModel gm = new GraphModel();
+            return View("Graph", gm);
+        }
+
+       [HttpPost]
+        public async Task<IActionResult> LoadGraph(List<IFormFile> files, string separators, string missingvalues,
+            string convert, string metric, double[] algsParams, double[] metricParams, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False,
             BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
         {
-            
 
-            if(files.Count == 0)
+            if (!GraphErrorHandling(out ErrorInputModel eim, files, separators, missingvalues, convert,
+                metric, groupColumn, idColumn, epsilonRadius, kNNmin, directed, header, grouping))
             {
-                ViewData["Message"] = "Please insert your data file";
-                return View("Index");
+                return View("Index", eim);
             }
 
             long size = files.Sum(f => f.Length);
@@ -59,101 +83,26 @@ namespace MultiVariateNetworkExplorer.Controllers
                 }
             }
 
-            char[] separatorArray;
+            char[] separatorArray = string.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
 
-
-            if (String.IsNullOrEmpty(separators))
-            {
-                separatorArray = " ".ToCharArray();
-            }
-
-            else
-            {
-                separatorArray = separators.Trim().ToCharArray();
-            }
-
-            if(String.IsNullOrEmpty(missingvalues))
-            {
-                missingvalues = "";
-            }
-
-            MultiVariateNetwork multiVariateNetwork;
-            GraphModel gm = new GraphModel();
 
             bool hasHeaders = header == BooleanParameter.True;
             bool isDirected = directed == BooleanParameter.True;
             bool doCommunityDetection = grouping == BooleanParameter.True;
-            //try
-            //{
 
-            IMetric chosenMetric = null;
-            switch (metric)
-            {
-                case Metric.GaussKernel:
-                    {
-                        chosenMetric = new GaussKernel();
-                        break;
-                    }
-                case Metric.CosineKernel:
-                    {
-                        chosenMetric = new CosineSimilarity();
-                        break;
-                    }
-                case Metric.EuclideanKernel:
-                    {
-                        chosenMetric = new EuclideanKernel();
-                        break;
-                    }
-                default:
-                    {
-                        chosenMetric = new GaussKernel();
-                        break;
-                    }
-            }
-            IVectorConversion conversionAlg = null;
-            switch (convert)
-            {
-                case ConversionAlgorithm.LRNet:
-                    {
-                        conversionAlg = new LRNet();
-                        break;
-                    }
-                    
-                case ConversionAlgorithm.Epsilon:
-                    {
-                        conversionAlg = new EpsilonKNN((double)epsilonRadius, (int)kNNmin);
-                        break;
-                    }
-                    
-                default:
-                    {
-                        conversionAlg = new LRNet();
-                        break;
-                    }
-                
-            }
+            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == metric);
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams.Cast<object>().ToArray());
+
+            Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == convert);
+            IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algsParams.Cast<object>().ToArray());
 
 
-            multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, conversionAlg, chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
-            gm.Graph = multiVariateNetwork.ToD3Json();
-            gm.Selection = multiVariateNetwork.PartitionsToD3Json();
-            gm.Mvn = multiVariateNetwork;
+            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, chosenConversion,
+                chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
 
-            //}
-            //catch(Exception e)
-            //{
-            //    multiVariateNetwork = new MultiVariateNetwork();
-            //    if(e is KeyNotFoundException)
-            //    {
-            //        ViewData["Message"] = "Your Id column name or Group column name is incorrect.";
-            //        return View("Index");
-            //    }
 
-                
-            //}
-
+            GraphModel gm = new GraphModel(multiVariateNetwork);
             
-           
 
             /*double[] precisions = multiVariateNetwork.calculatePrecision();
 
@@ -161,24 +110,88 @@ namespace MultiVariateNetworkExplorer.Controllers
             {
                 sw.WriteLine("Weighted: " + precisions[0] + " Prec: " + precisions[1]);
             }*/
-
+            ModelState.Clear();
             return View("Graph", gm);
-            
+
         }
 
         [HttpPost]
-        public JsonResult GraphCommunityDetection(string graphFilt)
+        public async Task<IActionResult> LoadAndAppendNodes(string currentGraph, List<IFormFile> files, string separators, string missingvalues,
+            string convert, string metric, List<double> algsParams, List<double> metricParams, string groupColumn, string idColumn,
+            BooleanParameter header = BooleanParameter.False)
+        {
+            long size = files.Sum(f => f.Length);
+            var filePaths = new List<string>();
+
+            foreach (var formFile in files)
+            {
+                if (formFile.Length > 0)
+                {
+                    var filePath = Path.GetTempFileName();
+                    filePaths.Add(filePath);
+                    using (var stream = System.IO.File.Create(filePath))
+                    {
+                        await formFile.CopyToAsync(stream);
+                    }
+                }
+            }
+
+            char[] separatorArray;
+
+            separatorArray = String.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
+
+            bool hasHeaders = header == BooleanParameter.True;
+
+            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == metric);
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams.Cast<object>().ToArray());
+
+            Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == convert);
+            IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algsParams.Cast<object>().ToArray());
+
+
+            MultiVariateNetwork currentMvn = MultiVariateNetwork.FromD3Json(JObject.Parse(currentGraph));
+            try
+            {
+                currentMvn.VectorData.ReadAndAppendFromFile(filePaths.ElementAt(0), missingvalues, hasHeaders, separatorArray);
+            }
+            catch(DataFrameException dfe)
+            {
+                ErrorInputModel eim = new ErrorInputModel();
+                GraphModel gme = new GraphModel(currentMvn, eim);
+                eim.ErrorMessage = dfe.Message;
+                return View("Graph", gme);
+            }
+
+            currentMvn.Network = chosenConversion.ConvertToNetwork(currentMvn.VectorData, chosenMetric);
+
+            for(int i = currentMvn.Partition.Count; i < currentMvn.VectorData.DataCount; i++)
+            {
+                string id = currentMvn.VectorData.IdColumn.Data[i].ToString();
+                currentMvn.Partition[id] = string.Empty;
+                currentMvn.RealClasses[id] = string.Empty;
+            }
+
+            GraphModel gm = new GraphModel(currentMvn);
+            
+
+            return View("Graph", gm);
+        }
+
+        [HttpPost]
+        public JsonResult GraphCommunityDetection(string graphNodes, string graphLinks)
         {
           
-            JObject root = JObject.Parse(graphFilt);
-            Network filteredNetwork = new Network(root);
-            JToken partitions = root["partitions"];
-            JToken realclasses = root["classes"];
+            //JObject root = JObject.Parse(graphFilt);
+            JArray nodes = JArray.Parse(graphNodes);
+            JArray links = JArray.Parse(graphLinks);
+            Network filteredNetwork = Network.FromD3Json(links);
+            JObject partitions = new JObject();
+            //JToken realclasses = root["classes"];
 
-        
+
             MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
 
-            
+
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
 
@@ -186,12 +199,12 @@ namespace MultiVariateNetworkExplorer.Controllers
             foreach (var node in mvnTemp.Partition)
             {
                 partitions[node.Key] = node.Value;
-                mvnTemp.RealClasses[node.Key] = (string)realclasses[node.Key];
+                //mvnTemp.RealClasses[node.Key] = (string)realclasses[node.Key];
             }
 
 
 
-            
+
             /*using (StreamWriter sw = new StreamWriter("filtereddata.txt"))
             {
 
@@ -208,7 +221,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             }*/
 
             //var precision = mvnTemp.calculatePrecision();
-            var temp = mvnTemp.Support();
+            //var temp = mvnTemp.Support();
 
 
             //mvnTemp.PartitionsToFile();
@@ -222,30 +235,12 @@ namespace MultiVariateNetworkExplorer.Controllers
                     sw.WriteLine(comm.Value[0] + " & " + comm.Value[1]);
                 }
             }*/
-            
 
 
             return Json(new { newPartitions = partitions.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
+            //return null;
         }
 
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

@@ -29,7 +29,7 @@ let transformX = 0;
 let transformY = 0;
 let scaleK = 1;
 
-const simulationDurationInMs = 10000; // 10 seconds
+const simulationDurationInMs = 20000; // 20 seconds
 
 let startTime = null;
 let endTime = null;
@@ -132,10 +132,11 @@ let forceProperties = {
 
 const prepareLinks = function() {
     //Create line or curves in SVG
+    const { links } = graph;
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
-        .data(graph.links)
+        .data(links)
         .enter().append("path")
 
     link.append("title")
@@ -145,13 +146,14 @@ const prepareLinks = function() {
 
 
     for (let l of graph.links) {
-        const index = l.source + "," + l.target
+        const { source, target } = l;
+        const index = source + "," + target
         linkedByIndex[index] = 1;
     }
 
 }
 
-const prepareNodes = function() {
+const prepareNodes = function () {
     //Create node circles in SVG
     const { nodes } = graph;
     const { radius } = forceProperties.collide;
@@ -175,12 +177,14 @@ const prepareNodes = function() {
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
 
-    
+
 
     //Add nodes to simulation
     simulation
         .nodes(nodes)
-        .on("tick", ticked);
+        .on("tick", ticked)
+        //.on("end", simulationEnd);
+        
 
     
         
@@ -238,8 +242,7 @@ const prepareNetworkBackground = function() {
         .attr("id", "network-background-rect")
         .attr('width', width)
         .attr('height', height)
-        .style('fill', '#1A1A1A')
-        .on('click', deselectAllNodes)
+        .on('click', deselectAllNodes);
 }
 
 
@@ -446,8 +449,8 @@ const mouseOut = function() {
 /////////////////////////////////////////////DRAGGING/////////////////////////////////////////////
 
 //Function for node dragging start
-const dragstarted = function(d) {
-    toggleNodeDetails(d.id, d.index);
+const dragstarted = function (d) {
+    closeNodeDetails("node-detail-container");
     if (!d3.event.active)
         resetSimulation();
     
@@ -496,7 +499,8 @@ const dragged = function(d) {
 //Function for node dragging end
 const dragended = function(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
-    
+
+    toggleNodeDetails(d.id, d.index);
     //node.filter(function (d) { return d.selected; })
     //    .each(function (d) { 
     //        d.fx = null;
@@ -771,21 +775,26 @@ const updateSelectionForces = function () {
 
 /////////////////////////////////////////GRAPH NODE AND LINK POSITION///////////////////////////////////////////////////
 const ticked = function() {
-    if (Date.now() < endTime) {
-        link.attr("d", positionLink);
-        /*link.attr('x1', function (d) { return d.source.x })
-            .attr('y1', function (d) { return d.source.y })
-            .attr('x2', function (d) { return d.target.x })
-            .attr('y2', function (d) { return d.target.y });*/
+    
+    link.attr("d", positionLink);
+        
+    nodeGroups.attr("transform", positionNode);
+}
 
-        //node.attr("transform", positionNode);
-        nodeGroups.attr("transform", positionNode);
-    }
-    else {
-        simulation.stop();
-    }
+const simulationEnd = function () {
+    //if (Date.now() < endTime) {
+    link.attr("d", positionLink);
+    /*link.attr('x1', function (d) { return d.source.x })
+        .attr('y1', function (d) { return d.source.y })
+        .attr('x2', function (d) { return d.target.x })
+        .attr('y2', function (d) { return d.target.y });*/
 
+    //node.attr("transform", positionNode);
+    nodeGroups.attr("transform", positionNode);
+    //return;
+    //}
 
+    simulation.stop();
 }
 
 const positionLink = function(d) {
@@ -872,7 +881,6 @@ const selectionTicked = function() {
 
 /////////////////////////////////////////////// NODE UPDATES////////////////////////////////////////////////
 const updateNodeColour = function (nodes) {
-
     nodes.style("fill", function (d) {
         const { id } = d;
         const colour = getNodeColour(id);
@@ -891,6 +899,17 @@ const updateLinkColour = function(links) {
         const { id } = l.source;
         return getNodeColour(id);
     })
+}
+
+const updateHeadingColour = function (nodes) {
+    nodes.each(function (d) {
+        const { id } = d;
+        const colour = getNodeColour(id);
+        const lightness = fontLightness(colour);
+        const nodeHeading = $('#heading-' + id);
+        nodeHeading.css("backgroundColor", colour);
+        nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
+    });
 }
 
 const getNodeColour = function (nodeId) {
@@ -1126,6 +1145,9 @@ $(document).ready(function () {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
 
+    document.addEventListener('click', closeAllToolbarPanels);
+
+    prepareInputForm();
     
     calculateAllMetrics();
 
@@ -1133,6 +1155,8 @@ $(document).ready(function () {
         setGroupColour(d);
     });
 
+    displayAlgorithmParameters("remodel-algorithm-select");
+    displayMetricParameters("remodel-metric-select");
     updateNodeAndLinkColour(node, link);
 
 });

@@ -7,6 +7,6 @@ namespace DataUtility.DataStructures.VectorDataConversion
 {
     public interface IVectorConversion
     {
-        Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IColumn idColumn);
+        Network ConvertToNetwork(DataFrame vectorData, IMetric metric);
     }
 }

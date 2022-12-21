@@ -3,41 +3,42 @@ for details on configuring this project to bundle and minify static web assets. 
 
 html {
     font-size: 10px;
+    padding-top: 0;
+    --border-color: rgb(89, 118, 135);
+    --active-content: rgb(138, 182, 210);
+    --shadow-color: rgba(0,0,0, 0.20);
+    --parameter-label-bg-color: rgba(70,70,70, 0.7);
+    --parameter-input-and-select-bg-color: rgba(85,85,85, 0.7);
+    --main-background-color: rgb(80, 80, 80);
 }
 
 body {
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     background-color: rgb(80, 80, 80);
+    padding-top: 0;
     height: 100%;
     margin: 0;
 }
 
 footer {
-    display: none;
-    border-top: 0.1rem dashed white;
-    padding: 0.5rem 1rem;
-    text-align: right;
-}
-
-.invisible {
-    opacity: 0;
-}
-
-.page-section {
-    position: relative;
-    padding-top: 1.5em;
-    padding-bottom: 3em;
-}
-
-.row.display-flex {
     display: flex;
-    -ms-flex-wrap: wrap;
-    -webkit-flex-wrap: wrap;
-    flex-wrap: wrap;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+    padding: 1rem;
+    position: relative;
 }
 
-.row.display-flex > [class*='col-'] {
-    -webkit-flex-grow: 1;
-    flex-grow: 1;
+.active-block {
+    display: block !important;
 }
+
+.active-flex {
+    display: flex !important;
+}
+
+
 
 

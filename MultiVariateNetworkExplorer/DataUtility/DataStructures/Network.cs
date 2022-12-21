@@ -13,6 +13,13 @@ namespace DataUtility
 {
     public class Network : IEnumerable<KeyValuePair<string, SortedDictionary<string, double>>>
     {
+
+
+        private static readonly string jsonLinkSourceName = "source";
+        private static readonly string jsonLinkTargetName = "target";
+        private static readonly string jsonLinkValueName = "value";
+        private static readonly string jsonLinkIdName = "id";
+
         //******************************************
         //**********Class properties section********
         //******************************************
@@ -126,6 +133,7 @@ namespace DataUtility
         public Network()
         {
             Data = new SortedDictionary<string, SortedDictionary<string, double>>();
+            NumberOfVertices = 0;
         }
 
         /// <summary>
@@ -140,6 +148,17 @@ namespace DataUtility
                 Data[i.ToString()] = new SortedDictionary<string, double>();
             }
             this.NumberOfVertices = initSize;
+        }
+
+        public Network(ColumnString idColumn)
+        {
+            Data = new SortedDictionary<string, SortedDictionary<string, double>>();
+            foreach (var node in idColumn)
+            {
+                Data[node.ToString()] = new SortedDictionary<string, double>();
+            }
+            this.NumberOfVertices = idColumn.DataCount;
+
         }
 
         /// <summary>
@@ -454,6 +473,42 @@ namespace DataUtility
             }
 
             return newNet;
+        }
+
+        public void ToFile(string path)
+        {
+            using (StreamWriter sw = new StreamWriter(path))
+            {
+                foreach(var node1 in this)
+                {
+                    foreach (var node2 in node1.Value.Where(x => String.Compare(x.Key, node1.Key) > 0))
+                    {
+                        string edge = node1.Key + " " + node2.Key;
+                        sw.WriteLine(edge);
+                    }
+                }
+            }
+            
+        }
+
+        public JArray ToD3Json()
+        {
+            return null;
+        }
+
+        public static Network FromD3Json(JArray jlinks)
+        {
+            Network network = new Network();
+
+            foreach (var link in jlinks)
+            {
+                string source = (string)link[jsonLinkSourceName];
+                string target = (string)link[jsonLinkTargetName];
+                double value = (double)link[jsonLinkValueName];
+                network.SetIndirectedEdge(source, target, value);
+            }
+
+            return network;
         }
 
         /// <summary>

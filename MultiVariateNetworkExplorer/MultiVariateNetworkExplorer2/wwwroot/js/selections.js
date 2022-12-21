@@ -11,7 +11,7 @@ const stopClickPropagation = function(event) {
 
 const selectNodesBySelection = function(selectionId) {
     deselectAllNodes();
-    node.filter(function (n) {
+    nodeGroups.filter(function (n) {
         return graph.partitions[n.id] === selectionId;
     }).classed('selected', function (d) {
         d.previouslySelected = d.selected;
@@ -94,7 +94,7 @@ const addSelectionDiv = function(selection) {
         .append('div')
         .classed('selection-panel', true)
         .attr('id', 'selection_panel_' + newId)
-        .attr('onclick', 'selectNodesBySelection(' + newId + ')');
+        .attr('onclick', 'selectNodesBySelection(\'' +(newId) + '\')');
 
     panel.append('h4')
         .attr('class', 'panel-title')
@@ -276,11 +276,28 @@ const deleteAllSelections = function () {
 
         
     })*/
+    //const lightness = fontLightness(defaultColour);
+    if (!forceProperties.colouring.enabled) {
+        updateNodeAndLinkColour(node, link);
+    }
+
+    const { partitions } = graph;
+    for (const node in partitions) {
+        partitions[node] = "";
+    }
+
     const lightness = fontLightness(defaultColour);
-    node.style("fill", defaultColour);
     d3.selectAll('.node-heading')
         .style("background-color", defaultColour)
         .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
+
+    
+   
+
+    //node.style("fill", defaultColour);
+    //d3.selectAll('.node-heading')
+    //    .style("background-color", defaultColour)
+    //    .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
 
     selectionGraph.nodes = [];
     selectionGraph.links = [];
@@ -299,8 +316,10 @@ const deleteSelection = function (event, selectionId) {
     selectionPanel.parentNode.removeChild(selectionPanel);
 
     const lightness = fontLightness(defaultColour);
-    node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
-        .style("fill", function (d) {
+    const nodesFromDeletedPartition = node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
+
+    if (!forceProperties.colouring.enabled) {
+        nodesFromDeletedPartition.style("fill", function (d) {
             link.filter(function (l) { return l.source.id === d.id; })
                 .style("stroke", defaultColour);
 
@@ -308,10 +327,19 @@ const deleteSelection = function (event, selectionId) {
                 .style("background-color", defaultColour)
                 .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
             graph.partitions[d.id] = "";
-
-
             return defaultColour;
         });
+    }
+
+    else {
+        nodesFromDeletedPartition.each(function (d) {
+            d3.select('#heading-' + d.id)
+                .style("background-color", defaultColour)
+                .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
+            graph.partitions[d.id] = "";
+            return defaultColour;
+        });
+    }
 
 
     selectionGraph.nodes = selectionGraph.nodes.filter(function (n) { return n.id != selectionId });
@@ -323,36 +351,57 @@ const deleteSelection = function (event, selectionId) {
 
 }
 
+const stringifyCommunityDetectionLinkReplacer = function (key, value) {
+    switch (key) {
+        case "source":
+        case "target": 
+            { 
+                return value.id;
+            }
+        default:
+            {
+                return value;
+            }
+    }
+}
+
 //Request for community detection on server
 const requestCommunityDetection = function () {
     store.nodes.forEach(function (d) {
         graph.partitions[d.id] = "";
     });
 
-    const graph_string = JSON.stringify(graph);
-
-
+    //const graph_string = JSON.stringify(graph);
+    const nodes_string = JSON.stringify(graph.nodes, ["id"]);
+    const links_string = JSON.stringify(graph.links, stringifyCommunityDetectionLinkReplacer);
+    
     $.ajax({
-        url: 'GraphCommunityDetection',
+        url: '/Home/GraphCommunityDetection',
         type: 'POST',
-        dataType: 'json',
+        //dataType: 'json',
         // It is important to set the content type
         // request header to application/json because
         // that's how the client will send the request
         //contentType: 'application/json',
-        data: { graphFilt: graph_string },
+        data: { graphNodes: nodes_string, graphLinks: links_string },
         //cache: false,
         success: function (result) {
             deleteAllSelections();
 
             graph.partitions = JSON.parse(result.newPartitions);
+            store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
 
             selectionGraph.nodes.forEach(function (d) {
                 addSelectionDiv(d);
             });
 
-            updateNodeAndLinkColour(node, link);
+            if (!forceProperties.colouring.enabled) {
+                updateNodeAndLinkColour(node, link);
+            }
+
+            updateHeadingColour(node);
+
             updateSelectionNodesAndLinks();
             //updateSelectionForces();
 

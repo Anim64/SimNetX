@@ -14,16 +14,17 @@
         <div class="column-content attributes" id="attributes">
             @foreach (var pair in Model.Mvn.VectorData.NumAtrrExtremes)
             {
+                string sliderId = @pair.Key;
                 <div class="numeric">
-                    <h4>@pair.Key</h4>
-                    <div id="@(pair.Key + "-slider")"></div>
-                    <script>createDoubleSlider('@(pair.Key + "-slider")', '@(pair.Key + "-sliderOutputMin")', '@(pair.Key + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
+                    <h4>@sliderId</h4>
+                    <div id="@(sliderId + "-slider")"></div>
+                    <script>createDoubleSlider('@(sliderId + "-slider")', '@(sliderId + "-sliderOutputMin")', '@(sliderId + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
+                            <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
                         </div>
                         <div class="col-md-4 col-md-offset-4">
-                            <input type="number" id="@(pair.Key + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
+                            <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
                         </div>
                     </div>
                 </div>
@@ -157,7 +158,8 @@
                 <label class="attribute-selection-label" for="node-label-select">
                     Choose Attribute:
                     <select id="node-label-select" class="attribute-select" name="node-label-select" onchange ="setNodeLabel(this)">
-                        <option value="id">Id</option>
+                        <option value="" >--None--</option>
+                        <option value="id" selected>Id</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
@@ -249,29 +251,40 @@
                         </div>
                     }
                 </div>
-                <div id="remodel-div">
-                    <label for="remodel-metric-select">Choose a conversion algorithm:</label>
-                    <select name="remodel-metric-select" id="remodel-metric-select" onchange="displayConversionParameters(this.value)">
-                        <option value="Gaussian" selected>Gaussian Kernel</option>
-                        <option value="Cosine">Cosine Similarity</option>
-                        <option value="Euclidean">Euclidean Kernel</option>
+                <div class="remodel-div" id="remodel-div">
+                    <h4 id="remodel-algorithm-headline">Algorithm Parameters</h4>
+                    <label for="remodel-algorithm-select">Choose a conversion algorithm:</label>
+                    <select name="remodel-algorithm-select" id="remodel-algorithm-select" onchange="displayAlgorithmParameters(this.id)">
+                        <option value="LRNet" selected>LRNet</option>
+                        <option value="EpsilonKNN">Epsilon and kNN</option>
                     </select>
-                    <div class="remodel-algorithm">
-                        <label for="remodel-algorithm-select">Choose a conversion algorithm:</label>
-                        <select name="remodel-algorithm-select" id="remodel-algorithm-select" onchange="displayConversionParameters(this.value)">
-                            <option value="LRNet" selected>LRNet</option>
-                            <option value="Epsilon">Epsilon and kNN</option>
-                        </select>
 
-                        <h4 id="remodel-parameters-headline">Algorithm Parameters</h4>
-                        <div class="remodel-parameters-div" id="epsilon-parameters">
+                    <div class="algorithm-parameters-container">
+                        <div class="algorithm-parameters" id="epsilon-parameters">
                             <label for="epsilonRadius">Choose a radius</label>
-                            <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1" value="1"/>
+                            <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1" value="1" />
 
                             <label for="kNNmin">Choose a minimal number of neighbours</label>
-                            <input type="number" id="kNNmin" name="kNNmin" min="0" value="1"/>
+                            <input type="number" id="kNNmin" name="kNNmin" min="0" value="1" />
                         </div>
                     </div>
+                            
+                    
+                    <h4 id="remodel-metric-headline">Metric Parameters</h4>
+                    <label for="remodel-metric-select">Choose a conversion metric:</label>
+                    <select name="remodel-metric-select" id="remodel-metric-select" onchange="displayMetricParameters(this.id)">
+                        <option value="GaussKernel" selected>Gaussian Kernel</option>
+                        <option value="CosineSimilarity">Cosine Similarity</option>
+                        <option value="EuclideanKernel">Euclidean Kernel</option>
+                    </select>
+
+                    <div class="metric-parameters-container">
+                        <div class="metric-parameters" id="gauss-parameters">
+                            <label for="sigma">Choose a standard deviation</label>
+                            <input type="number" id="sigma" name="sigma" step="0.001" min="0" value="1" />
+                        </div>
+                    </div>
+
                 </div>
                 <div class="align-right-div">
                     <button type="button" class="settings-submit-btn" onclick="remodelNetwork('remodel-attribute-checkboxes', 'remodel-algorithm-select', 'remodel-metric-select')">Remodel</button>

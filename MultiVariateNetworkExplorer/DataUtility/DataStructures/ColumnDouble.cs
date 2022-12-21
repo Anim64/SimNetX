@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataUtility
 {
-    public class ColumnDouble : IColumn
+    public class ColumnDouble : IColumn, IEnumerable
     {
         public IList Data { get; } = new List<double?>();
         public int DataCount
@@ -60,8 +60,8 @@ namespace DataUtility
             {
                 this.Extremes = FindExtremes();
             }
-
-            double? doubleValue = (double?)value;
+            Type t = Nullable.GetUnderlyingType(typeof(double?));
+            double? doubleValue = value != null ? (double?)Convert.ChangeType(value, t) : null;
             this.Data.Add(doubleValue);
         }
 
@@ -91,7 +91,26 @@ namespace DataUtility
             return new ColumnExtremesStruct(min, max);
         }
 
+        public double Sum()
+        {
+            double result = 0;
 
+            foreach(double? value in this.Data)
+            {
+                if(value != null)
+                {
+                    result += (double)value;
+                }
+            }
+
+            return result;
+        }
+
+        public ColumnString ToColumnString()
+        {
+            ColumnString result = new ColumnString(this);
+            return result;
+        }
     }
 }
 

@@ -9,17 +9,18 @@ namespace DataUtility.DataStructures.VectorDataConversion
     public class EpsilonKNN : IVectorConversion
     {
         public double Radius { get; set; }
-        public int K { get; set; }
+        public double K { get; set; }
 
-        public EpsilonKNN(double radius, int k)
+        public EpsilonKNN(double radius, double k)
         {
             this.Radius = radius;
             this.K = k;
         }
        
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IColumn idColumn)
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric)
         {
-            Network result = new Network(vectorData.DataCount);
+            ColumnString idColumn = vectorData.IdColumn;
+            Network result = new Network(idColumn);
             Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData);
 
 

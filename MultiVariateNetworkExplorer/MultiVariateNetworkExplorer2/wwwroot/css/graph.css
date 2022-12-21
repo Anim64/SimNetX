@@ -1,28 +1,26 @@
-﻿html {
-    --border-color: rgb(89, 118, 135);
-    --active-content: rgb(138, 182, 210);
-    --shadow-color: rgba(0,0,0, 0.20);
-    --parameter-label-bg-color: rgba(70,70,70, 0.7);
-    --parameter-input-and-select-bg-color: rgba(85,85,85, 0.7);
-}
-
-.body-content {
-    padding-left: 5px;
-    padding-right: 5px;
+﻿.main-div {
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    padding-bottom: 0.5rem;
+    padding-top: 1rem;
+    min-height: 90vh;
+    max-height: 90vh;
     margin: 1.3rem auto 0 auto;
     border: none;
     outline: none;
     width: 100%;
-    
 }
-.main-div {
+
+.graph-section {
     display: flex;
     -ms-flex-direction: row;
     -webkit-flex-direction: row;
     flex-direction: row;
     -webkit-justify-content: stretch;
     justify-content: stretch;
-    padding-bottom: 0.5rem;
+    min-height: 90vh;
     max-height: 90vh;
     width: 100%;
 }
@@ -34,6 +32,7 @@
     flex-direction: row;
     -webkit-justify-content: flex-start;
     justify-content: flex-start;
+    
 }
 
 
@@ -44,7 +43,12 @@
 
 .tab-link {
     padding: 1rem 1.5rem;
-    display: block;
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: center;
+    justify-content: center;
     -webkit-border-top-left-radius: 7px;
     border-top-left-radius: 7px;
     -webkit-border-top-right-radius: 7px;
@@ -54,6 +58,8 @@
     border-bottom: 2px solid var(--border-color);
     font-size: 1.7rem;
     color: lavender;
+    height: 100%;
+    line-height: 100%;
 }
 
 .tab-link.tab-active {
@@ -135,11 +141,10 @@
     color: black;
 }
 
-
 .graph-content {
+    display: none;
     height: 100%;
     border-left: 2px solid var(--border-color);
-    display: none;
     position: relative;
 }
 
@@ -149,11 +154,11 @@
 
 #networkGraph {
     height: 100%;
-}
-
-#networkGraph.graph-content{
+    background-color: #1A1A1A;
     display: block;
 }
+
+
 
 .bottom-panel {
     display: flex;
@@ -163,12 +168,6 @@
     -webkit-justify-content: flex-end;
     justify-content: flex-end;
     padding: 1rem;
-}
-
-footer {
-    border: none;
-    outline: none;
-    display: none;
 }
 
 

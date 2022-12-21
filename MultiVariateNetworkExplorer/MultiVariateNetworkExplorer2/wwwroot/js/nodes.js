@@ -50,7 +50,7 @@ const selectNode = function (event, nodeId) {
 
     const nodeHeadingElement = document.getElementById('heading-' + nodeId);
     nodeHeadingElement.classList.add('node-heading-selected');
-    node.classed('selected', function (d) {
+    nodeGroups.classed('selected', function (d) {
         return d.selected = d.selected | d.id == nodeId;
     });
 }

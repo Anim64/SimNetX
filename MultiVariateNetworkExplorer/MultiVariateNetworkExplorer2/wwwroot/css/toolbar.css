@@ -1,0 +1,62 @@
+﻿.toolbar {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+    display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+    border-bottom: 1px solid #eee;
+}
+
+
+
+.toolbar-container {
+    overflow: hidden;
+}
+
+.toolbar-container .toolbar-btn {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    user-select: none;
+}
+
+.toolbar-btn:hover {
+    background-color: #777;
+}
+
+.toolbar-panel {
+    display: none;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    min-width: 25vh;
+    background-color: #404040;
+    -moz-border-radius: 1px;
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+    margin-top: 1px;
+    z-index: 1;
+    -moz-border-radius: 0 0 0.7rem 0.7rem;
+    -webkit-border-radius: 0 0 0.7rem 0.7rem;
+    border-radius: 0 0 0.7rem 0.7rem;
+}
+
+
+.toolbar-panel a {
+    color: white;
+    text-align: left;
+    padding: 0.5rem 1rem;
+}
+
+.toolbar-panel a:hover {
+    text-decoration: none;
+    background-color: #777777;
+}

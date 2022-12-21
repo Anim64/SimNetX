@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="~/css/selections.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/attributes.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/mvn_input.css" type="text/css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/toolbar.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css" />
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
@@ -34,9 +36,11 @@
 @section ScriptsDev {
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
-    <script src="~/js/graph_settings.js" type="text/javascript" asp-append-version="true"></script>
-    <script src="~/js/nodes.js" type="text/javascript" asp-append-version="true"></script>
-    <script src="~/js/selections.js" type="text/javascript" asp-append-version="true"></script>
+    <script src="~/js/graph_settings.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+    <script src="~/js/nodes.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+    <script src="~/js/selections.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+    <script src="~/js/mvn-input.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+    <script src="~/js/toolbar.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="https://d3js.org/d3-color.v1.min.js"></script>
     <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
@@ -54,88 +58,95 @@
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 }
 
-
+<div
 <main class="main-div">
-    @Html.PartialAsync("Controls").Result
-    <section id="graph" class="column graph-col">
-        <div class="navigation">
-            <div class="tab-nav">
-                <a class="tab-link tab-active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graph-content')" id="defaultGraphTab">Network Graph</a>
-            </div>
-            <div class="tab-nav">
-                <a class="tab-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graph-content') ">Selection Graph</a>
-            </div>
-            <div class="tab-nav">
-                <a class="tab-link" href="#" onclick="openTab(event, 'networkMetrics', 'graph', '.graph-content') ">Graph Metrics</a>
-            </div>
-        </div>
-        <div id="networkGraph" class="graph-content">
-            <svg></svg>
-            <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-            @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
-            <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
-            <script>
-                drawNetwork(@Html.Raw(Model.Graph));
-            </script>
-            <div class="node-detail-container" id="node-detail-container">
-                <div class="node-detail-heading-container">
-                    <h4 id="node-detail-heading">Node:</h4>
-                    <button class="close-button" onclick="closeNodeDetails('node-detail-container')">X</button>
+    @Html.PartialAsync("ToolBar").Result
+    <div class="graph-section">
+        @Html.PartialAsync("Controls").Result
+        <section id="graph" class="column graph-col">
+            <div class="navigation">
+                <div class="tab-nav">
+                    <a class="tab-link tab-active" href="#" onclick="openTab(event, 'networkGraph', 'graph', '.graph-content')" id="defaultGraphTab">Network Graph</a>
                 </div>
-                <div id="node-detail" class="node-detail">
-                    <div id="node-attributes">
-                        @foreach (var attribute in Model.Mvn.VectorData.Columns)
-                        {
+                <div class="tab-nav">
+                    <a class="tab-link" href="#" onclick="openTab(event, 'selectionGraph', 'graph', '.graph-content') ">Selection Graph</a>
+                </div>
+                <div class="tab-nav">
+                    <a class="tab-link" href="#" onclick="openTab(event, 'networkMetrics', 'graph', '.graph-content') ">Graph Metrics</a>
+                </div>
+            </div>
+            <div id="networkGraph" class="graph-content">
+                <svg></svg>
+                <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+                @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
+                <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
+                <script>
+                    drawNetwork(@Html.Raw(Model.Graph));
+                </script>
+                <div class="node-detail-container" id="node-detail-container">
+                    <div class="node-detail-heading-container">
+                        <h4 id="node-detail-heading">Node:</h4>
+                        <button class="close-button" onclick="closeNodeDetails('node-detail-container')">X</button>
+                    </div>
+                    <div id="node-detail" class="node-detail">
+                        <div id="node-attributes">
+                            @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                            {
+                                <div class="node-property-group">
+                                    <label for="@("display-" + attribute)">@(attribute + ":")</label>
+                                    <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
+                                </div>
+                            }
+                        </div>
+                        <div id="node-centralities">
                             <div class="node-property-group">
-                                <label for="@("display-" + attribute)">@(attribute + ":")</label>
-                                <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
+                                <label for="display-degree">Degree:</label>
+                                <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
                             </div>
-                        }
-                    </div>
-                    <div id="node-centralities">
-                        <div class="node-property-group">
-                            <label for="display-degree">Degree:</label>
-                            <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
-                        </div>
-                        <div class="node-property-group">
-                            <label for="display-closeness">Closeness:</label>
-                            <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
+                            <div class="node-property-group">
+                                <label for="display-closeness">Closeness:</label>
+                                <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="selectionGraph" class="graph-content">
-            <svg></svg>
-            <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-            <script>
-                drawSelectionNetwork(@Html.Raw(Model.Selection));
-            </script>
-        </div>
-        <div id="networkMetrics" class="graph-content">
-            <div class="network-metrics-container">
-                <div class="network-metric-sync-content" data-value="getNodeCount(graph)">
-                    <h5>Number of Nodes:</h5>
-                    <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
-                </div>
-                <div class="network-metric-sync-content" data-value="getLinkCount(graph)">
-                    <h5>Number of Links:</h5>
-                    <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
-                </div>
-                <div class="network-metric-async-content" data-value="degree">
-                    <h5>Average Degree:</h5>
-                    <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
-                </div>
-                <div class="network-metric-async-content" data-value="closeness">
-                    <h5>Average Closeness:</h5>
-                    <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
+            <div id="selectionGraph" class="graph-content">
+                <svg></svg>
+                <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+                <script>
+                    drawSelectionNetwork(@Html.Raw(Model.Selection));
+                </script>
+            </div>
+            <div id="networkMetrics" class="graph-content">
+                <div class="network-metrics-container">
+                    <div class="network-metric-sync-content" data-value="getNodeCount(graph)">
+                        <h5>Number of Nodes:</h5>
+                        <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
+                    </div>
+                    <div class="network-metric-sync-content" data-value="getLinkCount(graph)">
+                        <h5>Number of Links:</h5>
+                        <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
+                    </div>
+                    <div class="network-metric-async-content" data-value="degree">
+                        <h5>Average Degree:</h5>
+                        <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
+                    </div>
+                    <div class="network-metric-async-content" data-value="closeness">
+                        <h5>Average Closeness:</h5>
+                        <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
+                    </div>
                 </div>
             </div>
-        </div>
         
-    </section>
-    @Html.PartialAsync("Nodes").Result
+        </section>
+        @Html.PartialAsync("Nodes").Result
+    </div>
+    @Html.PartialAsync("MvnInput").Result
 </main>
+
 <footer class="bottom-panel">
+
     <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities" />
+    
 </footer>

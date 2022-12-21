@@ -35,13 +35,18 @@ namespace DataUtility.DataStructures.Metrics
 
                             if (!(pair.Value is ColumnString))
                             {
-                                double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : 0;
-                                double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : 0;
+                                double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : vectorData.Averages[pair.Key];
+                                double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : vectorData.Averages[pair.Key];
                                 euclideanDistance += Math.Pow((vectorValueA - vectorValueB), 2);
                             }
 
                         }
-                        kernelMatrix[i, j] = kernelMatrix[j, i] = (1.0 / (this.Sigma * Math.Sqrt(2 * Math.PI))) * Math.Exp((-euclideanDistance) / (2 * Math.Pow(this.Sigma, 2)));
+                        
+                        double gauss1 = 1.0 / (this.Sigma * Math.Sqrt(2 * Math.PI));
+                        double gauss2 = (-euclideanDistance) / (2 * Math.Pow(this.Sigma, 2));
+                        double gauss3 = Math.Pow(Math.E, (gauss2));
+                        double gauss4 = gauss1 * gauss3;
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = gauss4;
                     }
                 }
             });

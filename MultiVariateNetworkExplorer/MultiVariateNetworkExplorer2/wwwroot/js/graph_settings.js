@@ -184,15 +184,20 @@ const enableNodeLabels = function () {
 
 const setNodeLabel = function (selectElement) {
     const attributeName = selectElement.value;
-    const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup')
+    const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup');
+
+    if (attributeName === "") {
+        nodeText.style("display", "none");
+    }
+
+    nodeText.style("display", "block");
+
+    let getValueFunction = getNodeAttribute;
 
     if (optgroup !== null) {
         const optGroupLabel = optgroup.getAttribute('label');
-        if (optGroupLabel === "Attributes") {
-            getValueFunction = getNodeAttribute;
-        }
 
-        else if (optGroupLabel === "Centralities") {
+        if (optGroupLabel === "Centralities") {
             getValueFunction = getNodeProperty;
         }
     }
@@ -257,8 +262,8 @@ const rgbObjectToString = function (rgbObject) {
     return rgb;
 }
 const pickHex = function(color1, color2, weight) {
-    const w1 = weight;
-    const w2 = 1 - w1; 
+    const w2 = weight;
+    const w1 = 1 - w2; 
     const rgb = {
         r: Math.round(color1.r * w1 + color2.r * w2),
         g: Math.round(color1.g * w1 + color2.g * w2),
@@ -444,27 +449,7 @@ const createDoubleSlider = function(sliderId, minValueId, maxValueId, minValue, 
 
 }
 
-const hideConversionParameters = function () {
-    $(".remodel-parameters-div").css("display", "none");
-}
 
-function displayConversionParameters(conversion_alg) {
-
-    hideConversionParameters();
-    const remodelParametersHeadline = document.getElementById("remodel-parameters-headline");
-
-    if (conversion_alg === "Epsilon") {
-        const epsilonParametersDiv = document.getElementById("epsilon-parameters");
-        epsilonParametersDiv.style.display = "grid";
-        remodelParametersHeadline.style.display = "block";
-    }
-
-    else {
-        remodelParametersHeadline.style.display = "none";
-    }
-
-    remodelParametersHeadline.parentElement.style.height = "auto";
-}
 
 const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId) {
     const attributeCheckboxDiv = document.getElementById(checkboxesDivId);
@@ -479,17 +464,17 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     
     let metricFunction = null;
     switch (selectedMetric) {
-        case 'Gaussian':
+        default:
+        case 'GaussKernel':
             metricFunction = gaussianKernel;
             break;
-        case 'Cosine':
+        case 'CosineSimilarity':
             metricFunction = cosineKernel;
             break;
-        case 'Euclidean':
+        case 'EuclideanKernel':
             metricFunction = euclideanKernel;
-        default:
-            metricFunction = gaussianKernel;
             break;
+            
     }
     let newNet = null;
 
@@ -500,7 +485,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             break;
         
 
-        case 'Epsilon':
+        case 'EpsilonKNN':
             const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
             const k = parseInt(document.getElementById('kNNmin').value);
             newNet = EpsilonAndkNN(graph.nodes, selected_attributes, metricFunction, epsilonRadius, k);
@@ -508,14 +493,25 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     }
 
     graph.links = newNet;
-    store.links = newNet.map(a => { return { ...a } })
+    store.links = newNet.map(a => { return { ...a } });
+
+    linkedByIndex = {};
+    for (let l of graph.links) {
+        const index = l.source + "," + l.target
+        linkedByIndex[index] = 1;
+    }
+
+    
     updateLinks();
+    requestCommunityDetection();
     updateLinkColour(link);
+    calculateAllMetrics();
     resetSimulation();
    
 }
 
-const gaussianKernel = function(nodes, attributes, sigma = 1) {
+const gaussianKernel = function (nodes, attributes) {
+    const sigma = parseInt(document.getElementById('sigma').value);
     const gaussianKernelMat = new Array(nodes.length * nodes.length);
     const nodeCount = nodes.length;
 
@@ -527,6 +523,10 @@ const gaussianKernel = function(nodes, attributes, sigma = 1) {
             }
             else {
                 const distance = euclideanDistance(node, nodes[i], attributes);
+                const gauss1 = 1.0 / (sigma * Math.sqrt(2 * Math.PI));
+                const gauss2 = (-distance) / (2 * Math.pow(sigma, 2));
+                const gauss3 = Math.pow(Math.E, (gauss2));
+                const gauss4 = gauss1 * gauss3;
                 const similarity = (1.0 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp((-distance) / (2 * Math.pow(sigma, 2)));
                 gaussianKernelMat[index * nodeCount + i] = gaussianKernelMat[i * nodeCount + index] = similarity;
             }

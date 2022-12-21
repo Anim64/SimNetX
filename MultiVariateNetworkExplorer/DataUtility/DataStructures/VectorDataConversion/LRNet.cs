@@ -9,9 +9,10 @@ namespace DataUtility.DataStructures.VectorDataConversion
     public class LRNet : IVectorConversion
     {
         
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IColumn idColumn)
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric)
         {
-            Network resultNet = new Network(vectorData.DataCount);
+            ColumnString idColumn = vectorData.IdColumn;
+            Network resultNet = new Network(idColumn);
             Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData);
             Dictionary<int, int> degrees = new Dictionary<int, int>();
             Dictionary<int, int> significances = new Dictionary<int, int>();
@@ -41,13 +42,18 @@ namespace DataUtility.DataStructures.VectorDataConversion
 
                         degrees[i]++;
 
+                        if (kernelMatrix[i, j] > maxSimilarity)
+                        {
+                            maxSimilarity = kernelMatrix[i, j];
+                            nearestNeighbour = j;
+                        }
                     }
 
-                    if (kernelMatrix[i, j] > maxSimilarity)
-                    {
-                        maxSimilarity = kernelMatrix[i, j];
-                        nearestNeighbour = j;
-                    }
+                    //if (kernelMatrix[i, j] > maxSimilarity)
+                    //{
+                    //    maxSimilarity = kernelMatrix[i, j];
+                    //    nearestNeighbour = j;
+                    //}
                 }
 
                 if (!significances.ContainsKey(nearestNeighbour))
@@ -62,15 +68,17 @@ namespace DataUtility.DataStructures.VectorDataConversion
 
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
-                if (significances[i] > 0)
-                {
-                    representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
-                }
+                //if (significances[i] > 0)
+                //{
+                //    representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
+                //}
 
-                else
-                {
-                    representativeness[i] = 0;
-                }
+                //else
+                //{
+                //    representativeness[i] = 0;
+                //}
+
+                representativeness[i] = significances[i] > 0 ? 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i]))) : 0;
 
                 int k = ((int)Math.Round(representativeness[i] * degrees[i]));
 
@@ -78,28 +86,19 @@ namespace DataUtility.DataStructures.VectorDataConversion
                 List<int> potentialNeighbours = Enumerable.Range(0, vectorData.DataCount).ToList();
                 potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
 
-                if (k > 0)
+                int finalNumberOfNeighbors = k > 0 ? k + 1 : 2;
+                
+                for (int n = 0; n < finalNumberOfNeighbors; n++)
                 {
-                    for (int n = 0; n < k + 1; n++)
+                    if (i != potentialNeighbours[n])
                     {
-                        if (i != potentialNeighbours[n])
-                        {
-                            resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                        resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
 
-                        }
                     }
                 }
+                
 
-                else
-                {
-                    for (int n = 0; n < 2; n++)
-                    {
-                        if (i != potentialNeighbours[n])
-                        {
-                            resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
-                        }
-                    }
-                }
+               
             };
             return resultNet;
         }

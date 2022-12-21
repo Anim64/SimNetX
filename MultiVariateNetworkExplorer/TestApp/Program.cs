@@ -1,5 +1,7 @@
 ﻿using DataUtility;
+using DataUtility.DataStructures.Metrics;
 using DataUtility.DataStructures.VectorDataConversion;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,11 +16,15 @@ namespace TestApp
             //DataFrame v = new DataFrame();
             //v.ReadFromFile("iris.data", ',');
 
-
-            MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "ecoli.data" }, null, null, null, new LRNet(), false, false, true, ' ');
+            object value = 0;
+            Type t = Nullable.GetUnderlyingType(typeof(double?));
+            double? doubleValue = (double?)Convert.ChangeType(value, t);
+            
+            int i = 0;
+            //MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "./orto.csv" }, "na", "Number", null, new LRNet(), new GaussKernel(), false, false, true, ';');
             //mvn.FindCommunities();
-            var ext = ((ColumnDouble)mvn.VectorData["aac"]).Extremes;
 
+            //mvn.Network.ToFile("orto-network.csv");
             /*Network g = new Network();
             //test network
             int edgecounter = 0;

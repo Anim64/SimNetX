@@ -42,38 +42,85 @@ const selectFocusOut = function(select_element) {
     select_element.style.textAlign = "center";
 }
 
-
-const hideConversionParameters = function() {
-    const conversion_parameters_divs = document.getElementsByClassName("conversion-parameters-div");
-    for (const conversion_parameters_div of conversion_parameters_divs) {
-        conversion_parameters_div.style.display = "none";
-    }
-}
-
-const recalculateCollapsibleContentHeight = function(collapsible_content_id) {
+const recalculateCollapsibleContentHeight = function (collapsible_content_id) {
     const content = document.getElementById(collapsible_content_id);
     content.style.height = "auto";
 }
 
-const displayConversionParameters = function(conversion_alg) {
-    
-    hideConversionParameters();
-    const conversion_parameters_headline = document.getElementById("conversion-parameters-headline");
+const hideConversionParameters = function (parameter_div_class) {
+    const parameters_divs = document.getElementsByClassName(parameter_div_class);
+    for (const parameters_div of parameters_divs) {
+        parameters_div.style.display = "none";
 
-    if (conversion_alg === "1") {
-        const epsilon_parameters_div = document.getElementById("epsilon-parameters");
-        epsilon_parameters_div.style.display = "grid";
-        conversion_parameters_headline.style.display = "block";
+        const inputs = parameters_div.querySelectorAll("input");
+        for (const input of inputs) {
+            input.disabled = true;
+        }
     }
+}
 
-    else {
-        conversion_parameters_headline.style.display = "none";
+const displayParametersElements = function (parameter_div_id, parameter_div_headline) {
+    const parameters_div = document.getElementById(parameter_div_id);
+    const algorithm_parameters_headline = document.getElementById(parameter_div_headline);
+
+    algorithm_parameters_headline.style.display = "block";
+    parameters_div.style.display = "grid";
+
+    const inputs = parameters_div.querySelectorAll("input");
+    for (const input of inputs) {
+        input.disabled = false;
+    }
+}
+
+const displayMetricParameters = function (metricSelectId) {
+
+    const metric_select_value = document.getElementById("metric").value;
+
+    switch (metric_select_value) {
+        
+        case "GaussKernel": {
+                hideConversionParameters("metric-parameters");
+                displayParametersElements("gauss-parameters", "metric-parameters-headline");
+                break;
+        }
+        default: {
+            hideConversionParameters("metric-parameters");
+            break;
+        }
+        
+            
     }
 
     recalculateCollapsibleContentHeight("conversion-collapsible-content");
 }
 
+const displayAlgorithmParameters = function () {
+    const algorithm_select_value = document.getElementById("convert").value;
+
+    switch (algorithm_select_value) {
+        
+        case "EpsilonKNN": {
+                hideConversionParameters("algorithm-parameters");
+                displayParametersElements("epsilon-parameters", "algorithm-parameters-headline");
+                break;
+        }
+
+        default: {
+            hideConversionParameters("algorithm-parameters");
+            break;
+        }
+        
+
+    }
+
+    recalculateCollapsibleContentHeight("conversion-collapsible-content");
+}
+
+
+
 window.addEventListener('load', function () {
     addFileButtonsEventListeners();
     addCollapsibleEventListeners();
+    displayMetricParameters();
+    displayAlgorithmParameters();
 })

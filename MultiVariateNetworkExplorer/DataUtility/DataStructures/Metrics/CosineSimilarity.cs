@@ -41,8 +41,8 @@ namespace DataUtility.DataStructures.Metrics
 
                         if (!(pair.Value is ColumnString))
                         {
-                            double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : 0;
-                            double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : 0;
+                            double vectorValueA = pair.Value.Data[i] != null ? Convert.ToDouble(pair.Value.Data[i]) : vectorData.Averages[pair.Key];
+                            double vectorValueB = pair.Value.Data[j] != null ? Convert.ToDouble(pair.Value.Data[j]) : vectorData.Averages[pair.Key];
 
                             if (isVectorMagnitudeANotCalc)
                             {

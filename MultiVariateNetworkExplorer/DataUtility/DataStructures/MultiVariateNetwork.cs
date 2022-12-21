@@ -1,4 +1,5 @@
-﻿using DataUtility.DataStructures.Metrics;
+﻿using DataUtility.DataStructures;
+using DataUtility.DataStructures.Metrics;
 using DataUtility.DataStructures.VectorDataConversion;
 using Newtonsoft.Json.Linq;
 using System;
@@ -13,6 +14,19 @@ namespace DataUtility
 {
     public class MultiVariateNetwork
     {
+
+        private static readonly string jsonNodesName = "nodes";
+        private static readonly string jsonLinksName = "links";
+        private static readonly string jsonPartitionsName = "partitions";
+        private static readonly string jsonRealClassesName = "classes";
+        private static readonly string jsonAttributesName = "attributes";
+        private static readonly string jsonIdColumnName = "id";
+
+        private static readonly string jsonLinkSourceName = "source";
+        private static readonly string jsonLinkTargetName = "target";
+        private static readonly string jsonLinkValueName = "value";
+        private static readonly string jsonLinkIdName = "id";
+
         public DataFrame VectorData { get; set; }
         public Network Network { get; set; }
 
@@ -22,71 +36,66 @@ namespace DataUtility
 
         public bool Directed { get; set; }
 
-        public ColumnString IdColumn { get; set; }
+
+        
 
 
         public MultiVariateNetwork()
         {
-            VectorData = new DataFrame();
-            Network = new Network(0);
-            Partition = null;
-            RealClasses = new Dictionary<string, string>();
+            this.VectorData = new DataFrame();
+            this.Network = new Network(0);
+            this.Partition = null;
+            this.RealClasses = new Dictionary<string, string>();
+            
+            this.Directed = false;
+        }
+
+        public MultiVariateNetwork(DataFrame nodeFrame, Network network, Dictionary<string, string> partitions, 
+            Dictionary<string, string> realClasses)
+        {
+            this.VectorData = nodeFrame;
+            this.Network = network;
+            this.Partition = partitions;
+            this.RealClasses = realClasses;
+            this.Directed = false;
+
         }
 
         public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, IMetric chosenMetric,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
-            VectorData = new DataFrame(paths.ElementAt(0), missingvalues, header, separator);
-            Directed = directed;
-            Partition = null;
-            IdColumn = null;
-            RealClasses = null;
+            this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, header, separator);
+            ColumnString dataFrameIdColumn = this.VectorData.IdColumn;
 
-            if (!String.IsNullOrEmpty(idColumn))
-            {
+            this.Directed = directed;
+            this.Partition = null;
+            this.RealClasses = null;
 
-                bool isParsable = int.TryParse(idColumn, out int result);
-                IdColumn = isParsable ? (ColumnString)this.VectorData["Attribute" + idColumn] : (ColumnString)this.VectorData[idColumn];
-                this.VectorData.RemoveColumn(isParsable ? "Attribute" + idColumn : idColumn);
-
-            }
-
-            else
-            {
-                IdColumn = new ColumnString(Enumerable.Range(0, this.VectorData.DataCount).Select(id => id.ToString()).ToList());
-            }
+            
             
             if (!String.IsNullOrEmpty(groupColumn))
             {
+                groupColumn = Utils.RemoveDiacritics(groupColumn);
                 Dictionary<string, string> groups = new Dictionary<string, string>();
                 bool isParsable = int.TryParse(groupColumn, out int result);
                 var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
                 this.VectorData.RemoveColumn(isParsable ? "Attribute" + groupColumn : groupColumn);
-                RealClasses = new Dictionary<string, string>();
+                this.RealClasses = new Dictionary<string, string>();
 
                 for (int i = 0; i < columnList.DataCount; i++)
                 {
-                    groups[IdColumn[i].ToString()] = columnList[i].ToString();
-                    RealClasses[IdColumn[i].ToString()] = columnList[i].ToString();
+                    groups[dataFrameIdColumn[i].ToString()] = columnList[i].ToString();
+                    RealClasses[dataFrameIdColumn[i].ToString()] = columnList[i].ToString();
                 }
 
                 this.Partition = groups;
             }
 
-            VectorData.FindAttributeExtremesAndValues();
+            this.VectorData.FindAttributeExtremesAndValues();
+            this.Network = paths.Count() > 1 ? 
+                Network.ReadFromFile(paths.ElementAt(1), header, directed, separator) :
+                convertAlg.ConvertToNetwork(this.VectorData, chosenMetric); ;
 
-
-            if (paths.Count() > 1)
-            {
-                this.Network = Network.ReadFromFile(paths.ElementAt(1), header, directed, separator);
-            }
-            else
-            {
-
-                this.Network = convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, IdColumn);
-                
-            }
-
-            if(grouping && Partition == null)
+            if(grouping && this.Partition == null)
             {
                 this.FindCommunities();
                 //PartitionsToFile();
@@ -100,6 +109,7 @@ namespace DataUtility
            
             
         }
+
         public void FindCommunities()
         {
             Dictionary<string, string> partition = Community.BestPartition(this.Network);
@@ -112,75 +122,88 @@ namespace DataUtility
             this.Partition = partition;
         }
 
-        public string ToD3Json()
+        public static MultiVariateNetwork FromD3Json(JObject d3JsonRoot, bool loadNetwork = false)
+        {
+            JArray jNodes = (JArray)d3JsonRoot[jsonNodesName];
+            JArray jLinks = (JArray)d3JsonRoot[jsonLinksName];
+
+            JObject jAttributes = (JObject)d3JsonRoot[jsonAttributesName];
+
+            DataFrame nodesFrame = DataFrame.FromD3Json(jNodes, jAttributes);
+            
+            Network network = loadNetwork ? Network.FromD3Json(jLinks) : null;
+
+            JObject jPartition = (JObject)d3JsonRoot[jsonPartitionsName];
+            JObject jRealClasses = (JObject)d3JsonRoot[jsonRealClassesName];
+
+            Dictionary<string, string> partitions = jPartition.ToObject<Dictionary<string, string>>();
+            Dictionary<string, string> realClasses = jRealClasses.ToObject<Dictionary<string, string>>();
+
+            MultiVariateNetwork mvn = new MultiVariateNetwork(nodesFrame, network, partitions, realClasses);
+
+
+            return mvn;
+        }
+
+        public JObject ToD3Json()
         {
             int edgeId = -1;
-            
+
             JObject root = new JObject();
 
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
-            JArray jAttributes = new JArray(this.VectorData.Columns);
+
+            JObject jAttributes = new JObject();
+            jAttributes[jsonIdColumnName] = this.VectorData.IdColumnName;
+            foreach(var column in this.VectorData)
+            {
+                jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
+            }
             JObject jPartition = new JObject();
             JObject jRealClasses = new JObject();
 
-            for(int i = 0; i < this.IdColumn.DataCount; i++)
+            int dataCount = this.VectorData.DataCount;
+
+            for (int i = 0; i < dataCount; i++)
             {
                 JObject jNode = new JObject();
-                var source = IdColumn[i].ToString();
+                var source = this.VectorData.IdColumn[i].ToString();
                 var links = this.Network[source];
-                jNode["id"] = source;
-                foreach(string column in VectorData.Columns)
+                jNode[jsonIdColumnName] = source;
+                foreach (string column in this.VectorData.Columns)
                 {
-                    jNode[column] = VectorData[column, i] != null ? JToken.FromObject(VectorData[column, i]) : "";
-                }
-                if(Partition != null)
-                {
-                    //jNode["group"] = Partition[node.Key];
-                    jPartition[source] = Partition[source];
-                }
-                else
-                {
-                    jPartition[source] = "";
+                    jNode[column] = this.VectorData[column, i] != null ? JToken.FromObject(this.VectorData[column, i]) : JValue.CreateNull();
                 }
 
-                if(RealClasses != null)
-                {
-                    jRealClasses[source] = RealClasses[source];
-                }
-
-                else
-                {
-                    jRealClasses[source] = "";
-                }
-                //jNode["neighbours"] = JArray.FromObject(Network[node.Key].Keys);
+                jPartition[source] = this.Partition != null ? this.Partition[source] : string.Empty;
+                jRealClasses[source] = this.RealClasses != null ? this.RealClasses[source] : string.Empty;
                 jNodes.Add(jNode);
-                
 
-                foreach(var target in this.Network[source].Where(kv => String.Compare(source, kv.Key) < 0))
+
+                foreach (var target in this.Network[source].Where(kv => string.Compare(source, kv.Key) < 0))
                 {
-                    
-                    JObject newLink = new JObject();
-                    newLink["source"] = source;
-                    newLink["target"] = target.Key;
-                    newLink["value"] = target.Value;
-                    newLink["id"] = ++edgeId;
+
+                    JObject newLink = new JObject
+                    {
+                        [jsonLinkSourceName] = source,
+                        [jsonLinkTargetName] = target.Key,
+                        [jsonLinkValueName] = target.Value,
+                        [jsonLinkIdName] = ++edgeId
+                    };
                     jLinks.Add(newLink);
-                    
-                    
+
+
                 }
             }
 
-            var count = this.Network.NumberOfEdges;
-            root["nodes"] = jNodes;
-            root["links"] = jLinks;
-            root["partitions"] = jPartition;
-            root["classes"] = jRealClasses;
-            root["attributes"] = jAttributes;
+            root[jsonNodesName] = jNodes;
+            root[jsonLinksName] = jLinks;
+            root[jsonPartitionsName] = jPartition;
+            root[jsonRealClassesName] = jRealClasses;
+            root[jsonAttributesName] = jAttributes;
 
-            
-            string json = root.ToString();
-            return json;
+            return root;
         }
 
         public string EmptyD3Json()

@@ -5,8 +5,14 @@ using System.Text;
 
 namespace DataUtility
 {
-    public interface IColumn : IEnumerable
+    public interface IColumn
     {
+        public enum ColumnTypes
+        {
+            Double,
+            String
+        }
+
         IList Data { get; }
         int DataCount { get; }
 
@@ -17,6 +23,7 @@ namespace DataUtility
         
 
         void AddData(object value, bool updateExtremes = false);
+        ColumnString ToColumnString();
 
 
 
