@@ -274,6 +274,62 @@ namespace DataUtility
 
         }
 
+        public void Normalize(IEnumerable<string> columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
+                        double range = columnExtremes.Max - columnExtremes.Min;
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? value = (double?)columnValues[i];
+                            if (value != null)
+                            {
+                                columnValues[i] = (value - columnExtremes.Min) / range;
+                            }
+
+                        }
+                    }
+
+
+                }
+            }
+
+        }
+
+        public void Normalize(params string[] columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
+                        double range = columnExtremes.Max - columnExtremes.Min;
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? value = (double?)columnValues[i];
+                            if (value != null)
+                            {
+                                columnValues[i] = (value - columnExtremes.Min) / range;
+                            }
+
+                        }
+                    }
+
+
+                }
+            }
+
+        }
+
 
         /// <summary>
         /// Creates attribute headers

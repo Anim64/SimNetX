@@ -13,17 +13,31 @@ namespace DataUtility
             String
         }
 
-        IList Data { get; }
-        int DataCount { get; }
-
-        object this[int index]
+        public IList Data { get; }
+        public int DataCount 
         {
-            get;
+            get 
+            { 
+                return this.Data.Count; 
+            } 
+        }
+
+        public object this[int index]
+        {
+            get
+            {
+                return this.Data[index];
+            }
+
+            set 
+            { 
+                this.Data[index] = value; 
+            }
         }
         
 
-        void AddData(object value, bool updateExtremes = false);
-        ColumnString ToColumnString();
+        public abstract void AddData(object value);
+        public abstract ColumnString ToColumnString();
 
 
 

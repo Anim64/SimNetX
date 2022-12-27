@@ -450,6 +450,17 @@ const createDoubleSlider = function(sliderId, minValueId, maxValueId, minValue, 
 }
 
 
+const closeAllRemodelPanels = function () {
+    $('.remodel-attribute-panel.active-flex').removeClass('active-flex');
+}
+
+const expandRemodelPanel = function (e, remodelPanelId) {
+    e.stopPropagation();
+    closeAllToolbarPanels();
+    closeAllRemodelPanels();
+    $('#' + remodelPanelId).toggleClass('active-flex');
+}
+
 
 const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId) {
     const attributeCheckboxDiv = document.getElementById(checkboxesDivId);
@@ -457,10 +468,24 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const selectedMetric = document.getElementById(metricSelectId).value;
 
 
-    const checkboxes = $(attributeCheckboxDiv).find("input:checkbox:not(:checked)");
-    const excludedAttributes = $.makeArray(checkboxes.map((index, checkbox) => {
+    const remodelingCheckboxes = $(attributeCheckboxDiv).find("input[type='checkbox'][data-role='remodeling']:not(:checked)");
+    const excludedAttributes = $.makeArray(remodelingCheckboxes.map((index, checkbox) => {
         return checkbox.value;
     }));
+
+
+    const attributeTransform = {
+        "normalize": [],
+        "standardize": [],
+        "distribution": []
+    }
+
+    const normalizationCheckboxes = $(attributeCheckboxDiv).find("input[type='checkbox'][data-role='normalization']:checked");
+    for (const normalizeCheckbox of normalizationCheckboxes) {
+        attributeTransform.normalize.push(normalizeCheckbox.value);
+    }
+
+
 
     const networkRemodelParams =
     {
@@ -501,6 +526,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const nodes_string = JSON.stringify(graph.nodes);
     const attributes_string = JSON.stringify(graph.attributes);
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
+    const attribute_transform_string = JSON.stringify(attributeTransform);
     const network_remodel_params_string = JSON.stringify(networkRemodelParams);
     
     $.ajax({
@@ -515,7 +541,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             nodes: nodes_string,
             attributes: attributes_string,
             excludedAttributes: excluded_attributes_string,
-            attributeTransform: "",
+            attributeTransform: attribute_transform_string,
             networkRemodelParams: network_remodel_params_string
         },
         //cache: false,

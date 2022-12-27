@@ -25,6 +25,11 @@ namespace DataUtility
             {
                 return this.Data[index];
             }
+
+            set
+            {
+                this.Data[index] = value;
+            }
         }
 
         public ColumnString() { }
@@ -42,7 +47,7 @@ namespace DataUtility
                 this.Data.Add(data.ToString());
             }
         }
-        public void AddData(object value, bool updateExtremes = false)
+        public void AddData(object value)
         {
             string stringValue = value.ToString();
             if(!(value is string))

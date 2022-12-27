@@ -8,6 +8,7 @@ namespace DataUtility
     public class ColumnDouble : IColumn, IEnumerable
     {
         public IList Data { get; } = new List<double?>();
+
         public int DataCount
         {
             get
@@ -16,25 +17,19 @@ namespace DataUtility
             }
         }
 
-        private ColumnExtremesStruct extremes = null;
-        public ColumnExtremesStruct Extremes 
+        public object this[int index]
         {
             get
             {
-                if(this.extremes == null)
-                {
-                    this.extremes = FindExtremes();
-                }
-
-                return this.extremes;
-
-
+                return this.Data[index];
             }
-            private set
+
+            set
             {
-                this.extremes = value;
+                this.Data[index] = value;
             }
         }
+        
 
 
         public ColumnDouble()
@@ -46,20 +41,8 @@ namespace DataUtility
             this.Data = data;
         }
 
-        public object this[int index]
+        public void AddData(object value)
         {
-            get
-            {
-                return this.Data[index];
-            }
-        }
-
-        public void AddData(object value, bool updateExtremes = false)
-        {
-            if(updateExtremes)
-            {
-                this.Extremes = FindExtremes();
-            }
             Type t = Nullable.GetUnderlyingType(typeof(double?));
             double? doubleValue = value != null ? (double?)Convert.ChangeType(value, t) : null;
             this.Data.Add(doubleValue);
@@ -70,7 +53,7 @@ namespace DataUtility
             return this.Data.GetEnumerator();
         }
 
-        private ColumnExtremesStruct FindExtremes()
+        public  ColumnExtremesStruct FindExtremes()
         {
             double min = double.MaxValue;
             double max = double.MinValue;

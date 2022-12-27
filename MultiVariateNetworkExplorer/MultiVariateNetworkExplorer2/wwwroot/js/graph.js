@@ -1146,6 +1146,7 @@ $(document).ready(function () {
         });
 
     document.addEventListener('click', closeAllToolbarPanels);
+    document.addEventListener('click', closeAllRemodelPanels);
 
     prepareInputForm();
     

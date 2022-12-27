@@ -5,5 +5,6 @@
 const toggleToolPanel = function (e, toolPanelId) {
     e.stopPropagation();
     closeAllToolbarPanels();
+    closeAllRemodelPanels();
     $('#' + toolPanelId).toggleClass('active-flex');
 }

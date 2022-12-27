@@ -3,6 +3,7 @@
     font-size: 90%;
     color: black;
     display: none;
+   
 }
 
 .controls .force {
@@ -10,6 +11,7 @@
     border-radius: 3px;
     padding: 5px;
     margin: 5px 0;
+    
 }
 
 .controls .force p label {
@@ -138,31 +140,55 @@
     background-color: #222
 }
 
-#remodel-attribute-checkboxes {
+#remodel-attributes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 2rem;
     margin: 1rem;
 }
 
-
-#remodel-attribute-checkboxes div {
+.remodel-attribute-group {
     display: flex;
     -ms-flex-direction: row;
     -webkit-flex-direction: row;
     flex-direction: row;
     -webkit-justify-content: space-between;
     justify-content: space-between;
-    -webkit-align-items: center;
+    -ms-flex-wrap: nowrap;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
     align-items: center;
     flex-shrink: 1;
     margin-bottom: 1rem;
+    position: relative;
+    
 }
 
-#remodel-attribute-checkboxes div label {
+.remodel-attribute-group label {
     overflow-wrap: anywhere;
     margin-bottom: 0;
     margin-right: 0.5rem;
+}
+
+.remodel-attribute-group button{
+    width: 20px;
+}
+
+.remodel-attribute-panel {
+    display: none;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
+    min-width: 25vh;
+    min-height: 200px;
+    background-color: #404040;
+    z-index: 9;
+    top: 0px;
+    left: 130px;
 }
 
 .remodel-div {

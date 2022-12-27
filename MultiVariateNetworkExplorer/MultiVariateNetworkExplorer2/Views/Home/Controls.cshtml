@@ -18,13 +18,13 @@
                 <div class="numeric">
                     <h4>@sliderId</h4>
                     <div id="@(sliderId + "-slider")"></div>
-                    <script>createDoubleSlider('@(sliderId + "-slider")', '@(sliderId + "-sliderOutputMin")', '@(sliderId + "-sliderOutputMax")', @pair.Value.MinAttrValue, @pair.Value.MaxAttrValue)</script>
+                    <script>createDoubleSlider('@(sliderId + "-slider")', '@(sliderId + "-sliderOutputMin")', '@(sliderId + "-sliderOutputMax")', @pair.Value.Min, @pair.Value.Max)</script>
                     <div class="row">
                         <div class="col-md-4">
-                            <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MinAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
+                            <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Min" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
                         </div>
                         <div class="col-md-4 col-md-offset-4">
-                            <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.MinAttrValue" max="@pair.Value.MaxAttrValue" value="@pair.Value.MaxAttrValue" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
+                            <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Max" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
                         </div>
                     </div>
                 </div>
@@ -242,12 +242,19 @@
             </div>
             <div class="force">
                 <p><label>Remodel the network</label> With option to exclude some attributes</p>
-                <div class="checkboxes" id="remodel-attribute-checkboxes">
+                <div class="checkboxes" id="remodel-attributes">
                     @foreach (var column in Model.Mvn.VectorData.Columns)
                     {   
-                        <div>
-                            <label for="@(column + "-remodel-checkbox")">@(column)</label>
-                            <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" checked />
+                        <div class="remodel-attribute-group">
+                            <label for="@(column + "-remodel-expand-button")">@(column)</label>
+                            <button id="@(column + "-remodel-expand-button")" onclick="expandRemodelPanel(event,'@(column + "-remodel-panel")')"><i class='fas fa-chevron-right'></i></button>
+                            <div class="remodel-attribute-panel" id="@(column + "-remodel-panel")">
+                                <label for="@(column + "-remodel-checkbox")">Use for remodeling?</label>
+                                <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="remodeling" checked />
+
+                                <label for="@(column + "-normalize-checkbox")">Normalize?</label>
+                                <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="normalization"/>
+                            </div>
                         </div>
                     }
                 </div>
@@ -287,7 +294,7 @@
 
                 </div>
                 <div class="align-right-div">
-                    <button type="button" class="settings-submit-btn" onclick="remodelNetwork('remodel-attribute-checkboxes', 'remodel-algorithm-select', 'remodel-metric-select')">Remodel</button>
+                    <button type="button" class="settings-submit-btn" onclick="remodelNetwork('remodel-attributes', 'remodel-algorithm-select', 'remodel-metric-select')">Remodel</button>
                 </div>
             </div>
         </div>

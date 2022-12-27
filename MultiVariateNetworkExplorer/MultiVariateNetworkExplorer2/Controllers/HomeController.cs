@@ -183,12 +183,15 @@ namespace MultiVariateNetworkExplorer.Controllers
             JArray jNodes = JArray.Parse(nodes);
             JObject jAttributes = JObject.Parse(attributes);
             JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
-            //JObject jAttributeTransform = JObject.Parse(attributeTransform);
+            JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
 
 
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
+
+            List<string> normalizeAttributes = jAttributeTransform["normalize"].ToObject<List<string>>();
+            nodeAttributes.Normalize(normalizeAttributes);
 
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());

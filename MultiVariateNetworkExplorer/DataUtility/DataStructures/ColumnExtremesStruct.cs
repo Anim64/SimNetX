@@ -6,13 +6,13 @@ namespace DataUtility
 {
     public class ColumnExtremesStruct
     {
-        public double MinAttrValue { get; set; }
-        public double MaxAttrValue { get; set; }
+        public double Min { get; set; }
+        public double Max { get; set; }
 
         public ColumnExtremesStruct(double min, double max)
         {
-            this.MinAttrValue = min;
-            this.MaxAttrValue = max;
+            this.Min = min;
+            this.Max = max;
         }
     }
 }
