@@ -277,7 +277,7 @@ const deleteAllSelections = function () {
         
     })*/
     //const lightness = fontLightness(defaultColour);
-    if (!forceProperties.colouring.enabled) {
+    if (!forceProperties.atttributeColouring.enabled) {
         updateNodeAndLinkColour(node, link);
     }
 
@@ -318,7 +318,7 @@ const deleteSelection = function (event, selectionId) {
     const lightness = fontLightness(defaultColour);
     const nodesFromDeletedPartition = node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
 
-    if (!forceProperties.colouring.enabled) {
+    if (!forceProperties.atttributeColouring.enabled) {
         nodesFromDeletedPartition.style("fill", function (d) {
             link.filter(function (l) { return l.source.id === d.id; })
                 .style("stroke", defaultColour);
@@ -396,7 +396,7 @@ const requestCommunityDetection = function () {
                 addSelectionDiv(d);
             });
 
-            if (!forceProperties.colouring.enabled) {
+            if (!forceProperties.atttributeColouring.enabled) {
                 updateNodeAndLinkColour(node, link);
             }
 

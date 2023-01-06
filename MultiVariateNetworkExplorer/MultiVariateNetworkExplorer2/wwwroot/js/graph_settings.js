@@ -214,6 +214,7 @@ const setAttributeNodeSizing = function (selectElement) {
 
     if (attributeName !== "") {
         forceProperties.sizing.enabled = true;
+        forceProperties.sizing.attribute = attributeName;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -282,7 +283,8 @@ const setAttributeNodeColouring = function (selectElement) {
     const attributeName = selectElement.value;
 
     if (attributeName !== "") {
-        forceProperties.colouring.enabled = true;
+        forceProperties.attributeColouring.enabled = true;
+        forceProperties.attributeColouring.attribute = attributeName;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -317,7 +319,7 @@ const setAttributeNodeColouring = function (selectElement) {
         return;
     }
 
-    forceProperties.colouring.enabled = false;
+    forceProperties.atttributeColouring.enabled = false;
     updateNodeAndLinkColour(node, link);
 }
 
@@ -332,6 +334,8 @@ const projectAttributeXAxis = function(selectElement) {
     if (attributeName !== "") {
 
         forceProperties.forceX.enabled = true;
+        forceProperties.forceX.attribute = attributeName;
+        
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -364,6 +368,7 @@ const projectAttributeXAxis = function(selectElement) {
         updateForces();
         return;
     }
+    forceProperties.forceX.enabled = false;
 
     simulation.force(forceName)
         .x(width * x);
@@ -384,8 +389,8 @@ function projectAttributeYAxis(selectElement) {
         .strength(strength * enabled);
 
     if (attributeName !== "") {
-
         forceProperties.forceY.enabled = true;
+        forceProperties.forceY.attribute = attributeName;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -417,6 +422,8 @@ function projectAttributeYAxis(selectElement) {
         updateForces();
         return;
     }
+
+    forceProperties.forceY.enabled = false;
 
     simulation.force(forceName)
         .y(height * y);
@@ -461,6 +468,17 @@ const expandRemodelPanel = function (e, remodelPanelId) {
     $('#' + remodelPanelId).toggleClass('active-flex');
 }
 
+const fillAttributeTransform = function (attributeCheckboxDiv, dataRole) {
+    const result = [];
+    const searchString = "input[type='checkbox'][data-role='" + dataRole + "']:checked";
+    const transformCheckboxes = $(attributeCheckboxDiv).find(searchString);
+    for (const transformCheckbox of transformCheckboxes) {
+        result.push(transformCheckbox.value);
+    }
+
+    return result;
+}
+
 
 const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId) {
     const attributeCheckboxDiv = document.getElementById(checkboxesDivId);
@@ -480,13 +498,10 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         "distribution": []
     }
 
-    const normalizationCheckboxes = $(attributeCheckboxDiv).find("input[type='checkbox'][data-role='normalization']:checked");
-    for (const normalizeCheckbox of normalizationCheckboxes) {
-        attributeTransform.normalize.push(normalizeCheckbox.value);
-    }
-
-
-
+    attributeTransform.normalize = fillAttributeTransform(attributeCheckboxDiv, 'normalization');
+    attributeTransform.standardize = fillAttributeTransform(attributeCheckboxDiv, 'standardization');
+    attributeTransform.distribution = fillAttributeTransform(attributeCheckboxDiv, 'distribution');
+    
     const networkRemodelParams =
     {
         "metric": {

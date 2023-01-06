@@ -9,7 +9,7 @@ namespace DataUtility
 {
     public class ColumnString : IColumn, IEnumerable
     {
-        public IList Data { get; } = new List<string>();
+        public IList Data { get; private set; } = new List<string>();
 
         public int DataCount
         {

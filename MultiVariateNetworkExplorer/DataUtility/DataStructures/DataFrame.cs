@@ -226,8 +226,7 @@ namespace DataUtility
                 IColumn columnValueList = this[column];
                 if(columnValueList is ColumnDouble)
                 {
-                    double average = ((ColumnDouble)columnValueList).Sum() / this.DataCount;
-                    result[column] = average;
+                    result[column] = ((ColumnDouble)columnValueList).Average();
                 }
             }
 
@@ -272,6 +271,91 @@ namespace DataUtility
                 }
             }
 
+        }
+
+        public void LogNormalToNormalDist(IEnumerable<string> columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        columnValues.Log();
+
+                    }
+                }
+            }
+        }
+
+        public void LogNormalToNormalDist(params string[] columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        columnValues.Map(Math.Log);
+
+                    }
+                }
+            }
+        }
+
+        public void Standardize(IEnumerable<string> columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        double average = columnValues.Average();
+                        double stdDev = columnValues.StandardDeviation(average);
+
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? columnValue = (double?)columnValues[i];
+                            columnValues[i] = columnValue != null ? (columnValue - average) / stdDev : null;
+                        }
+
+                        average = columnValues.Average();
+                        int j = 0;
+                        
+                    }
+
+
+                }
+            }
+        }
+
+        public void Standardize(params string[] columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        double average = columnValues.Average();
+                        double stdDev = columnValues.StandardDeviation(average);
+
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? columnValue = (double?)columnValues[i];
+                            columnValues[i] = columnValue != null ? columnValue - average / stdDev : null;
+                        }
+
+                    }
+
+
+                }
+            }
         }
 
         public void Normalize(IEnumerable<string> columns)

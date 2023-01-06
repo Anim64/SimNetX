@@ -192,6 +192,10 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             List<string> normalizeAttributes = jAttributeTransform["normalize"].ToObject<List<string>>();
             nodeAttributes.Normalize(normalizeAttributes);
+            List<string> standardizeAttributes = jAttributeTransform["standardize"].ToObject<List<string>>();
+            nodeAttributes.Standardize(standardizeAttributes);
+            List<string> distributionAttributes = jAttributeTransform["distribution"].ToObject<List<string>>();
+            nodeAttributes.LogNormalToNormalDist(distributionAttributes);
 
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());

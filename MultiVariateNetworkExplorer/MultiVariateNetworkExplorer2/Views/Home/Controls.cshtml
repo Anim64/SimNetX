@@ -253,7 +253,13 @@
                                 <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="remodeling" checked />
 
                                 <label for="@(column + "-normalize-checkbox")">Normalize?</label>
-                                <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="normalization"/>
+                                <input type="checkbox" id="@(column + "-normalize-checkbox")" value="@column" data-role="normalization"/>
+
+                                <label for="@(column + "-standardize-checkbox")">Standardardize?</label>
+                                <input type="checkbox" id="@(column + "-standadize-checkbox")" value="@column" data-role="standardization" />
+
+                                <label for="@(column + "-distribution-checkbox")">LogNormal To Normal?</label>
+                                <input type="checkbox" id="@(column + "-distribution-checkbox")" value="@column" data-role="distribution" />
                             </div>
                         </div>
                     }

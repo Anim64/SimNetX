@@ -104,13 +104,15 @@ let forceProperties = {
     forceX: {
         enabled: true,
         strength: 0.1,
-        x: 0.5
+        x: 0.5,
+        attribute: ""
     },
 
     forceY: {
         enabled: true,
         strength: 0.1,
-        y: 0.5
+        y: 0.5,
+        attribute: ""
     },
 
     link: {
@@ -119,13 +121,21 @@ let forceProperties = {
         iterations: 1
     },
     sizing: {
-        enabled: false
+        enabled: false,
+        attribute: ""
     },
     colouring: {
-        enabled: false
+        network: "#FFFFFF",
+        background: "#000000"
+    },
+
+    atttributeColouring: {
+        enabled: false,
+        attribute: ""
     },
     labels: {
-        enabled: true
+        enabled: true,
+        attribute: "Id"
     }
 };
 

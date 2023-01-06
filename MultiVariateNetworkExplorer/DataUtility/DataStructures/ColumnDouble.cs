@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace DataUtility
 {
     public class ColumnDouble : IColumn, IEnumerable
     {
-        public IList Data { get; } = new List<double?>();
+        public IList Data { get; private set; } 
 
         public int DataCount
         {
@@ -34,11 +35,16 @@ namespace DataUtility
 
         public ColumnDouble()
         {
-
+            this.Data = new List<double?>();
         }
         public ColumnDouble(IList data)
         {
             this.Data = data;
+        }
+
+        public ColumnDouble(int size)
+        {
+            this.Data = new List<double?>(size);
         }
 
         public void AddData(object value)
@@ -87,6 +93,65 @@ namespace DataUtility
             }
 
             return result;
+        }
+
+        public void Map(Func<double, double> mapFunction)
+        {
+            for (int i = 0; i < this.DataCount; i++)
+            {
+                object columnValue = this[i];
+                if (columnValue != null)
+                {
+                    this[i] = mapFunction((double)columnValue);
+                }
+            }
+        }
+
+        public void Log()
+        {
+            List<double?> logColumn = new List<double?>(this.DataCount);
+            foreach (object columnValue in this.Data)
+            {
+                
+                if (columnValue != null)
+                {
+                    double columnValueNumber = (double)columnValue;
+                    if(columnValueNumber <= 0)
+                    {
+                        return;
+                    }
+
+                    logColumn.Add(Math.Log(columnValueNumber));
+                }
+            }
+
+            this.Data = logColumn;
+        }
+
+        public double Average()
+        {
+            return this.Sum() / this.DataCount;
+        }
+
+        public double StandardDeviation(double average = double.NegativeInfinity)
+        {
+            if(average == double.NegativeInfinity)
+            {
+                average = this.Average();
+            }
+
+            double squareSum = 0;
+
+            foreach (double? value in this.Data)
+            {
+                if (value != null)
+                {
+                    double differenceFromAverage = ((double)value - average);
+                    squareSum += differenceFromAverage * differenceFromAverage;
+                }
+            }
+
+            return Math.Sqrt(squareSum / (this.DataCount - 1));
         }
 
         public ColumnString ToColumnString()
