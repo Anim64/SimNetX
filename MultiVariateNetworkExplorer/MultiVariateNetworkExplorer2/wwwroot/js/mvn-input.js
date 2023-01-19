@@ -201,3 +201,68 @@ const prepareInputForm = function () {
     });
 
 }
+
+const isNullOrEmpty = function (string) {
+    return string === null || string === "";
+}
+
+const validateNewNetworkForm = function (form) {
+    let isValid = true;
+    let errorMessage = "";
+
+    const vectorFile = form.querySelector("#fileVector").value;
+    if (isNullOrEmpty(vectorFile)) {
+        errorMessage += "Please insert the vector file.<br>";
+        isValid = false;
+    }
+
+    const separators = form.querySelector("#separators").value;
+    if (isNullOrEmpty(separators)) {
+        errorMessage += "Please enter the data separating character.<br>";
+        isValid = false;
+    }
+
+    const missingValues = form.querySelector("#missingvalues").value;
+    if (isNullOrEmpty(missingValues)) {
+        errorMessage += "Please enter the string which will represents missing values.<br>";
+        isValid = false;
+    }
+
+    const errorParagraph = form.querySelector("#new-network-error-para");
+    errorParagraph.innerHTML = errorMessage;
+    
+    return isValid;
+}
+
+const validateAppendNetworkForm = function (form) {
+    let isValid = true;
+    let errorMessage = "";
+
+    if (graph.nodes.length <= 0) {
+        errorMessage += "There is no graph to append to.<br>";
+        isValid = false;
+    }
+
+    const vectorFile = form.querySelector("#fileVectorAppend").value;
+    if (isNullOrEmpty(vectorFile)) {
+        errorMessage += "Please insert the vector file.<br>";
+        isValid = false;
+    }
+
+    const separators = form.querySelector("#separatorsAppend").value;
+    if (isNullOrEmpty(separators)) {
+        errorMessage += "Please enter the data separating character.<br>";
+        isValid = false;
+    }
+
+    const missingValues = form.querySelector("#missingvaluesAppend").value;
+    if (isNullOrEmpty(missingValues)) {
+        errorMessage += "Please enter the string which will represents missing values.<br>";
+        isValid = false;
+    }
+
+    const errorParagraph = form.querySelector("#append-network-error-para");
+    errorParagraph.innerHTML = errorMessage;
+
+    return isValid;
+}

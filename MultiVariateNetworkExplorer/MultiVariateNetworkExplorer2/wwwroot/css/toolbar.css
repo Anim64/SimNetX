@@ -43,20 +43,26 @@
     -webkit-border-radius: 1px;
     border-radius: 1px;
     margin-top: 1px;
-    z-index: 1;
+    z-index: 9;
     -moz-border-radius: 0 0 0.7rem 0.7rem;
     -webkit-border-radius: 0 0 0.7rem 0.7rem;
     border-radius: 0 0 0.7rem 0.7rem;
 }
 
 
-.toolbar-panel a {
+.toolbar-item {
     color: white;
     text-align: left;
     padding: 0.5rem 1rem;
 }
 
-.toolbar-panel a:hover {
+.toolbar-item:hover {
     text-decoration: none;
     background-color: #777777;
+}
+
+.toolbar-item-file {
+    width: 0;
+    height: 0;
+    overflow: hidden;
 }

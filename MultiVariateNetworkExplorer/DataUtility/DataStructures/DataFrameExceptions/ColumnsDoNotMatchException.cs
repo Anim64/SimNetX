@@ -4,11 +4,12 @@ using System.Text;
 
 namespace DataUtility.DataStructures.DataFrameExceptions
 {
+    [Serializable]
     public class ColumnsDoNotMatchException : DataFrameException
     {
         public ColumnsDoNotMatchException()
         {
-
+            
         }
 
         public ColumnsDoNotMatchException(string message) : base(message)

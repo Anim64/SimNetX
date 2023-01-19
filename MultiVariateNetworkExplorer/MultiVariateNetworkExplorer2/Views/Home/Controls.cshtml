@@ -24,7 +24,7 @@
                             <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Min" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.lower, false);">
                         </div>
                         <div class="col-md-4 col-md-offset-4">
-                            <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Max" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
+                        <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Max" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', FilterCondition.greater, true);">
                         </div>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="handleForceEnablement(this.checked, 'charge', updateChargeForce);"> Charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+                <p><label><input type="checkbox" id="charge_EnabledCheckbox" checked onchange="handleForceEnablement(this.checked, 'charge', updateChargeForce);"> Charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
                 <label title="Negative strength repels nodes. Positive strength attracts nodes.">
                     strength
                     <output id="charge_StrengthSliderOutput">-80</output>
@@ -84,7 +84,7 @@
             </div>
 
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="handleForceEnablement(this.checked, 'collide', updateCollideForce);"> Collide</label> Prevents nodes from overlapping</p>
+            <p><label><input type="checkbox" id="collide_EnabledCheckbox" checked onchange="handleForceEnablement(this.checked, 'collide', updateCollideForce);"> Collide</label> Prevents nodes from overlapping</p>
                 <label>
                     strength
                     <output id="collide_StrengthSliderOutput">.7</output>
@@ -104,7 +104,7 @@
             
             
             <div class="force">
-                <p><label><input type="checkbox" checked onchange="    handleForceEnablement(this.checked, 'link', updateLinkForce);"> Link</label> Sets link length</p>
+            <p><label><input type="checkbox" id="link_EnabledCheckbox" checked onchange="    handleForceEnablement(this.checked, 'link', updateLinkForce);"> Link</label> Sets link length</p>
                 <label title="The force will push/pull nodes to make links this long">
                     distance
                     <output id="link_DistanceSliderOutput">75</output>
@@ -154,12 +154,12 @@
                 
             </div>
              <div class="force">
-                <p><label><input type="checkbox" checked onchange="forceProperties.labels.enabled = this.checked; enableNodeLabels();"> Node Label</label>Set a node label based on chosen attribute</p>
+            <p><label><input type="checkbox" id="label_EnabledCheckbox" checked onchange="forceProperties.labels.enabled = this.checked; enableNodeLabels();"> Node Label</label>Set a node label based on chosen attribute</p>
                 <label class="attribute-selection-label" for="node-label-select">
                     Choose Attribute:
                     <select id="node-label-select" class="attribute-select" name="node-label-select" onchange ="setNodeLabel(this)">
-                        <option value="" >--None--</option>
-                        <option value="id" selected>Id</option>
+                        <option value="">--None--</option>
+                        <option value="id" selected>id</option>
                         <optgroup label="Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
@@ -196,11 +196,11 @@
                 <div class="colour-row">
                     <label class="colouring">
                         Default node colour
-                        <input type="color" value="#FFFFFF" onchange="changeNetworkNodeColour(value)" >
+                        <input type="color" id="network-colour-input" value="#FFFFFF" onchange="changeNetworkNodeColour(value)" >
                     </label>
                     <label class="colouring">
                         Background colour
-                        <input type="color" onchange="changeNetworkBackgroundColour(value);">
+                        <input type="color" id="background-colour-input" value= "#000000" onchange="changeNetworkBackgroundColour(value);">
                     </label>
                 </div>
             </div>
@@ -210,18 +210,18 @@
                     Choose Attribute:
                     <select id="attribute-node-colouring" class="attribute-select" name="attribute-node-colouring" onchange ="setAttributeNodeColouring(this)">
                         <option value="">--None--</option>
-                        <optgroup label="Numerical Attributes">
+                        <optgroup label="Numeric Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
                                 <option value="@key">@key</option>
                             }
                         </optgroup>
-                        <optgroup label="Categorical Attributes">
+                        @*<optgroup label="Categorical Attributes">
                             @foreach(var key in Model.Mvn.VectorData.CatAttrValues.Keys)
                             {
                                 <option value="@key">@key</option>
                             }
-                        </optgroup>
+                        </optgroup>*@
                         <optgroup label="Centralities">
                             <option value="degree">Degree</option>
                             <option value="closeness">Closeness</option>
@@ -231,11 +231,11 @@
                 <div class="colour-row">
                     <label class="colouring" for="low-value-colour">
                         Low value colour
-                        <input  type="color" id="low-value-colour" value="#0000FF">
+                        <input type="color" id="low-value-colour" value="#0000FF">
                     </label>
                     <label class="colouring" for="high-value-colour">
                         High value colour
-                        <input class="coloring-input" type="color" id="high-value-colour" value="#FF0000">
+                        <input type="color" id="high-value-colour" value="#FF0000">
                     </label>
                 </div>
                 
@@ -247,22 +247,29 @@
                     {   
                         <div class="remodel-attribute-group">
                             <label for="@(column + "-remodel-expand-button")">@(column)</label>
-                            <button id="@(column + "-remodel-expand-button")" onclick="expandRemodelPanel(event,'@(column + "-remodel-panel")')"><i class='fas fa-chevron-right'></i></button>
-                            <div class="remodel-attribute-panel" id="@(column + "-remodel-panel")">
-                                <label for="@(column + "-remodel-checkbox")">Use for remodeling?</label>
-                                <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="remodeling" checked />
-
-                                <label for="@(column + "-normalize-checkbox")">Normalize?</label>
-                                <input type="checkbox" id="@(column + "-normalize-checkbox")" value="@column" data-role="normalization"/>
-
-                                <label for="@(column + "-standardize-checkbox")">Standardardize?</label>
-                                <input type="checkbox" id="@(column + "-standadize-checkbox")" value="@column" data-role="standardization" />
-
-                                <label for="@(column + "-distribution-checkbox")">LogNormal To Normal?</label>
-                                <input type="checkbox" id="@(column + "-distribution-checkbox")" value="@column" data-role="distribution" />
-                            </div>
+                            <button id="@(column + "-remodel-expand-button")" onclick="expandRemodelPanel(event,'@(column + "-remodel-panel")')"><i class='fa fa-plus'></i></button>
                         </div>
                     }
+
+                @foreach (var column in Model.Mvn.VectorData.Columns)
+                {
+                    <div class="remodel-attribute-panel" id="@(column + "-remodel-panel")">
+                        <h4>@(column + " remodel options")</h4>
+                        <div class="checkboxes">
+                            <label for="@(column + "-remodel-checkbox")">Use for remodeling?</label>
+                            <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="remodeling" checked />
+
+                            <label for="@(column + "-normalize-checkbox")">Normalize?</label>
+                            <input type="checkbox" id="@(column + "-normalize-checkbox")" value="@column" data-role="normalization" />
+
+                            <label for="@(column + "-standardize-checkbox")">Standardardize?</label>
+                            <input type="checkbox" id="@(column + "-standadize-checkbox")" value="@column" data-role="standardization" />
+
+                            <label for="@(column + "-distribution-checkbox")">LogNormal To Normal?</label>
+                            <input type="checkbox" id="@(column + "-distribution-checkbox")" value="@column" data-role="distribution" />
+                        </div>
+                    </div>
+                }
                 </div>
                 <div class="remodel-div" id="remodel-div">
                     <h4 id="remodel-algorithm-headline">Algorithm Parameters</h4>

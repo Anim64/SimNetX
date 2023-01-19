@@ -28,7 +28,7 @@ footer {
     -webkit-justify-content: flex-end;
     justify-content: flex-end;
     padding: 1rem;
-    position: relative;
+    
 }
 
 .active-block {
@@ -37,6 +37,10 @@ footer {
 
 .active-flex {
     display: flex !important;
+}
+
+.active-grid {
+    display: grid !important;
 }
 
 

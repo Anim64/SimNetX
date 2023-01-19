@@ -26,27 +26,6 @@ namespace MultiVariateNetworkExplorer2
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddDistributedMemoryCache();
-
-            //services.Configure<FormOptions>(x =>
-            //{
-            //    x.ValueLengthLimit = int.MaxValue;
-            //    x.MultipartBodyLengthLimit = int.MaxValue;
-            //    x.MultipartHeadersLengthLimit = int.MaxValue;
-            //});
-
-            //services.Configure<IISServerOptions>(options =>
-            //{
-            //    options.MaxRequestBodySize = int.MaxValue;
-            //});
-
-            //services.AddSession(options =>
-            //{
-            //    //options.IdleTimeout = TimeSpan.FromHours(2);
-            //    options.Cookie.HttpOnly = true;
-            //    options.Cookie.IsEssential = true;
-            //});
-
             services.AddControllersWithViews();
         }
 
@@ -65,7 +44,7 @@ namespace MultiVariateNetworkExplorer2
             }
             else
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
                 app.UseExceptionHandler("/Home/Error");
                 //// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();

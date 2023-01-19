@@ -4,7 +4,10 @@
 		<div class="toolbar-panel" id="fileToolPanel">
 			<a href="#" class="toolbar-item" onclick="openNetworkInputForm('mvn-input-form')">New Network</a>
 			<a href="#" class="toolbar-item" onclick="saveGraph('graph.json')">Save Network</a>
-			<a href="#" class="toolbar-item" onclick="openNetworkInputForm('mvn-append-form')">Append Nodes</a>
+			<a href="#" class="toolbar-item" onclick="openNetworkInputForm('mvn-append-form')")>Append Nodes</a>
+			<a href="#" class="toolbar-item" onclick="openFileBrowser('loadNetwork')">Load Network</a>
+			<input class="toolbar-item-file" type="file" id="loadNetwork" onchange="loadNetwork(this.files[0])" accept="application/json" data-caption="{filePath}">
+
 		</div>
 	</div>
 	<div class="toolbar-container">

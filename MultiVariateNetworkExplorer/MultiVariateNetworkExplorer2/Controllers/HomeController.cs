@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using DataUtility;
 using DataUtility.DataStructures;
@@ -52,6 +53,8 @@ namespace MultiVariateNetworkExplorer.Controllers
         public IActionResult Graph()
         {
             GraphModel gm = new GraphModel();
+            //ErrorInputModel gm = new ErrorInputModel();
+            TempData["ErrorMessage"] = null;
             return View("Graph", gm);
         }
 
@@ -72,14 +75,17 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             foreach (var formFile in files)
             {
-                if (formFile.Length > 0)
+                if (formFile.Length <= 0)
                 {
-                    var filePath = Path.GetTempFileName();
-                    filePaths.Add(filePath);
-                    using (var stream = System.IO.File.Create(filePath))
-                    {
-                        await formFile.CopyToAsync(stream);
-                    }
+                    TempData["ErrorMessage"] = "The input file was empty. Please check if you have inserted the correct file.";
+                    return Redirect(HttpContext.Request.Headers["Referer"].ToString());
+                }
+
+                var filePath = Path.GetTempFileName();
+                filePaths.Add(filePath);
+                using (var stream = System.IO.File.Create(filePath))
+                {
+                    await formFile.CopyToAsync(stream);
                 }
             }
 
@@ -96,22 +102,32 @@ namespace MultiVariateNetworkExplorer.Controllers
             Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == convert);
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algsParams.Cast<object>().ToArray());
 
-
-            MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, chosenConversion,
-                chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
-
-
-            GraphModel gm = new GraphModel(multiVariateNetwork);
             
 
+            try
+            {
+                MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, chosenConversion,
+                chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
+
+                GraphModel gm = new GraphModel(multiVariateNetwork);
+
+                ModelState.Clear();
+                return View("Graph", gm);
+            }
+            catch (Exception e)
+            {
+                TempData["ErrorMessage"] = e.Message;
+                return Redirect(HttpContext.Request.Headers["Referer"].ToString());
+            }
+            
+            
             /*double[] precisions = multiVariateNetwork.calculatePrecision();
 
             using(StreamWriter sw = new StreamWriter("precision.txt"))
             {
                 sw.WriteLine("Weighted: " + precisions[0] + " Prec: " + precisions[1]);
             }*/
-            ModelState.Clear();
-            return View("Graph", gm);
+            
 
         }
 
@@ -154,11 +170,11 @@ namespace MultiVariateNetworkExplorer.Controllers
             {
                 currentMvn.VectorData.ReadAndAppendFromFile(filePaths.ElementAt(0), missingvalues, hasHeaders, separatorArray);
             }
-            catch(DataFrameException dfe)
+            catch(Exception dfe)
             {
-                ErrorInputModel eim = new ErrorInputModel();
-                GraphModel gme = new GraphModel(currentMvn, eim);
-                eim.ErrorMessage = dfe.Message;
+               
+                GraphModel gme = new GraphModel(currentMvn);
+                ViewBag.ErrorMessage = dfe.Message;
                 return View("Graph", gme);
             }
 

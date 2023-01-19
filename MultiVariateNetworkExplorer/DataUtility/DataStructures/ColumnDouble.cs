@@ -49,9 +49,30 @@ namespace DataUtility
 
         public void AddData(object value)
         {
+            if (!IsNumber(value))
+            {
+                this.Data.Add(null);
+                return;
+            }
+
             Type t = Nullable.GetUnderlyingType(typeof(double?));
             double? doubleValue = value != null ? (double?)Convert.ChangeType(value, t) : null;
             this.Data.Add(doubleValue);
+        }
+
+        private bool IsNumber(object value)
+        {
+            return  value is double
+            || value is int
+            || value is sbyte
+            || value is byte
+            || value is short
+            || value is ushort
+            || value is uint
+            || value is long
+            || value is ulong
+            || value is float
+            || value is decimal;
         }
 
         public IEnumerator GetEnumerator()

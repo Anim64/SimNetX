@@ -1,5 +1,5 @@
 ﻿<section class="mvn-input" id="mvn-input-section">
-    <form method="post" asp-action="LoadGraph" asp-controller="Home" enctype="multipart/form-data" id="mvn-input-form">
+    <form method="post" asp-action="LoadGraph" asp-controller="Home" enctype="multipart/form-data" id="mvn-input-form" name="mvn-input-form" onsubmit="return validateNewNetworkForm(this);">
         <div class="file-buttons">
             <div class="file-button">
                 <input class="inputfile" type="file" id="fileVector" name="files" data-caption="{filePath}">
@@ -12,7 +12,7 @@
         </div>
         <div class="parameters">
             <div class="collapsible-parameters-btn">
-                <i class='fas fa-chevron-up'></i>
+                <i class='fa fa-chevron-up'></i>
                 <span>Data parameters</span>
             </div>
             <div class="collapsible-parameters-content">
@@ -29,10 +29,10 @@
                 </select>
 
                 <label for="missingvalues"><span>Enter the character representing missing data (leave empty if no character is used)</span></label>
-                <input type="text" id="missingvalues" name="missingvalues" placeholder="eg: -, --, NA etc."/>
+                <input type="text" id="missingvalues" name="missingvalues" value="na" placeholder="eg: -, --, NA etc."/>
             </div>
             <div class="collapsible-parameters-btn">
-                <i class='fas fa-chevron-up'></i>
+                <i class='fa fa-chevron-up'></i>
                 <span>Separators</span>
             </div>
             <div class="collapsible-parameters-content">
@@ -41,7 +41,7 @@
             </div>
 
             <div class="collapsible-parameters-btn">
-                <i class='fas fa-chevron-up'></i>
+                <i class='fa fa-chevron-up'></i>
                 <span>Group and Id Parameters</span>
             </div>
             <div class="collapsible-parameters-content">
@@ -58,7 +58,7 @@
             </div>
 
             <div class="collapsible-parameters-btn">
-                <i class='fas fa-chevron-up'></i>
+                <i class='fa fa-chevron-up'></i>
                 <span>Conversion Parameters</span>
             </div>
             <div class="collapsible-parameters-content" id="conversion-collapsible-content">
@@ -100,14 +100,12 @@
         </div>
         <div class="submit-buttons">
             <input type="submit" class="submit-btn" value="Upload" />
-            <input type="button" class="clear-btn" value="Clear" />
+            @*<input type="button" class="clear-btn" value="Clear" />*@
         </div>
-        <p class="error-display">
-            @*@Model.ErrorMessage*@
-        </p>
+        <p id="new-network-error-para" class="error-display"></p>
     </form>
 
-    <form method="post" asp-action="LoadAndAppendNodes" asp-controller="Home" enctype="multipart/form-data" id="mvn-append-form">
+    <form method="post" asp-action="LoadAndAppendNodes" asp-controller="Home" enctype="multipart/form-data" id="mvn-append-form" onsubmit="return validateAppendNetworkForm(this)">
         <div class="file-buttons">
             <div class="file-button">
                 <input class="inputfile" type="file" id="fileVectorAppend" name="files" data-caption="{filePath}">
@@ -127,7 +125,7 @@
                 </select>
 
                 <label for="missingvalues"><span>Enter the character representing missing data (leave empty if no character is used)</span></label>
-                <input type="text" id="missingvalues" name="missingvalues" placeholder="eg: -, --, NA etc." />
+                <input type="text" id="missingvaluesAppend" name="missingvalues" placeholder="eg: -, --, NA etc." />
             </div>
             <div class="collapsible-parameters-btn">
                 <i class='fas fa-chevron-up'></i>
@@ -135,7 +133,7 @@
             </div>
             <div class="collapsible-parameters-content">
                 <label for="separators">Enter the data separating characters (separated by SPACE):</label>
-                <input type="text" id="separators" name="separators" />
+                <input type="text" id="separatorsAppend" name="separators" />
             </div>
 
             <div class="collapsible-parameters-btn">
@@ -181,10 +179,8 @@
         </div>
         <div class="submit-buttons">
             <input type="submit" class="submit-btn" value="Upload" />
-            <input type="button" class="clear-btn" value="Clear" />
+            @*<input type="button" class="clear-btn" value="Clear"/>*@
         </div>
-        <p class="error-display">
-            @*@Model.ErrorMessage*@
-        </p>
+        <p id="append-network-error-para" class="error-display"></p>
     </form>
 </section>

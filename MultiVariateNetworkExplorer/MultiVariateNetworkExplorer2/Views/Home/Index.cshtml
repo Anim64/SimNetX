@@ -10,21 +10,11 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 }
 
-@section StylesProd {
-    <link rel="stylesheet" href="~/css/index.min.css" type="text/css" asp-append-version="true" />
-    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-}
-
 @section ScriptsDev {
     <script src="~/js/index.js" asp-append-version="true"></script>
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
 }
 
-@section ScriptsProd {
-    <script src="~/js/index.min.js" asp-append-version="true"></script>
-    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
-}
 
 
 
@@ -137,9 +127,9 @@
         <input type="submit" class="submit-btn" value="Upload" />
         <input type="button" class="clear-btn" value="Clear" />
     </div>
-    <p class="error-display">
+    @*<p class="error-display">
         @Model.ErrorMessage
-    </p>
+    </p>*@
 </form>
 
 

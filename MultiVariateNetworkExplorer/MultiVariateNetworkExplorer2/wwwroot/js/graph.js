@@ -69,8 +69,6 @@ let selectionSimulation = d3.forceSimulation()
 let groupColours = d3.scaleOrdinal(d3.schemeCategory20);
 //let groupColours = d3.scaleOrdinal(d3.interpolateSpectral);
 
-let defaultColour = "#FFFFFF";
-
 let xScale = d3.scaleLinear()
     .domain([0, width]).range([0, width]);
 let yScale = d3.scaleLinear()
@@ -129,15 +127,21 @@ let forceProperties = {
         background: "#000000"
     },
 
-    atttributeColouring: {
+    attributeColouring: {
         enabled: false,
-        attribute: ""
+        attribute: "",
+        lowValue: "#0000FF",
+        highValue: "#FF0000"
     },
     labels: {
         enabled: true,
-        attribute: "Id"
+        attribute: "id"
     }
 };
+
+const updateGraphStore = function (graph) {
+    store = $.extend(true, {}, graph);
+}
 
 
 const prepareLinks = function() {
@@ -148,6 +152,7 @@ const prepareLinks = function() {
         .selectAll("path")
         .data(links)
         .enter().append("path")
+        .style("display", "none");
 
     link.append("title")
         .text(function (l) {
@@ -177,6 +182,7 @@ const prepareNodes = function () {
     nodeGroups = gNodes.enter()
         .append("g")
         .attr("class", "node-group")
+        .style("display", "none")
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
@@ -189,11 +195,12 @@ const prepareNodes = function () {
 
 
 
+
     //Add nodes to simulation
     simulation
         .nodes(nodes)
-        .on("tick", ticked)
-        //.on("end", simulationEnd);
+        //.on("tick", ticked)
+        .on("end", simulationEnd);
         
 
     
@@ -255,14 +262,7 @@ const prepareNetworkBackground = function() {
         .on('click', deselectAllNodes);
 }
 
-
-
-//Draw graph of the network
-const drawNetwork = function(data) {
-//function drawNetwork(data) {
-    graph = data;
-    graph.properties = {};
-
+const prepareCanvas = function () {
     svg.selectAll('.g-main').remove();
 
     gMain = svg.append('g')
@@ -272,35 +272,31 @@ const drawNetwork = function(data) {
 
     gDraw = gMain.append('g');
 
-    //Edge arrow definition
-    /*var defs = svg.append("defs");
-    defs.append("marker")
-        .attr("id", "arrow")
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 15)
-        .attr("refY", 0)
-        .attr("markerWidth", 5)
-        .attr("markerHeight", 5)
-        .attr("orient", "auto")
-        .attr("class", "arrow")
-        .append("svg:path")
-        .attr("d", "M0,-5L10,0L0,5");*/
-
-    prepareLinks();
-    prepareNodes();
-    
     prepareBrush();
-    prepareZoom();  
+    prepareZoom();
 
     d3.select('body').on('keydown', keydown);
     d3.select('body').on('keyup', keyup);
+}
 
 
-    //Store graph for filtration
-    store = $.extend(true, {}, data);
 
-    updateForces();
+//Draw graph of the network
+const drawNetwork = function(data) {
+    graph = data;
+    graph.properties = {};
+
+    prepareLinks();
+    prepareNodes();
     prepareText();
+}
+
+const initGraph = function (data) {
+    prepareCanvas();
+    drawNetwork(data);
+    updateGraphStore(graph);
+    updateForces();
+    updateNodeAndLinkColour(node, link);
 }
 
 
@@ -419,11 +415,11 @@ const fadeDisconnectedNodes = function(nodeId, opacity) {
 
     node.style("stroke-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
-        return thisOpacity;
+        return this.Opacity;
     });
     node.style("fill-opacity", function (o) {
         thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
-        return thisOpacity;
+        return this.Opacity;
     });
     // also style link accordingly
     link.style("stroke-opacity", function (o) {
@@ -462,7 +458,7 @@ const mouseOut = function() {
 const dragstarted = function (d) {
     closeNodeDetails("node-detail-container");
     if (!d3.event.active)
-        resetSimulation();
+        //resetSimulation();
     
     if (!d.selected && !shiftKey) {
         // if this node isn't selected, then we have to unselect every other node
@@ -499,8 +495,7 @@ const dragged = function(d) {
     //        d.fx += dx;
     //        d.fy += dy;
     //    })
-    //link.attr("d", positionLink);
-    //node.attr("transform", positionNode);
+    ticked();
     
 }
 
@@ -512,10 +507,11 @@ const dragended = function(d) {
 
     toggleNodeDetails(d.id, d.index);
     //node.filter(function (d) { return d.selected; })
-    //    .each(function (d) { 
+    //    .each(function (d) {
     //        d.fx = null;
     //        d.fy = null;
     //    })
+    
 }
 
 /******************************************DRAGGING END**************************************************/
@@ -646,7 +642,7 @@ const selectionZoomed = function () {
 ///////////////////////////////////////// GRAPH SIMULATION ///////////////////////////////////////////////
 
 //Update graph simulation forces
-const updateForces = function() {
+const updateForces = function(reset = true) {
 
     updateCenterForce();
     updateChargeForce();
@@ -668,7 +664,9 @@ const updateForces = function() {
    
     // updates ignored until this is run
     // restarts the simulation (important if simulation has already slowed down)
-    resetSimulation();
+    if (reset) {
+        resetSimulation();
+    }
 }
 
 const updateCenterForce = function () {
@@ -784,11 +782,10 @@ const updateSelectionForces = function () {
 /******************************************END SELECTION SIMULATION ***********************************************/
 
 /////////////////////////////////////////GRAPH NODE AND LINK POSITION///////////////////////////////////////////////////
-const ticked = function() {
-    
-    link.attr("d", positionLink);
-        
+const ticked = function () {
     nodeGroups.attr("transform", positionNode);
+    link.attr("d", positionLink);
+    
 }
 
 const simulationEnd = function () {
@@ -803,6 +800,8 @@ const simulationEnd = function () {
     nodeGroups.attr("transform", positionNode);
     //return;
     //}
+    link.style("display", "block");
+    nodeGroups.style("display", "block");
 
     simulation.stop();
 }
@@ -877,8 +876,8 @@ const positionNode = function (d) {
 //Update node or link position when simulation starts
 const selectionTicked = function() {
     if (Date.now() < endTime) {
-        selectionLink.attr("d", positionLink);
         selectionNode.attr("transform", positionNode);
+        selectionLink.attr("d", positionLink);
     }
     else {
         selectionSimulation.stop();
@@ -912,14 +911,14 @@ const updateLinkColour = function(links) {
 }
 
 const updateHeadingColour = function (nodes) {
-    nodes.each(function (d) {
+    for (const d of nodes) {
         const { id } = d;
         const colour = getNodeColour(id);
         const lightness = fontLightness(colour);
         const nodeHeading = $('#heading-' + id);
         nodeHeading.css("backgroundColor", colour);
         nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
-    });
+    };
 }
 
 const getNodeColour = function (nodeId) {
@@ -933,17 +932,19 @@ const getNodeColour = function (nodeId) {
 
     }
     else {
-        return defaultColour;
+        return forceProperties.colouring.network;
     }
 }
 
 
 
 const updateNodes = function () {
+    
     const { nodes } = graph;
-    nodeGroups = nodeGroups.data(nodes, function (d) { return d.id; });
+    nodeGroups = nodeGroups.data(nodes);
     //	EXIT
     nodeGroups.exit().remove();
+    
     
 
     const newNodeGroups = nodeGroups.enter()
@@ -971,18 +972,13 @@ const updateNodes = function () {
     nodeText = nodeGroups.selectAll("text");
     simulation
         .nodes(nodes)
-        .on("tick", ticked)
-        //.on("end", simulationStop);
-
-    
-
-
+        .on("tick", ticked);
+        //.on("end", simulationEnd);
 }
 
 const updateLinks = function () {
     const { links } = graph;
     link = link.data(links, function (d) { d.source });
-    
     link.exit().remove();
 
     const newLink = link.enter().append("path")
@@ -1013,10 +1009,6 @@ const updateNodesAndLinks = function() {
 const updateNodeAndLinkColour = function(nodes, links) {
     updateNodeColour(nodes);
     updateLinkColour(links);
-}
-
-const updateAll = function() {
-    updateForces(); 
 }
 
 /****************************************END NODE UPDATES******************************************/
@@ -1159,8 +1151,8 @@ $(document).ready(function () {
     document.addEventListener('click', closeAllRemodelPanels);
 
     prepareInputForm();
-    
     calculateAllMetrics();
+    
 
     selectionNode.each(function (d) {
         setGroupColour(d);
@@ -1168,7 +1160,6 @@ $(document).ready(function () {
 
     displayAlgorithmParameters("remodel-algorithm-select");
     displayMetricParameters("remodel-metric-select");
-    updateNodeAndLinkColour(node, link);
 
 });
 

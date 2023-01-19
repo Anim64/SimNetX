@@ -270,34 +270,16 @@ const addNodesToSelection = function (event, selectionId) {
 
 //Deletes all selections
 const deleteAllSelections = function () {
-    /*selectionNode.each(function (d) {
-        var selectionPanel = document.querySelector('#selection_panel_' + d.id);
-        selectionPanel.parentNode.removeChild(selectionPanel);
-
-        
-    })*/
-    //const lightness = fontLightness(defaultColour);
-    if (!forceProperties.atttributeColouring.enabled) {
-        updateNodeAndLinkColour(node, link);
-    }
-
     const { partitions } = graph;
     for (const node in partitions) {
         partitions[node] = "";
     }
 
-    const lightness = fontLightness(defaultColour);
+    const { network: networkColour } = forceProperties.colouring;
+    const lightness = fontLightness(networkColour);
     d3.selectAll('.node-heading')
-        .style("background-color", defaultColour)
+        .style("background-color", networkColour)
         .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
-
-    
-   
-
-    //node.style("fill", defaultColour);
-    //d3.selectAll('.node-heading')
-    //    .style("background-color", defaultColour)
-    //    .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
 
     selectionGraph.nodes = [];
     selectionGraph.links = [];
@@ -309,35 +291,37 @@ const deleteAllSelections = function () {
 
 }
 
+
+
 //Deletes one specific selection
 const deleteSelection = function (event, selectionId) {
     event.stopPropagation();
     const selectionPanel = document.getElementById('selection_panel_' + selectionId);
     selectionPanel.parentNode.removeChild(selectionPanel);
 
-    const lightness = fontLightness(defaultColour);
+    const lightness = fontLightness(forceProperties.colouring.network);
     const nodesFromDeletedPartition = node.filter(function (d) { return graph.partitions[d.id] == selectionId; })
 
-    if (!forceProperties.atttributeColouring.enabled) {
+    if (!forceProperties.attributeColouring.enabled) {
         nodesFromDeletedPartition.style("fill", function (d) {
             link.filter(function (l) { return l.source.id === d.id; })
-                .style("stroke", defaultColour);
+                .style("stroke", forceProperties.colouring.network);
 
             d3.select('#heading-' + d.id)
-                .style("background-color", defaultColour)
+                .style("background-color", forceProperties.colouring.network)
                 .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
             graph.partitions[d.id] = "";
-            return defaultColour;
+            return forceProperties.colouring.network;
         });
     }
 
     else {
         nodesFromDeletedPartition.each(function (d) {
             d3.select('#heading-' + d.id)
-                .style("background-color", defaultColour)
+                .style("background-color", forceProperties.colouring.network)
                 .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
             graph.partitions[d.id] = "";
-            return defaultColour;
+            return forceProperties.colouring.network;
         });
     }
 
@@ -396,13 +380,16 @@ const requestCommunityDetection = function () {
                 addSelectionDiv(d);
             });
 
-            if (!forceProperties.atttributeColouring.enabled) {
+            updateSelectionNodesAndLinks();
+
+            if (!forceProperties.attributeColouring.enabled) {
                 updateNodeAndLinkColour(node, link);
+                return;
             }
 
             updateHeadingColour(node);
 
-            updateSelectionNodesAndLinks();
+            
             //updateSelectionForces();
 
         },

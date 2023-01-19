@@ -8,37 +8,37 @@
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-        @{
-            RenderSection("StylesDev", required: true);
-            IgnoreSection("StylesProd");
-        }
-
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
+        @*<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>*@
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        @RenderSection("StylesDev", true);
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-        @{
-            RenderSection("StylesDev", required: true);
-            IgnoreSection("StylesProd");
-        }
-        @*@{
-            RenderSection("StylesProd", required: true);
-            IgnoreSection("StylesDev");
-        }*@
-
-
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        @RenderSection("StylesDev", false);
+        
+        
     </environment>
 
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+        <script src="https://d3js.org/d3-color.v1.min.js"></script>
+        <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
-        @{
-            RenderSection("ScriptsDev", required: true);
-            IgnoreSection("ScriptsProd");
-        }
+        @RenderSection("ScriptsDev", true);
+        
     </environment>
     <environment exclude="Development">
         <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
@@ -53,16 +53,13 @@
                 crossorigin="anonymous"
                 integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd">
         </script>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+        <script src="https://d3js.org/d3-color.v1.min.js"></script>
+        <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
-        @{
-            RenderSection("ScriptsDev", required: true);
-            IgnoreSection("ScriptsProd");
-        }
-        @*@{
-            RenderSection("ScriptsProd", required: true);
-            IgnoreSection("ScriptsDev");
-        }*@
-        
+        @RenderSection("ScriptsDev", false);
         </environment>
     </head>
     <body>

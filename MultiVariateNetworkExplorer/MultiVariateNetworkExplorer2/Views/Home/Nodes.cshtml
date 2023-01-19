@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="column-content nodes" id="accordion">
-            <div class="node-grid">
+            <div class="node-grid" id="node-grid">
                 @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
                 {
                     <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.VectorData.IdColumn[node])" onclick="nodeHeadingClick(event, '@(Model.Mvn.VectorData.IdColumn[node])', @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.VectorData.IdColumn[node])', .2)" onmouseout="mouseOut()">

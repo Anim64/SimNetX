@@ -8,3 +8,7 @@ const toggleToolPanel = function (e, toolPanelId) {
     closeAllRemodelPanels();
     $('#' + toolPanelId).toggleClass('active-flex');
 }
+
+const openFileBrowser = function (inputId) {
+    document.getElementById(inputId).click();
+}

@@ -9,14 +9,12 @@ namespace MultiVariateNetworkExplorer2.Models
         public string Graph { get; set; }
         public string Selection { get; set; }
 
-        public ErrorInputModel Error { get; set; }
 
         public GraphModel()
         {
             Mvn = new MultiVariateNetwork();
             Graph = Mvn.EmptyD3Json().ToString();
             Selection = Mvn.PartitionsToD3Json();
-            Error = null;
         }
 
         public GraphModel(MultiVariateNetwork mvn)
@@ -24,7 +22,6 @@ namespace MultiVariateNetworkExplorer2.Models
             Mvn = mvn;
             Graph = Mvn.ToD3Json().ToString();
             Selection = Mvn.PartitionsToD3Json();
-            Error = null;
         }
 
         public GraphModel(MultiVariateNetwork mvn, ErrorInputModel eim)
@@ -32,7 +29,6 @@ namespace MultiVariateNetworkExplorer2.Models
             Mvn = mvn;
             Graph = Mvn.ToD3Json().ToString();
             Selection = Mvn.PartitionsToD3Json();
-            Error = eim;
         }
     }
 }

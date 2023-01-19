@@ -4,6 +4,7 @@ using System.Text;
 
 namespace DataUtility.DataStructures.DataFrameExceptions
 {
+    [Serializable]
     public class DataFrameException : Exception
     {
         public DataFrameException()

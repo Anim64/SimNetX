@@ -9,7 +9,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
+using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace DataUtility
 {
     public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     {
+        private static string exceptionMessageResourceName = "DataUtility.DataStructures.DataFrameExceptions.ExceptionMessages";
         /// <summary>
         /// A dataframe that holds vector data
         /// </summary>
@@ -460,6 +463,8 @@ namespace DataUtility
             if (hasHeaders)
             {
                 string line;
+                var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
+
                 if ((line = sr.ReadLine()) != null)
                 {
                     string[] headers;
@@ -474,13 +479,13 @@ namespace DataUtility
                     
                     if (commonHeaders.Count() != this.Columns.Count())
                     {
-                        string message = "The number of columns from the file does not match " +
-                            "the number of columns in the current network. Fix the file and try again";
-                        throw new ColumnsDoNotMatchException(message);
+                        throw new ColumnsDoNotMatchException(resourceManager.GetString("ColumnsDoNotMatch"));
                     }
 
                     return commonHeaders;
                 }
+
+                throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
             }
 
             return this.Columns.ToArray();
@@ -668,31 +673,37 @@ namespace DataUtility
                     headers = PrepareHeaders(sr, header, line, ref vector, separator);
                     PrepareColumns(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
                     DataCount++;
-                }
-               
-                //Load Data to Frame
-                while ((line = sr.ReadLine()) != null)
-                {
-                        
-                    line = line.Trim();
-                    if(line == "")
+
+                    //Load Data to Frame
+                    while ((line = sr.ReadLine()) != null)
                     {
-                        continue;
+
+                        line = line.Trim();
+                        if (line == "")
+                        {
+                            continue;
+                        }
+
+                        vector = line.Split(separator);
+
+                        AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
+
+                        DataCount++;
                     }
 
-                    vector = line.Split(separator);
+                    this.Averages = averages;
+                    FindAttributeExtremesAndValues();
 
-                    AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
-                        
-                    DataCount++;
+                    return;
                 }
 
-                    
+                var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
+                throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
+               
                     
             }
             
-            this.Averages = averages;
-            FindAttributeExtremesAndValues();
+            
 
             /*foreach(var pair in nullIndeces)
             {

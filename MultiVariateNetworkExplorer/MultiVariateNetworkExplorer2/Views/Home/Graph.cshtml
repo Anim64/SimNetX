@@ -13,57 +13,23 @@
     <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/mvn_input.css" type="text/css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/toolbar.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="~/css/node_properties.css" type="text/css" asp-append-version="true" />
 }
 
-@section StylesProd {
-    <link rel="stylesheet" href="~/css/controls.min.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/metrics.min.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/selections.min.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/attributes.min.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/graph.min.css" type="text/css" asp-append-version="true" />
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/node_properties.min.css" type="text/css" asp-append-version="true" />
-}
-
 @section ScriptsDev {
-    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
     <script src="~/js/graph_settings.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="~/js/nodes.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="~/js/selections.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="~/js/mvn-input.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="~/js/toolbar.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
     <script src="~/js/import-export-graph.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
-    <script src="https://d3js.org/d3-color.v1.min.js"></script>
-    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    
+    <script src="~/js/element-generator.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
 }
 
-@section ScriptsProd {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
-    <script src="~/js/graph_settings.min.js" type="text/javascript" asp-append-version="true"></script>
-    <script src="~/js/nodes.min.js" type="text/javascript" asp-append-version="true"></script>
-    <script src="~/js/selections.min.js" type="text/javascript" asp-append-version="true"></script>
-    <script src="https://d3js.org/d3-color.v1.min.js"></script>
-    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-}
-
-<div
 <main class="main-div">
-    @Html.PartialAsync("ToolBar").Result
+    <partial name="ToolBar" />
     <div class="graph-section">
-        @Html.PartialAsync("Controls").Result
+        <partial name="Controls" />
         <section id="graph" class="column graph-col">
             <div class="navigation">
                 <div class="tab-nav">
@@ -82,7 +48,7 @@
                 @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
                 <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
                 <script>
-                    drawNetwork(@Html.Raw(Model.Graph));
+                    initGraph(@Html.Raw(Model.Graph));
                 </script>
                 <div class="node-detail-container" id="node-detail-container">
                     <div class="node-detail-heading-container">
@@ -141,13 +107,19 @@
             </div>
         
         </section>
-        @Html.PartialAsync("Nodes").Result
+        <partial name="Nodes" />
     </div>
-    @Html.PartialAsync("MvnInput").Result
+    <partial name="MvnInput" />
+    <footer class="bottom-panel">
+        Version: 0.1
+    </footer>
 </main>
+@if (TempData["ErrorMessage"] != null)
+{  
+    <script>
+        window.addEventListener("load", () => {
+            alert("@TempData["ErrorMessage"]");
+        });
+    </script>  
+} 
 
-<footer class="bottom-panel">
-
-    <input type="button" id="communityDetectionBtn" onclick="requestCommunityDetection()" value="Detect Communities" />
-    
-</footer>

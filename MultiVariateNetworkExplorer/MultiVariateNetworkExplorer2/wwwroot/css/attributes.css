@@ -53,11 +53,15 @@
     
 }
 
-.categorical .checkboxes {
+.checkboxes {
     margin: 0 5% 1em;
     width: 90%;
     display: grid;
     grid-template-columns: 2fr 1fr;
+}
+
+.checkboxes input[type=checkbox]{
+    align-self: center;
 }
 
 .categorical input[type="checkbox"] {

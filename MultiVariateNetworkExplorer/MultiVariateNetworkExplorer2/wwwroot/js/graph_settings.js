@@ -11,17 +11,18 @@ const isGreater = function(value1, value2) {
 class FilterCondition {
     static lower = new FilterCondition(isLower);
     static greater = new FilterCondition(isGreater);
-
     constructor(booleanFunction) {
         this.booleanFunction = booleanFunction;
     }
-}
+};
+
+
 
 
 const filterByValue = function (input, filteredAttributeName, filterCondition, minmax) {
     //var value = event.currentTarget.value;
 
-    const value = input.value;
+    let value = input.value;
     const extremeValue = !minmax ? input.min : input.max;
     const filterSuffix = !minmax ? "_min" : "_max";
     const attributeFilterType = !minmax ? "low" : "high";
@@ -68,7 +69,7 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + filterSuffix), 1);
                 if (n.filters.length === 0) {
                     graphNodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1);
                     delete n.filters;
                     nodeHeading.removeClass('node-heading-disabled');
                 }
@@ -131,7 +132,7 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
                 n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
                 if (n.filters.length === 0) {
                     graphNodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1)
+                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1);
                     delete n.filters;
                 }
             }
@@ -185,7 +186,7 @@ const enableNodeLabels = function () {
 const setNodeLabel = function (selectElement) {
     const attributeName = selectElement.value;
     const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup');
-
+    forceProperties.labels.attribute = attributeName;
     if (attributeName === "") {
         nodeText.style("display", "none");
     }
@@ -209,12 +210,11 @@ const setNodeLabel = function (selectElement) {
 }
 const setAttributeNodeSizing = function (selectElement) {
     const attributeName = selectElement.value;
-
     const { radius: defaultRadius } = forceProperties.collide;
+    forceProperties.sizing.attribute = attributeName;
 
     if (attributeName !== "") {
         forceProperties.sizing.enabled = true;
-        forceProperties.sizing.attribute = attributeName;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -270,21 +270,20 @@ const pickHex = function(color1, color2, weight) {
         g: Math.round(color1.g * w1 + color2.g * w2),
         b: Math.round(color1.b * w1 + color2.b * w2)
     };
-    //var rgb = 'rgb(' + Math.round(color1.b * w1 + color2.b * w2)  + ', '
-    //+ Math.round(color1.g * w1 + color2.g * w2) + ', '
-    //    + Math.round(color1.r * w1 + color2.r * w2) + ')';
     return rgb;
 }
 
 const setAttributeNodeColouring = function (selectElement) {
-    const lowValueColour = hexToRgb(document.getElementById('low-value-colour').value);
-    const highValueColour = hexToRgb(document.getElementById('high-value-colour').value);
+    const { lowValue, highValue } = forceProperties.attributeColouring;
+    const lowValueColour = hexToRgb(lowValue);
+    const highValueColour = hexToRgb(highValue);
 
     const attributeName = selectElement.value;
+    forceProperties.attributeColouring.attribute = attributeName;
+
 
     if (attributeName !== "") {
         forceProperties.attributeColouring.enabled = true;
-        forceProperties.attributeColouring.attribute = attributeName;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -305,21 +304,21 @@ const setAttributeNodeColouring = function (selectElement) {
         node.style("fill", function (d) {
             const attributeValue = getValueFunction(d, attributeName);
             if (attributeValue === "") {
-                return defaultColour;
+                return forceProperties.colouring.network;
             }
             
             const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
             const resultColour = pickHex(lowValueColour, highValueColour, resultValue);
             const lightness = fontLightness(resultColour);
             const node_text = $('#' + d.id + '_node_text');
-            node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
+            node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
             return rgbObjectToString(resultColour);
         });
         link.style("stroke", 'white');
         return;
     }
 
-    forceProperties.atttributeColouring.enabled = false;
+    forceProperties.attributeColouring.enabled = false;
     updateNodeAndLinkColour(node, link);
 }
 
@@ -377,7 +376,7 @@ const projectAttributeXAxis = function(selectElement) {
 }
 
 
-function projectAttributeYAxis(selectElement) {
+const projectAttributeYAxis = function (selectElement) {
     const attributeName = selectElement.value;
     const { strength, enabled, y } = forceProperties.forceY;
     const forceName = "forceY";
@@ -432,22 +431,22 @@ function projectAttributeYAxis(selectElement) {
     
 }
 
-const createDoubleSlider = function(sliderId, minValueId, maxValueId, minValue, maxValue) {
+const createDoubleSlider = function (sliderId, minValueId, maxValueId, minValue, maxValue, lowValue = minValue, highValue = maxValue) {
     $("#" + sliderId).slider({
         range: true,
         min: minValue,
         max: maxValue,
-        values: [minValue, maxValue],
+        values: [lowValue, highValue],
         step: 0.01,
         slide: function (event, ui) {
             $("#" + minValueId).val(ui.values[0]);
             $("#" + maxValueId).val(ui.values[1]);
 
             if (ui.handleIndex === 0) {
-                filterByValue(ui, minValueId.split("-")[0], FilterCondition.lower, false)
+                filterByValue(ui, minValueId.split("-")[0], FilterCondition.lower, false);
             }
             else if (ui.handleIndex === 1) {
-                filterByValue(ui, maxValueId.split("-")[0], FilterCondition.greater, true)
+                filterByValue(ui, maxValueId.split("-")[0], FilterCondition.greater, true);
             }
         }
     });
@@ -496,7 +495,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         "normalize": [],
         "standardize": [],
         "distribution": []
-    }
+    };
 
     attributeTransform.normalize = fillAttributeTransform(attributeCheckboxDiv, 'normalization');
     attributeTransform.standardize = fillAttributeTransform(attributeCheckboxDiv, 'standardization');
@@ -563,7 +562,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         success: function (result) {
             const newNet = JSON.parse(result.newNetwork);
             graph.links = newNet;
-            store.links = newNet.map(a => { return { ...a } });
+            store.links = $.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
 
             linkedByIndex = {};
             for (let l of graph.links) {
@@ -586,10 +585,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 }
 
 const changeNetworkNodeColour = function(colour) {
-    defaultColour = colour;
+    forceProperties.colouring.network = colour;
     updateNodeAndLinkColour(node, link);
 }
 
 const changeNetworkBackgroundColour = function (colour) {
+    forceProperties.colouring.background = colour;
     $('#network-background-rect.background').css("fill", colour);
 }
