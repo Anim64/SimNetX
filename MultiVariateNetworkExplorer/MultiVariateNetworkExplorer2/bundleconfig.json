@@ -3,7 +3,6 @@
     "outputFileName": "wwwroot/css/site.min.css",
     "inputFiles": [
       "wwwroot/css/site.css",
-      //"wwwroot/css/index.css",
       "wwwroot/css/attributes.css",
       "wwwroot/css/controls.css",
       "wwwroot/css/graph.css",
@@ -21,28 +20,33 @@
   {
     "outputFileName": "wwwroot/js/site.min.js",
     "inputFiles": [
-      "wwwroot/js/site.js",
-      "wwwroot/js/index.js",
-      "wwwroot/js/algorithms.js",
-      "wwwroot/js/d3v4-brush-lite.js",
-      //"wwwroot/js/graph.js",
-      "wwwroot/js/import-export-graph.js",
       "wwwroot/js/mvn-input.js",
+      "wwwroot/js/toolbar.js",
+      "wwwroot/js/graph_settings.js",
+      "wwwroot/js/algorithms.js",
+      "wwwroot/js/site.js",
+      "wwwroot/js/d3v4-brush-lite.js",
+      "wwwroot/js/import-export-graph.js",
       "wwwroot/js/nodes.js",
       "wwwroot/js/queue.js",
-      "wwwroot/js/selections.js",
-      "wwwroot/js/toolbar.js",
-      "wwwroot/js/node_count_worker.js",
-      "wwwroot/js/graph_settings.js"
-
-
-
+      "wwwroot/js/selections.js"
     ],
     "minify": {
       "enabled": true,
-      "renameLocals": true
+      "renameLocals": false
     },
     "sourceMap": false
+
+  },
+  {
+    "outputFileName": "wwwroot/js/graph.min.js",
+    "inputFiles": [
+      "wwwroot/js/graph.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": false
+    }
 
   }
 ]

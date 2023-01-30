@@ -1137,31 +1137,7 @@ d3.select(window).on("resize", function () {
     updateSelectionForces();
 });
 
-$(document).ready(function () {
-    $('.collapse.in').prev('.panel-heading').addClass('active');
-    $('#accordion')
-        .on('show.bs.collapse', function (a) {
-            $(a.target).prev('.panel-heading').addClass('active');
-        })
-        .on('hide.bs.collapse', function (a) {
-            $(a.target).prev('.panel-heading').removeClass('active');
-        });
 
-    document.addEventListener('click', closeAllToolbarPanels);
-    document.addEventListener('click', closeAllRemodelPanels);
-
-    prepareInputForm();
-    calculateAllMetrics();
-    
-
-    selectionNode.each(function (d) {
-        setGroupColour(d);
-    });
-
-    displayAlgorithmParameters("remodel-algorithm-select");
-    displayMetricParameters("remodel-metric-select");
-
-});
 
 $(function () {
     $('[data-toggle="tooltip"]').tooltip();

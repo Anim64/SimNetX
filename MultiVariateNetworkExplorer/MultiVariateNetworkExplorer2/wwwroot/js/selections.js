@@ -281,6 +281,7 @@ const deleteAllSelections = function () {
         .style("background-color", networkColour)
         .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
 
+
     selectionGraph.nodes = [];
     selectionGraph.links = [];
 
@@ -288,6 +289,11 @@ const deleteAllSelections = function () {
 
     const selectionList = document.getElementById('list-selections');
     selectionList.innerHTML = "";
+
+    if (!forceProperties.attributeColouring.enabled) {
+        updateNodeAndLinkColour(node, link);
+    }
+    
 
 }
 

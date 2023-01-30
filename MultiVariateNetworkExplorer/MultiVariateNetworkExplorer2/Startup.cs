@@ -65,7 +65,7 @@ namespace MultiVariateNetworkExplorer2
                     pattern: "{controller=Home}/{action=Graph}/{id?}");
             });
 
-            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
 
             CultureInfo.DefaultThreadCurrentCulture = customCulture;

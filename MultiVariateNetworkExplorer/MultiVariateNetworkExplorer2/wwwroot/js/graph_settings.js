@@ -9,14 +9,14 @@ const isGreater = function(value1, value2) {
 
 
 class FilterCondition {
-    static lower = new FilterCondition(isLower);
-    static greater = new FilterCondition(isGreater);
+    
     constructor(booleanFunction) {
         this.booleanFunction = booleanFunction;
     }
 };
 
-
+const lower = new FilterCondition(isLower);
+    const greater = new FilterCondition(isGreater);
 
 
 const filterByValue = function (input, filteredAttributeName, filterCondition, minmax) {
@@ -289,7 +289,7 @@ const setAttributeNodeColouring = function (selectElement) {
         let attributeMin = null;
         let getValueFunction = null;
 
-        if (optgroup === "Numerical Attributes") {
+        if (optgroup === "Numeric Attributes") {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
             getValueFunction = getNodeAttribute;

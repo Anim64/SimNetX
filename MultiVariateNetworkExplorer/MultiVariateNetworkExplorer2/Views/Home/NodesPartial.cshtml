@@ -21,8 +21,9 @@
         </div>
         <div class="column-content selections" id="selections">
             <div class="selection-edit">
-                <input type="button" onclick="addNewSelection()" value="Add New Selection" />
-                <input type="button" onclick="deleteAllSelections()" value="Delete All Selections" />
+                <input type="button" onclick="addNewSelection();" value="Add New Selection" />
+            
+            <input type="button" onclick="deleteAllSelections();" value="Delete All Selections" />
             </div>
             <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
                 @if (Model.Mvn.Partition != null)

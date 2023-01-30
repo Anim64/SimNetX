@@ -5,16 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MultiVariateNetworkExplorer</title>
     
-    <environment include="Development">
+    <environment exclude="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
         <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
         @*<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>*@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        @RenderSection("StylesDev", true);
+        <link rel="stylesheet" href="~/css/controls.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/metrics.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/selections.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/attributes.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/graph.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/mvn_input.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/toolbar.css" type="text/css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/node_properties.css" type="text/css" asp-append-version="true" />
+
     </environment>
-    <environment exclude="Development">
+    <environment include="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
@@ -23,12 +31,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        @RenderSection("StylesDev", false);
         
         
     </environment>
 
-    <environment include="Development">
+    <environment exclude="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
@@ -37,10 +44,17 @@
         <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
         <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
-        @RenderSection("ScriptsDev", true);
+        <script src="~/js/graph_settings.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/nodes.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/selections.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/mvn-input.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/toolbar.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/import-export-graph.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/element-generator.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        
         
     </environment>
-    <environment exclude="Development">
+    <environment include="Development">
         <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
                 asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
                 asp-fallback-test="window.jQuery"
@@ -59,8 +73,8 @@
         <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
         <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
-        @RenderSection("ScriptsDev", false);
-        </environment>
+        @*@IgnoreSection("ScriptsDev");*@
+    </environment>
     </head>
     <body>
         <partial name="_CookieConsentPartial" />

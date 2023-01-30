@@ -67,7 +67,8 @@ namespace MultiVariateNetworkExplorer.Controllers
             if (!GraphErrorHandling(out ErrorInputModel eim, files, separators, missingvalues, convert,
                 metric, groupColumn, idColumn, epsilonRadius, kNNmin, directed, header, grouping))
             {
-                return View("Index", eim);
+                TempData["ErrorMessage"] = "Input files were not loaded correctly.";
+                return Redirect(HttpContext.Request.Headers["Referer"].ToString());
             }
 
             long size = files.Sum(f => f.Length);
@@ -201,8 +202,6 @@ namespace MultiVariateNetworkExplorer.Controllers
             JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
             JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
-
-
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
