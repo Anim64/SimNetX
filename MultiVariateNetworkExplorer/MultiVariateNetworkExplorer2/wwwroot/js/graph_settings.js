@@ -16,14 +16,14 @@ class FilterCondition {
 };
 
 const lower = new FilterCondition(isLower);
-    const greater = new FilterCondition(isGreater);
+const greater = new FilterCondition(isGreater);
 
 
 const filterByValue = function (input, filteredAttributeName, filterCondition, minmax) {
     //var value = event.currentTarget.value;
 
-    let value = input.value;
-    const extremeValue = !minmax ? input.min : input.max;
+    let value = parseFloat(input.value);
+    const extremeValue = parseFloat(!minmax ? input.min : input.max);
     const filterSuffix = !minmax ? "_min" : "_max";
     const attributeFilterType = !minmax ? "low" : "high";
     if (filterCondition.booleanFunction(value, extremeValue)) {
@@ -189,6 +189,7 @@ const setNodeLabel = function (selectElement) {
     forceProperties.labels.attribute = attributeName;
     if (attributeName === "") {
         nodeText.style("display", "none");
+        return
     }
 
     nodeText.style("display", "block");
@@ -431,27 +432,27 @@ const projectAttributeYAxis = function (selectElement) {
     
 }
 
-const createDoubleSlider = function (sliderId, minValueId, maxValueId, minValue, maxValue, lowValue = minValue, highValue = maxValue) {
+const createDoubleSlider = function (sliderId, attributeName, minValueId, maxValueId, minValue, maxValue, lowValue = minValue, highValue = maxValue) {
     $("#" + sliderId).slider({
         range: true,
         min: minValue,
         max: maxValue,
         values: [lowValue, highValue],
         step: 0.01,
-        slide: function (event, ui) {
-            $("#" + minValueId).val(ui.values[0]);
-            $("#" + maxValueId).val(ui.values[1]);
+        stop: function (event, ui) {
+            const minValueElem = document.getElementById(minValueId);
+            const maxValueElem = document.getElementById(maxValueId);
+            minValueElem.value = ui.values[0];
+            maxValueElem.value = ui.values[1];
 
             if (ui.handleIndex === 0) {
-                filterByValue(ui, minValueId.split("-")[0], FilterCondition.lower, false);
+                filterByValue(minValueElem, attributeName, lower, false);
             }
             else if (ui.handleIndex === 1) {
-                filterByValue(ui, maxValueId.split("-")[0], FilterCondition.greater, true);
+                filterByValue(maxValueElem, attributeName, greater, true);
             }
         }
     });
-    //$("#" + minValueId).val($("#" + sliderId).slider("values", 0));
-    //$("#" + maxValueId).val($("#" + sliderId).slider("values", 1));
 
 }
 
@@ -562,7 +563,8 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         success: function (result) {
             const newNet = JSON.parse(result.newNetwork);
             graph.links = newNet;
-            store.links = $.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
+            store.links = [...newNet];//$.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
+            
 
             linkedByIndex = {};
             for (let l of graph.links) {

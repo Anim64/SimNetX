@@ -961,15 +961,21 @@ const updateNodes = function () {
         .on("mouseout", mouseOut);
 
     const newNodeText = newNodeGroups.append("text")
-        .attr("id", function (d) { return d.id + '_node_text'; })
+        .text(function (d) {
+            return d.id;
+        })
+        .attr("id", function (d) {
+            return d.id + '_node_text';
+        })
         .attr("text-anchor", "middle")
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
 
-
+    
     nodeGroups = nodeGroups.merge(newNodeGroups);
-    node = nodeGroups.selectAll("circle");
-    nodeText = nodeGroups.selectAll("text");
+    node = nodeGroups.select("circle");
+    nodeText = nodeGroups.select("text");
+
     simulation
         .nodes(nodes)
         .on("tick", ticked);

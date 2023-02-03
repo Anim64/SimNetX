@@ -24,11 +24,11 @@
             <div id="networkGraph" class="graph-content">
                 <svg></svg>
                 @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
-                <environment exclude="Development">
+                <environment include="Development">
                     <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
                     <script src="~/js/graph.js" type="text/javascript" asp-append-version="true"></script>
                 </environment>
-                <environment include="Development">
+                <environment exclude="Development">
                     <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
                     <script src="~/js/graph.min.js" type="text/javascript" asp-append-version="true"></script>
                 </environment>

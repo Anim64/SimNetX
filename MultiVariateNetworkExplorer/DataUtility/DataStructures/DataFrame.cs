@@ -218,7 +218,7 @@ namespace DataUtility
             }
         }
 
-        public Dictionary<string, double> CalculateAverages(params string[] columns)
+        public Dictionary<string, double> CalculateAverages(bool inplace = false, params string[] columns)
         {
             Dictionary<string, double> result = new Dictionary<string, double>();
 
@@ -233,6 +233,7 @@ namespace DataUtility
                 }
             }
 
+            this.Averages = result;
             return result;
         }
 
@@ -780,6 +781,8 @@ namespace DataUtility
                 }
                 df.DataCount++;
             }
+
+            df.CalculateAverages(inplace: true);
 
             return df;
             
