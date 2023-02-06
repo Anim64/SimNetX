@@ -39,6 +39,16 @@ namespace DataUtility
             this.Data = data;
         }
 
+        public ColumnString(int count)
+        {
+            this.Data = new List<string>(count);
+            for(int i = 0; i < count; i++)
+            {
+                this.Data.Add(null);
+            }
+            
+        }
+
         public ColumnString(ColumnDouble col)
         {
             this.Data = new List<string>(col.DataCount);
@@ -49,13 +59,7 @@ namespace DataUtility
         }
         public void AddData(object value)
         {
-            string stringValue = value.ToString();
-            if(!(value is string))
-            {
-                string message = "There was an error when adding values from file to the network. " +
-                    "Please check if the column order is the same as in previous files";
-                throw new ColumnsDoNotMatchException(message);
-            }
+            string stringValue = value != null ? value.ToString() : null;
             this.Data.Add(stringValue);
         }
 

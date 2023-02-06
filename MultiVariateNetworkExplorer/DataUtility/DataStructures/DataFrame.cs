@@ -504,14 +504,14 @@ namespace DataUtility
         private void PrepareColumns(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
             Dictionary<string, double> averages)
         {
-            int columnCount = vector.Length;
+            int columnCount = headers.Length;
             for (int i = 0; i < columnCount; i++)
             {
                 string header = headers[i];
-                string vectorValue = vector[i];
+                string vectorValue = i < vector.Length ? vector[i] : "";
                 nullIndeces[header] = new List<int>();
                 averages[header] = 0;
-                if (String.IsNullOrEmpty(vectorValue) || vectorValue == missingValues)
+                if (String.IsNullOrEmpty(vectorValue) || vectorValue == missingValues || i >= vector.Length)
                 {
                     emptyAtrributeCount[header] = 1;
                     nullIndeces[header].Add(0);
@@ -595,8 +595,10 @@ namespace DataUtility
                 //keys.MoveNext();
                 /*if (this.Data[headers[i]] is List<int>)
                     this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
+
                 string header = headers[i];
-                string vectorValue = vector[i];
+
+                string vectorValue = i < vector.Length ? vector[i] : "";
                 bool isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
 
                 if (emptyAtrributeCount.ContainsKey(header))
@@ -630,7 +632,7 @@ namespace DataUtility
                     emptyAtrributeCount.Remove(header);
                 }
 
-                if (vectorValue == "" || vectorValue == missingValues)
+                if (string.IsNullOrEmpty(vectorValue) || vectorValue == missingValues)
                 {
                     this.Data[header].AddData(null);
                     nullIndeces[header].Add(DataCount);
@@ -690,6 +692,19 @@ namespace DataUtility
                         AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
 
                         DataCount++;
+                    }
+
+                    foreach (var attribute in emptyAtrributeCount)
+                    {
+                        this.Data[attribute.Key] = new ColumnString(attribute.Value);
+                    }
+
+                    foreach (var attribute in this)
+                    {
+                        if(attribute.Value.DataCount <= 0)
+                        {
+                            this.RemoveColumn(attribute.Key);
+                        }
                     }
 
                     this.Averages = averages;
