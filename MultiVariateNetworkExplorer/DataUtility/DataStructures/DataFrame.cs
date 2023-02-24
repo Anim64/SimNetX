@@ -372,13 +372,12 @@ namespace DataUtility
                     {
                         ColumnDouble columnValues = (ColumnDouble)column;
                         ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
-                        double range = columnExtremes.Max - columnExtremes.Min;
                         for (int i = 0; i < columnValues.DataCount; i++)
                         {
                             double? value = (double?)columnValues[i];
                             if (value != null)
                             {
-                                columnValues[i] = (value - columnExtremes.Min) / range;
+                                columnValues[i] = value / columnExtremes.Max;
                             }
 
                         }
@@ -391,6 +390,33 @@ namespace DataUtility
         }
 
         public void Normalize(params string[] columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? value = (double?)columnValues[i];
+                            if (value != null)
+                            {
+                                columnValues[i] = value / columnExtremes.Max;
+                            }
+
+                        }
+                    }
+
+
+                }
+            }
+
+        }
+
+        public void Rescale(IEnumerable<string> columns, double min = 0, double max = 1)
         {
             foreach (string columnName in columns)
             {
@@ -415,7 +441,33 @@ namespace DataUtility
 
                 }
             }
+        }
 
+        public void Rescale(double min = 0, double max = 1, params string[] columns)
+        {
+            foreach (string columnName in columns)
+            {
+                if (this.Data.TryGetValue(columnName, out IColumn column))
+                {
+                    if (!(column is ColumnString))
+                    {
+                        ColumnDouble columnValues = (ColumnDouble)column;
+                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
+                        double range = columnExtremes.Max - columnExtremes.Min;
+                        for (int i = 0; i < columnValues.DataCount; i++)
+                        {
+                            double? value = (double?)columnValues[i];
+                            if (value != null)
+                            {
+                                columnValues[i] = (value - columnExtremes.Min) / range;
+                            }
+
+                        }
+                    }
+
+
+                }
+            }
         }
 
 

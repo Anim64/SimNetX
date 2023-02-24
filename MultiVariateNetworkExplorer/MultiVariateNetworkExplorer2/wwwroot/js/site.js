@@ -30,6 +30,12 @@ const getJsonValue = function (obj, stringPath) {
     return result;
 }
 
+const cancelDefaultBehaviour = function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+}
+
 
 
 window.addEventListener("load", function () {
@@ -42,11 +48,9 @@ window.addEventListener("load", function () {
             $(a.target).prev('.panel-heading').removeClass('active');
         });
 
-
-
     document.addEventListener('click', closeAllToolbarPanels);
-    document.addEventListener('click', closeAllRemodelPanels);
-
+    //initiateEventHandlers();
+    
     prepareInputForm();
     calculateAllMetrics();
 
@@ -55,6 +59,8 @@ window.addEventListener("load", function () {
         setGroupColour(d);
     });
 
+
+    updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select");
     displayMetricParameters("remodel-metric-select");
 

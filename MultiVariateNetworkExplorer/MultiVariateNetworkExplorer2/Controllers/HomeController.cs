@@ -1,29 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using DataUtility;
-using DataUtility.DataStructures;
-using DataUtility.DataStructures.DataFrameExceptions;
 using DataUtility.DataStructures.Metrics;
 using DataUtility.DataStructures.VectorDataConversion;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MultiVariateNetworkExplorer.Models;
-using MultiVariateNetworkExplorer2;
 using MultiVariateNetworkExplorer2.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using static DataUtility.DataStructures.Metrics.MetricEnums;
 using static DataUtility.DataStructures.Metrics.ParameterEnums;
-using static DataUtility.DataStructures.VectorDataConversion.ConversionEnums;
-
 namespace MultiVariateNetworkExplorer.Controllers
 {
     public class HomeController : Controller
@@ -195,22 +184,59 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
-        public JsonResult RemodelNetwork(string nodes, string attributes, string excludedAttributes, string attributeTransform, string networkRemodelParams)
+        public JsonResult RemodelNetwork(string nodes, string attributes, string attributeTransform, string networkRemodelParams)
         {
             JArray jNodes = JArray.Parse(nodes);
             JObject jAttributes = JObject.Parse(attributes);
-            JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
             JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
+            Parallel.ForEach<KeyValuePair<string, JToken?>>(jAttributeTransform, attribute =>
+            {
+                List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
+                foreach (var transform in attributeTransforms)
+                {
+                    switch (transform)
+                    {
+                        case "normalize":
+                            {
+                                nodeAttributes.Normalize();
+                                break;
+                            }
+                        case "rescale":
+                            {
+                                nodeAttributes.Rescale();
+                                break;
+                            }
+                        case "standardize":
+                            {
+                                nodeAttributes.Standardize();
+                                break;
+                            }
+                        case "distribute":
+                            {
+                                nodeAttributes.LogNormalToNormalDist();
+                                break;
+                            }
+                        default:
+                            break;
+                    }
+                }
+            });
+           
+            
             List<string> normalizeAttributes = jAttributeTransform["normalize"].ToObject<List<string>>();
             nodeAttributes.Normalize(normalizeAttributes);
             List<string> standardizeAttributes = jAttributeTransform["standardize"].ToObject<List<string>>();
             nodeAttributes.Standardize(standardizeAttributes);
+            List<string> rescaleAttributes = jAttributeTransform["rescale"].ToObject<List<string>>();
+            nodeAttributes.Rescale(rescaleAttributes);
             List<string> distributionAttributes = jAttributeTransform["distribution"].ToObject<List<string>>();
             nodeAttributes.LogNormalToNormalDist(distributionAttributes);
+
+            List<string> excludedAttributes = jAttributeTransform["remodeling"].ToObject<List<string>>();
 
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
@@ -222,8 +248,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             object[] algorithmParams = jAlgorithm["params"].ToObject<object[]>();
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
-            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, jExcludedAttributes.ToObject<IEnumerable<string>>());
-
+            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, excludedAttributes);
             return Json(new { newNetwork = remodeledNetwork.ToD3Json().ToString() }); 
             
         }

@@ -145,46 +145,11 @@
     grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 2rem;
     margin: 1rem;
-    
-    
-}
-
-.remodel-attribute-group {
-    display: flex;
-    -ms-flex-direction: row;
-    -webkit-flex-direction: row;
-    flex-direction: row;
-    -webkit-justify-content: space-between;
-    justify-content: space-between;
-    -ms-flex-wrap: nowrap;
-    -webkit-flex-wrap: nowrap;
-    flex-wrap: nowrap;
-    align-items: center;
-    flex-shrink: 1;
-    margin-bottom: 1rem;
-    position: relative;
-}
-
-.remodel-attribute-group label {
-    overflow-wrap: anywhere;
-    margin-bottom: 0;
-    margin-right: 0.5rem;
-}
-
-.remodel-attribute-group button {
-    width: 30px;
-    display: flex;
-    -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    -webkit-justify-content: center;
-    justify-content: center;
-    -webkit-align-items: center;
-    align-items: center;
+    justify-items: left;
 }
 
 .remodel-attribute-panel {
-    display: none;
+    display: flex;
     -ms-flex-direction: column;
     -webkit-flex-direction: column;
     flex-direction: column;
@@ -194,9 +159,7 @@
     align-items: center;
     box-shadow: 0px 8px 16px 0px rgba(255,255,255,0.2);
     min-width: 25vh;
-    min-height: 200px;
     background-color: #404040;
-    overflow: visible;
     color: white;
     padding: 1rem;
     -ms-grid-column: 1 / 3;
@@ -210,6 +173,45 @@
 
 .remodel-attribute-panel input {
     display: inline-block;
+}
+
+.transformation-option {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 1rem;
+}
+
+.attribute-clear-btn {
+    border: 0.1rem solid lightblue;
+    border-radius: 0.6rem;
+    color: white;
+    background-color: rgba(100, 100, 100, 0.5);
+    outline: none;
+    min-height: 3rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: inherit;
+    font-weight: 600;
+    width: 20%;
+    min-width: 4rem;
+    align-self: flex-end;
+}
+
+.transformation-list{
+    width: 100%;
+    padding: 1rem 2rem;
+}
+
+.transformation-li {
+    width: 100%;
+    display: flex;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+}
+.transformation-li button {
+    display: inline;
 }
 
 .remodel-div {

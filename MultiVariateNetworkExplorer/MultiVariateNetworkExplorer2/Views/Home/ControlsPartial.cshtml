@@ -242,35 +242,44 @@
             </div>
             <div class="force">
                 <p><label>Remodel the network</label> With option to exclude some attributes</p>
-                <div class="checkboxes" id="remodel-attributes">
-                    @foreach (var column in Model.Mvn.VectorData.Columns)
-                    {   
-                        <div class="remodel-attribute-group">
-                            <label for="@(column + "-remodel-expand-button")">@(column)</label>
-                            <button id="@(column + "-remodel-expand-button")" onclick="expandRemodelPanel(event,'@(column + "-remodel-panel")')"><i class='fa fa-plus'></i></button>
-                        </div>
-                    }
-
-                @foreach (var column in Model.Mvn.VectorData.Columns)
-                {
-                    <div class="remodel-attribute-panel" id="@(column + "-remodel-panel")">
-                        <h4>@(column + " remodel options")</h4>
-                        <div class="checkboxes">
-                            <label for="@(column + "-remodel-checkbox")">Use for remodeling?</label>
-                            <input type="checkbox" id="@(column + "-remodel-checkbox")" value="@column" data-role="remodeling" checked />
-
-                            <label for="@(column + "-normalize-checkbox")">Normalize?</label>
-                            <input type="checkbox" id="@(column + "-normalize-checkbox")" value="@column" data-role="normalization" />
-
-                            <label for="@(column + "-standardize-checkbox")">Standardardize?</label>
-                            <input type="checkbox" id="@(column + "-standadize-checkbox")" value="@column" data-role="standardization" />
-
-                            <label for="@(column + "-distribution-checkbox")">LogNormal To Normal?</label>
-                            <input type="checkbox" id="@(column + "-distribution-checkbox")" value="@column" data-role="distribution" />
-                        </div>
+                <label class="attribute-selection-label" for="remodel-network-select">
+                    Choose Attribute:
+                <select class="attribute-select" id="remodel-network-select" onchange="updateRemodelOptionsHeader('remodel-attribute-panel-header', this.id); displayAttributeTransformation(this.value, 'attribute-transformation-list')" asp-items="@(new SelectList(Model.Mvn.VectorData.NumAtrrExtremes.Keys))"></select>
+                </label>
+                <div class="transformation-options">
+                    <div class="transformation-option" id="normalize-option" data-role="normalize">
+                        <h5>Normalize</h5>
+                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
+                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
                     </div>
-                }
+                    <div class="transformation-option" id="rescale-option" data-role="rescale">
+                        <h5>Rescale</h5>
+                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
+                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
+                    </div>
+                    <div class="transformation-option" id="standardize-option" data-role="standardize">
+                        <h5>Standardize</h5>
+                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
+                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
+                    </div>
+                    <div class="transformation-option" id="distribute" data-role="distribute">
+                        <h5>Log Normal To Normal</h5>
+                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
+                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
+                    </div>
                 </div>
+
+                <div class="remodel-attribute-panel" id="remodel-panel">
+                    <h4 id="remodel-attribute-panel-header" onload="updateRemodelOptionsHeader(this.id, 'remodel-network-select')"></h4>
+                    <div class="checkboxes">
+                        <label for="remodel-checkbox">Use for remodeling?</label>
+                        <input type="checkbox" id="remodel-checkbox" data-role="remodeling" onchange="updateRemodelingAttributes(this, 'remodel-network-select')" checked />
+                    </div>
+                    
+                    <ul class="transformation-list" id="attribute-transformation-list"></ul>
+                <button class="attribute-clear-btn" onclick="clearAttributeTransformations('remodel-network-select')">Clear</button>
+                </div>
+                
                 <div class="remodel-div" id="remodel-div">
                     <h4 id="remodel-algorithm-headline">Algorithm Parameters</h4>
                     <label for="remodel-algorithm-select">Choose a conversion algorithm:</label>

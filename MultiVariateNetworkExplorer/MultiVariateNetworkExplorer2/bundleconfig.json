@@ -29,7 +29,8 @@
       "wwwroot/js/import-export-graph.js",
       "wwwroot/js/nodes.js",
       "wwwroot/js/queue.js",
-      "wwwroot/js/selections.js"
+      "wwwroot/js/selections.js",
+      "wwwroot/js/remodel_network.js"
     ],
     "minify": {
       "enabled": true,
