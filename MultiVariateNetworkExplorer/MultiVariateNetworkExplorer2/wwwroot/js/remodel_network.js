@@ -63,19 +63,20 @@ const transformationDragStart = function (e) {
 const transformationDrop = function (e) {
     cancelDefaultBehaviour(e);
     const selectedAttribute = document.getElementById("remodel-network-select").value;
-
+    this.classList.remove("transformation-dragover");
     // get new and old index
-    const oldIndex = e.dataTransfer.getData('text/plain');
+    const oldIndex = parseInt(e.dataTransfer.getData('text/plain'));
     const target = $(e.currentTarget);
     const newIndex = target.index();
+
+    if (newIndex === oldIndex) {
+        return;
+    }
 
     const transformArray = attributeTransform[selectedAttribute];
     const temp = transformArray[newIndex];
     transformArray[newIndex] = transformArray[oldIndex];
     transformArray[oldIndex] = temp;
-
-
-
 
     // remove dropped items at old place
     let dropped = $(this).parent().children().eq(oldIndex).remove();
@@ -86,6 +87,16 @@ const transformationDrop = function (e) {
     } else {
         target.after(dropped);
     }
+}
+
+const transformationDragOver = function (e) {
+    cancelDefaultBehaviour(e);
+    this.classList.add("transformation-dragover");
+}
+
+const transformationDragLeave = function (e) {
+    cancelDefaultBehaviour(e);
+    this.classList.remove("transformation-dragover");
 }
 
 
@@ -106,8 +117,9 @@ const addTransformationElement = function (transformationListId, transformationT
 
     newTransformationListItem.node().addEventListener("dragstart", transformationDragStart, true);
     newTransformationListItem.node().addEventListener("drop", transformationDrop, true);
-    newTransformationListItem.node().addEventListener("dragover", cancelDefaultBehaviour, true);
+    newTransformationListItem.node().addEventListener("dragover", transformationDragOver, true);
     newTransformationListItem.node().addEventListener("dragenter", cancelDefaultBehaviour, true);
+    newTransformationListItem.node().addEventListener("dragleave", transformationDragLeave, true);
 
 
     newTransformationListItem
