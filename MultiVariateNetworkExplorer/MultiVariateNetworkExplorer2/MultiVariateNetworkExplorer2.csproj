@@ -240,7 +240,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataUtility\DataUtility.csproj" />
+    <ProjectReference Include="..\DataUtility\MultiVariateNetwork.csproj" />
   </ItemGroup>
 
 

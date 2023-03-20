@@ -1,11 +1,4 @@
-﻿using DataUtility;
-using DataUtility.DataStructures.Metrics;
-using DataUtility.DataStructures.VectorDataConversion;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System;
 
 namespace TestApp
 {
@@ -20,7 +13,6 @@ namespace TestApp
             Type t = Nullable.GetUnderlyingType(typeof(double?));
             double? doubleValue = (double?)Convert.ChangeType(value, t);
             
-            int i = 0;
             //MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "./orto.csv" }, "na", "Number", null, new LRNet(), new GaussKernel(), false, false, true, ';');
             //mvn.FindCommunities();
 

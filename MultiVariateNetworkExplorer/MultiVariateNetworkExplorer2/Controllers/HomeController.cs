@@ -4,15 +4,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DataUtility;
-using DataUtility.DataStructures.Metrics;
-using DataUtility.DataStructures.VectorDataConversion;
+using DataFrameLibrary;
+using Metrics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MultiVariateNetworkExplorer.Models;
 using MultiVariateNetworkExplorer2.Models;
+using MultiVariateNetworkLibrary;
+using NetworkLibrary;
 using Newtonsoft.Json.Linq;
-using static DataUtility.DataStructures.Metrics.ParameterEnums;
+using VectorConversion;
+using static Metrics.Enums.ParameterEnums;
+
 namespace MultiVariateNetworkExplorer.Controllers
 {
     public class HomeController : Controller
@@ -162,9 +165,8 @@ namespace MultiVariateNetworkExplorer.Controllers
             }
             catch(Exception dfe)
             {
-               
                 GraphModel gme = new GraphModel(currentMvn);
-                ViewBag.ErrorMessage = dfe.Message;
+                TempData["ErrorMessage"] = dfe.Message;
                 return View("Graph", gme);
             }
 
@@ -193,7 +195,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
-            Parallel.ForEach<KeyValuePair<string, JToken?>>(jAttributeTransform, attribute =>
+            Parallel.ForEach<KeyValuePair<string, JToken>>(jAttributeTransform, attribute =>
             {
                 List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
                 foreach (var transform in attributeTransforms)

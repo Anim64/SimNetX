@@ -1,5 +1,5 @@
-﻿using DataUtility;
-using DataUtility.DataStructures;
+﻿
+using MultiVariateNetworkLibrary;
 
 namespace MultiVariateNetworkExplorer2.Models
 {
