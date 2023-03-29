@@ -17,7 +17,10 @@ namespace DataFrameLibrary
 {
     public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     {
-        private static string exceptionMessageResourceName = "DataUtility.DataStructures.DataFrameExceptions.ExceptionMessages";
+        private static readonly string exceptionMessageResourceName = "DataUtility.DataStructures.DataFrameExceptions.ExceptionMessages";
+
+        private static readonly string jsonIdColumnName = "id";
+
         /// <summary>
         /// A dataframe that holds vector data
         /// </summary>
@@ -47,11 +50,7 @@ namespace DataFrameLibrary
         /// </summary>
         public Dictionary<string, List<string>> CatAttrValues { get; set; }
 
-        public Dictionary<string, double> Averages 
-        {
-            get;
-            set; 
-        }
+        public Dictionary<string, double> Averages { get; set; }
 
         /// <summary>
         /// Creates an empty dataframe.
@@ -126,11 +125,7 @@ namespace DataFrameLibrary
                 IdColumnName = null;
                 IdColumn = new ColumnString(Enumerable.Range(0, this.DataCount).Select(id => id.ToString()).ToList());
             }
-
-
         }
-
-        
 
         /// <summary>
         /// </summary>
@@ -149,8 +144,6 @@ namespace DataFrameLibrary
                     {
                         selectedRows.Data[pair.Key].AddData(this.Data[pair.Key].Data[row]);
                     }
-
-                     
                 }
                 return selectedRows;
             }
@@ -167,25 +160,6 @@ namespace DataFrameLibrary
                 return this.Data[column];
             }
         }
-
-        
-        /*public DataFrame this[params string[] columns]
-        {
-            
-            get
-            {
-                DataFrame selectedColumns = new DataFrame();
-
-                foreach(string column in columns)
-                {
-                    selectedColumns.dataFrame.Add(column, this.dataFrame[column]);
-                }
-
-                return selectedColumns;
-            }
-
-        }*/
-
 
         /// <summary>
         /// </summary>
@@ -238,8 +212,6 @@ namespace DataFrameLibrary
         /// </summary>
         public void FindAttributeExtremesAndValues()
         {
-            
-
             foreach (var column in this.Data)
             {
                 if (column.Value is ColumnDouble)
@@ -282,8 +254,7 @@ namespace DataFrameLibrary
                     if (!(column is ColumnString))
                     {
                         ColumnDouble columnValues = (ColumnDouble)column;
-                        columnValues.Log();
-
+                        columnValues.Map(Math.Log);
                     }
                 }
             }
@@ -322,11 +293,7 @@ namespace DataFrameLibrary
                             double? columnValue = (double?)columnValues[i];
                             columnValues[i] = columnValue != null ? (columnValue - average) / stdDev : null;
                         }
-
-                        average = columnValues.Average();
                     }
-
-
                 }
             }
         }
@@ -431,8 +398,6 @@ namespace DataFrameLibrary
 
                         }
                     }
-
-
                 }
             }
         }
@@ -576,9 +541,6 @@ namespace DataFrameLibrary
 
                 this.Data[header] = new ColumnString();
                 this.Data[header].AddData(vectorValue);
-
-
-
             }
         }
 
@@ -602,8 +564,6 @@ namespace DataFrameLibrary
                     this.IdColumn.AddData(vectorValue);
                     continue;
                 }
-
-
 
                 if (vectorValue == "" || vectorValue == missingValues)
                 {
@@ -638,10 +598,6 @@ namespace DataFrameLibrary
         {
             for (int i = 0; i < headers.Length; i++)
             {
-                //keys.MoveNext();
-                /*if (this.Data[headers[i]] is List<int>)
-                    this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
-
                 string header = headers[i];
 
                 string vectorValue = i < vector.Length ? vector[i] : "";
@@ -805,15 +761,9 @@ namespace DataFrameLibrary
 
                         DataCount++;
                     }
-
-
-
                 }
-
                 this.Averages = CalculateAverages();
                 FindAttributeExtremesAndValues();
-
-            
         }
 
 
@@ -832,10 +782,9 @@ namespace DataFrameLibrary
             
             foreach (var node in jNodes)
             {
-                df.IdColumn.AddData(node["id"].ToString());
+                df.IdColumn.AddData(node[jsonIdColumnName].ToString());
                 foreach (string column in df.Columns)
                 {
-                    IColumn columnList = df[column];
                     JToken attributeValue = node[column];
                     object value = attributeValue.ToString() != null ? attributeValue.ToObject<object>() : null;
                     df[column].AddData(value);
@@ -847,6 +796,37 @@ namespace DataFrameLibrary
 
             return df;
             
+        }
+
+        public JArray ToD3Json()
+        {
+            JArray jNodes = new JArray();
+            for (int i = 0; i < this.DataCount; i++)
+            {
+                string source = this.IdColumn[i].ToString();
+
+                JObject jNode = new JObject();
+                jNode[jsonIdColumnName] = source;
+
+                foreach (string column in this.Columns)
+                {
+                    jNode[column] = this[column, i] != null ? JToken.FromObject(this[column, i]) : JValue.CreateNull();
+                }
+                jNodes.Add(jNode);
+            }
+
+            return jNodes;
+        }
+
+        public JObject AttributesToD3Json()
+        {
+            JObject jAttributes = new JObject();
+            jAttributes[jsonIdColumnName] = this.IdColumnName;
+            foreach (var column in this.Data)
+            {
+                jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
+            }
+            return jAttributes;
         }
 
 

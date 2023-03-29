@@ -10,8 +10,6 @@ namespace NetworkLibrary
 {
     public class Network : IEnumerable<KeyValuePair<string, SortedDictionary<string, double>>>
     {
-
-
         private static readonly string jsonLinkSourceName = "source";
         private static readonly string jsonLinkTargetName = "target";
         private static readonly string jsonLinkValueName = "value";

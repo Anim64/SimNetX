@@ -7,6 +7,7 @@ using NetworkLibrary;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using VectorConversion;
@@ -21,13 +22,7 @@ namespace MultiVariateNetworkLibrary
         private static readonly string jsonPartitionsName = "partitions";
         private static readonly string jsonRealClassesName = "classes";
         private static readonly string jsonAttributesName = "attributes";
-        private static readonly string jsonIdColumnName = "id";
-
-        private static readonly string jsonLinkSourceName = "source";
-        private static readonly string jsonLinkTargetName = "target";
-        private static readonly string jsonLinkValueName = "value";
-        private static readonly string jsonLinkIdName = "id";
-
+        
         public DataFrame VectorData { get; set; }
         public Network Network { get; set; }
 
@@ -37,17 +32,12 @@ namespace MultiVariateNetworkLibrary
 
         public bool Directed { get; set; }
 
-
-        
-
-
         public MultiVariateNetwork()
         {
             this.VectorData = new DataFrame();
             this.Network = new Network(0);
             this.Partition = null;
             this.RealClasses = new Dictionary<string, string>();
-            
             this.Directed = false;
         }
 
@@ -59,36 +49,31 @@ namespace MultiVariateNetworkLibrary
             this.Partition = partitions;
             this.RealClasses = realClasses;
             this.Directed = false;
-
         }
 
         public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, IMetric chosenMetric,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
             this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, header, separator);
-            ColumnString dataFrameIdColumn = this.VectorData.IdColumn;
 
             this.Directed = directed;
-            this.Partition = null;
-            this.RealClasses = null;
-
-            
+            this.Partition = this.RealClasses = null;
             
             if (!String.IsNullOrEmpty(groupColumn))
             {
                 groupColumn = Utils.RemoveDiacritics(groupColumn);
-                Dictionary<string, string> groups = new Dictionary<string, string>();
+                this.Partition = new Dictionary<string, string>();
+                this.RealClasses = new Dictionary<string, string>();
+
                 bool isParsable = int.TryParse(groupColumn, out int result);
                 var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
                 this.VectorData.RemoveColumn(isParsable ? "Attribute" + groupColumn : groupColumn);
-                this.RealClasses = new Dictionary<string, string>();
 
                 for (int i = 0; i < columnList.DataCount; i++)
                 {
-                    groups[dataFrameIdColumn[i].ToString()] = columnList[i].ToString();
-                    RealClasses[dataFrameIdColumn[i].ToString()] = columnList[i].ToString();
+                    string id = this.VectorData.IdColumn[i].ToString();
+                    string value = columnList[i].ToString();
+                    this.Partition[id] = RealClasses[id] = value;
                 }
-
-                this.Partition = groups;
             }
 
             this.VectorData.FindAttributeExtremesAndValues();
@@ -101,14 +86,6 @@ namespace MultiVariateNetworkLibrary
                 this.FindCommunities();
                 //PartitionsToFile();
             }
-
-            /*if(Partition != null)
-            {
-                PartitionsToFile();
-            }*/
-
-           
-            
         }
 
         public void FindCommunities()
@@ -148,19 +125,13 @@ namespace MultiVariateNetworkLibrary
 
         public JObject ToD3Json()
         {
-            int edgeId = -1;
-
             JObject root = new JObject();
 
-            JArray jNodes = new JArray();
-            JArray jLinks = new JArray();
+            JArray jNodes = this.VectorData.ToD3Json();
+            JArray jLinks = this.Network.ToD3Json();
 
-            JObject jAttributes = new JObject();
-            jAttributes[jsonIdColumnName] = this.VectorData.IdColumnName;
-            foreach(var column in this.VectorData)
-            {
-                jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
-            }
+            JObject jAttributes = this.VectorData.AttributesToD3Json();
+            
             JObject jPartition = new JObject();
             JObject jRealClasses = new JObject();
 
@@ -168,34 +139,9 @@ namespace MultiVariateNetworkLibrary
 
             for (int i = 0; i < dataCount; i++)
             {
-                JObject jNode = new JObject();
-                var source = this.VectorData.IdColumn[i].ToString();
-                var links = this.Network[source];
-                jNode[jsonIdColumnName] = source;
-                foreach (string column in this.VectorData.Columns)
-                {
-                    jNode[column] = this.VectorData[column, i] != null ? JToken.FromObject(this.VectorData[column, i]) : JValue.CreateNull();
-                }
-
+                string source = this.VectorData.IdColumn[i].ToString();
                 jPartition[source] = this.Partition != null ? this.Partition[source] : string.Empty;
                 jRealClasses[source] = this.RealClasses != null ? this.RealClasses[source] : string.Empty;
-                jNodes.Add(jNode);
-
-
-                foreach (var target in links.Where(kv => string.Compare(source, kv.Key) < 0))
-                {
-
-                    JObject newLink = new JObject
-                    {
-                        [jsonLinkSourceName] = source,
-                        [jsonLinkTargetName] = target.Key,
-                        [jsonLinkValueName] = target.Value,
-                        [jsonLinkIdName] = ++edgeId
-                    };
-                    jLinks.Add(newLink);
-
-
-                }
             }
 
             root[jsonNodesName] = jNodes;
@@ -286,17 +232,14 @@ namespace MultiVariateNetworkLibrary
         public double[] calculatePrecision()
         {
             double[] result = new double[2];
-            double weightedPrecision = 0;
-            double precision = 0;
-            if(RealClasses == null)
+            double weightedPrecision = 0, precision = 0;
+            if (RealClasses == null)
             {
                 return null;
             }
             foreach(var node in Network)
             {
-                double nodeWeightedPrecision = 0;
-                double nodeAllWeight = 0;
-                double nodePrecision;
+                double nodeWeightedPrecision = 0, nodeAllWeight = 0, nodePrecision;
                 foreach(var edge in node.Value)
                 {
                     if(RealClasses[node.Key].Equals(RealClasses[edge.Key]))
@@ -305,7 +248,6 @@ namespace MultiVariateNetworkLibrary
                     }
                     nodeAllWeight += edge.Value;
                 }
-
                 weightedPrecision += nodeWeightedPrecision / nodeAllWeight;
                 nodePrecision = nodeWeightedPrecision > (nodeAllWeight - nodeWeightedPrecision) ? 1 : 0;
                 precision += nodePrecision;
@@ -366,10 +308,6 @@ namespace MultiVariateNetworkLibrary
                         {
                             numberOfCommons = partition.Value.Intersect(realclass.Value).Count();
                         }
-
-                        
-
-
                     }
 
                     supportDict[partition.Key][1] = numberOfCommons / supportDict[partition.Key][0];
