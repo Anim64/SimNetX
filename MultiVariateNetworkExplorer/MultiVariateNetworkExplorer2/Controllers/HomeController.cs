@@ -112,16 +112,6 @@ namespace MultiVariateNetworkExplorer.Controllers
                 TempData["ErrorMessage"] = e.Message;
                 return Redirect(HttpContext.Request.Headers["Referer"].ToString());
             }
-            
-            
-            /*double[] precisions = multiVariateNetwork.calculatePrecision();
-
-            using(StreamWriter sw = new StreamWriter("precision.txt"))
-            {
-                sw.WriteLine("Weighted: " + precisions[0] + " Prec: " + precisions[1]);
-            }*/
-            
-
         }
 
         [HttpPost]
@@ -145,9 +135,7 @@ namespace MultiVariateNetworkExplorer.Controllers
                 }
             }
 
-            char[] separatorArray;
-
-            separatorArray = String.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
+            char[] separatorArray; = String.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
 
             bool hasHeaders = header == BooleanParameter.True;
 
@@ -175,13 +163,11 @@ namespace MultiVariateNetworkExplorer.Controllers
             for(int i = currentMvn.Partition.Count; i < currentMvn.VectorData.DataCount; i++)
             {
                 string id = currentMvn.VectorData.IdColumn.Data[i].ToString();
-                currentMvn.Partition[id] = string.Empty;
-                currentMvn.RealClasses[id] = string.Empty;
+                currentMvn.Partition[id] = currentMvn.RealClasses[id] = string.Empty;
+                
             }
 
             GraphModel gm = new GraphModel(currentMvn);
-            
-
             return View("Graph", gm);
         }
 
@@ -259,16 +245,12 @@ namespace MultiVariateNetworkExplorer.Controllers
         public JsonResult GraphCommunityDetection(string graphNodes, string graphLinks)
         {
           
-            //JObject root = JObject.Parse(graphFilt);
             JArray nodes = JArray.Parse(graphNodes);
             JArray links = JArray.Parse(graphLinks);
             Network filteredNetwork = Network.FromD3Json(links);
             JObject partitions = new JObject();
-            //JToken realclasses = root["classes"];
-
 
             MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
-
 
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
@@ -277,46 +259,10 @@ namespace MultiVariateNetworkExplorer.Controllers
             foreach (var node in mvnTemp.Partition)
             {
                 partitions[node.Key] = node.Value;
-                //mvnTemp.RealClasses[node.Key] = (string)realclasses[node.Key];
             }
 
 
-
-
-            /*using (StreamWriter sw = new StreamWriter("filtereddata.txt"))
-            {
-
-                foreach (JObject node in root["nodes"].Children())
-                {
-                    string line = "";
-                    foreach(var property in node.Properties())
-                    {
-                        line = line + property.Value.ToString() + ";";
-                    }
-
-                    sw.WriteLine(line);
-                }
-            }*/
-
-            //var precision = mvnTemp.calculatePrecision();
-            //var temp = mvnTemp.Support();
-
-
-            //mvnTemp.PartitionsToFile();
-
-            //Debug.WriteLine("Precision: " + precision[0].ToString() + " - " + precision[1].ToString());
-
-            /*using(StreamWriter sw = new StreamWriter("supp.txt"))
-            {
-                foreach (var comm in temp.OrderByDescending(kv => kv.Value[0]))
-                {
-                    sw.WriteLine(comm.Value[0] + " & " + comm.Value[1]);
-                }
-            }*/
-
-
             return Json(new { newPartitions = partitions.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
-            //return null;
         }
 
 
