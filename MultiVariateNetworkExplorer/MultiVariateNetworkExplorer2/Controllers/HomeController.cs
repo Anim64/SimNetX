@@ -135,7 +135,7 @@ namespace MultiVariateNetworkExplorer.Controllers
                 }
             }
 
-            char[] separatorArray; = String.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
+            char[] separatorArray = string.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
 
             bool hasHeaders = header == BooleanParameter.True;
 
@@ -172,59 +172,19 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [HttpPost]
-        public JsonResult RemodelNetwork(string nodes, string attributes, string attributeTransform, string networkRemodelParams)
+        public async Task<JsonResult> RemodelNetwork(string nodes, string attributes, string attributeTransform, string networkRemodelParams, string excludedAttributes)
         {
             JArray jNodes = JArray.Parse(nodes);
             JObject jAttributes = JObject.Parse(attributes);
             JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
-
+            JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
+            
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
-            Parallel.ForEach<KeyValuePair<string, JToken>>(jAttributeTransform, attribute =>
-            {
-                List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
-                foreach (var transform in attributeTransforms)
-                {
-                    switch (transform)
-                    {
-                        case "normalize":
-                            {
-                                nodeAttributes.Normalize();
-                                break;
-                            }
-                        case "rescale":
-                            {
-                                nodeAttributes.Rescale();
-                                break;
-                            }
-                        case "standardize":
-                            {
-                                nodeAttributes.Standardize();
-                                break;
-                            }
-                        case "distribute":
-                            {
-                                nodeAttributes.LogNormalToNormalDist();
-                                break;
-                            }
-                        default:
-                            break;
-                    }
-                }
-            });
-           
-            
-            List<string> normalizeAttributes = jAttributeTransform["normalize"].ToObject<List<string>>();
-            nodeAttributes.Normalize(normalizeAttributes);
-            List<string> standardizeAttributes = jAttributeTransform["standardize"].ToObject<List<string>>();
-            nodeAttributes.Standardize(standardizeAttributes);
-            List<string> rescaleAttributes = jAttributeTransform["rescale"].ToObject<List<string>>();
-            nodeAttributes.Rescale(rescaleAttributes);
-            List<string> distributionAttributes = jAttributeTransform["distribution"].ToObject<List<string>>();
-            nodeAttributes.LogNormalToNormalDist(distributionAttributes);
+            await nodeAttributes.ApplyJsonTransformationAsync(jAttributeTransform);
 
-            List<string> excludedAttributes = jAttributeTransform["remodeling"].ToObject<List<string>>();
+            List<string> excludedAttributesList = jExcludedAttributes.ToObject<List<string>>();
 
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
@@ -236,8 +196,13 @@ namespace MultiVariateNetworkExplorer.Controllers
             object[] algorithmParams = jAlgorithm["params"].ToObject<object[]>();
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
-            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, excludedAttributes);
-            return Json(new { newNetwork = remodeledNetwork.ToD3Json().ToString() }); 
+
+            //TODO Return only transformed columns and then assign then into global json graph
+            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, excludedAttributesList);
+            return Json(new { newVectorData = jAttributeTransform.HasValues ? 
+                nodeAttributes.ToD3Json().ToString() : 
+                JValue.CreateNull().ToString(), 
+                newNetwork = remodeledNetwork.ToD3Json().ToString() }); 
             
         }
 
@@ -269,7 +234,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            ViewData["Message"] = "There was an error while loading your data, check if you have fill every parameter correctly";
+            ViewData["Message"] = "There was an error while loading your data, check if you have filled every parameter correctly";
             return View("Index", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 

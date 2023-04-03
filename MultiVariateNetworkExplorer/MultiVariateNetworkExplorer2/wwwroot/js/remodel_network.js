@@ -1,4 +1,5 @@
-﻿const attributeTransform = {};
+﻿const attributeTransform = {}
+const excludedAttributes = [];
 
 const updateRemodelOptionsHeader = function (headerId, attributeSelectId) {
     const header = document.getElementById(headerId);
@@ -20,16 +21,15 @@ const displayAttributeTransformation = function (attribute, transformationListId
 const updateRemodelingAttributes = function (optionCheckbox, attributeSelectId) {
     const attributeSelect = document.getElementById(attributeSelectId);
     const attribute = attributeSelect.value;
-    const role = optionCheckbox.getAttribute("data-role");
 
     if (!optionCheckbox.checked) {
-        attributeTransform[role].push(attribute);
+        excludedAttributes.push(attribute);
         return;
     }
 
-    for (let i = 0; i < attributeTransform[role].length; i++) {
-        if (attributeTransform[role][i] === attribute) {
-            attributeTransform[role].splice(i, 1);
+    for (let i = 0; i < excludedAttributes.length; i++) {
+        if (excludedAttributes[i] === attribute) {
+            excludedAttributes.splice(i, 1);
             return;
         }
     }
@@ -206,6 +206,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const attributes_string = JSON.stringify(graph.attributes);
     const attribute_transform_string = JSON.stringify(attributeTransform);
     const network_remodel_params_string = JSON.stringify(networkRemodelParams);
+    const excluded_attributes_string = JSON.stringify(excludedAttributes);
 
     $.ajax({
         url: '/Home/RemodelNetwork',
@@ -219,10 +220,17 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             nodes: nodes_string,
             attributes: attributes_string,
             attributeTransform: attribute_transform_string,
-            networkRemodelParams: network_remodel_params_string
+            networkRemodelParams: network_remodel_params_string,
+            excludedAttributes: excluded_attributes_string
         },
         //cache: false,
         success: function (result) {
+            if (result.newVectorData != "") {
+                const newVectorData = JSON.parse(result.newVectorData);
+                graph.nodes = newVectorData;
+                store.nodes = [...newVectorData];
+                updateNodes();
+            }
             const newNet = JSON.parse(result.newNetwork);
             graph.links = newNet;
             store.links = [...newNet];//$.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
