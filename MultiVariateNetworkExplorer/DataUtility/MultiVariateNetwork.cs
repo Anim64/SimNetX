@@ -119,7 +119,6 @@ namespace MultiVariateNetworkLibrary
 
             MultiVariateNetwork mvn = new MultiVariateNetwork(nodesFrame, network, partitions, realClasses);
 
-
             return mvn;
         }
 
@@ -220,8 +219,8 @@ namespace MultiVariateNetworkLibrary
                 }
             }
 
-            root["nodes"] = jNodes;
-            root["links"] = jLinks;
+            root[jsonNodesName] = jNodes;
+            root[jsonLinksName] = jLinks;
 
 
             string json = root.ToString();

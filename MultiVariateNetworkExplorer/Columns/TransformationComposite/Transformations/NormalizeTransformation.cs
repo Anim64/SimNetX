@@ -11,15 +11,16 @@ namespace Columns.TransformationComposite.Transformations
         public void ApplyTransformation(ColumnDouble column)
         {
             ColumnExtremesStruct columnExtremes = column.FindExtremes();
-            for (int i = 0; i < column.DataCount; i++)
-            {
-                double? value = (double?)column[i];
-                if (value != null)
-                {
-                    column[i] = value / columnExtremes.Max;
-                }
+            column.Map(columnValue => { return columnValue / columnExtremes.Max; });
+            //for (int i = 0; i < column.DataCount; i++)
+            //{
+            //    double? value = (double?)column[i];
+            //    if (value != null)
+            //    {
+            //        column[i] = value / columnExtremes.Max;
+            //    }
 
-            }
+            //}
         }
     }
 }

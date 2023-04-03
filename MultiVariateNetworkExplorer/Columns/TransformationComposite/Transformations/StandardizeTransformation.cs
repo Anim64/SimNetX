@@ -12,12 +12,15 @@ namespace Columns.TransformationComposite.Transformations
         {
             double average = column.Average();
             double stdDev = column.StandardDeviation(average);
+            column.Map(columnValue => { return (columnValue - average) / stdDev; });
 
-            for (int i = 0; i < column.DataCount; i++)
-            {
-                double? columnValue = (double?)column[i];
-                column[i] = columnValue != null ? (columnValue - average) / stdDev : null;
-            }
+            //for (int i = 0; i < column.DataCount; i++)
+            //{
+            //    double? columnValue = (double?)column[i];
+            //    column[i] = columnValue != null ? (columnValue - average) / stdDev : null;
+
+            //}
         }
+
     }
 }
