@@ -1,4 +1,6 @@
 ﻿using Columns;
+using Columns.TransformationComposite.Transformations;
+using Columns.Transforms;
 using Columns.Types;
 using DataFrameLibrary.DataFrameExceptions;
 using Newtonsoft.Json.Linq;
@@ -11,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static Columns.Enums.ColumnEnums;
 
 namespace DataFrameLibrary
@@ -245,190 +248,57 @@ namespace DataFrameLibrary
 
         }
 
-        public void LogNormalToNormalDist(IEnumerable<string> columns)
+        public async Task ApplyJsonTransformationAsync(JObject jAttributeTransform)
         {
-            foreach (string columnName in columns)
+            await Task.Run(() =>
             {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
+                foreach (var attribute in jAttributeTransform)
                 {
-                    if (!(column is ColumnString))
+                    ColumnDouble columnValue = (ColumnDouble)this[attribute.Key];
+
+                    List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
+                    TransformComposite transforms = new TransformComposite();
+
+                    foreach (var transform in attributeTransforms)
                     {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        columnValues.Map(Math.Log);
-                    }
-                }
-            }
-        }
-
-        public void LogNormalToNormalDist(params string[] columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        columnValues.Map(Math.Log);
-
-                    }
-                }
-            }
-        }
-
-        public void Standardize(IEnumerable<string> columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        double average = columnValues.Average();
-                        double stdDev = columnValues.StandardDeviation(average);
-
-                        for (int i = 0; i < columnValues.DataCount; i++)
+                        ITransformComponent component = null;
+                        switch (transform)
                         {
-                            double? columnValue = (double?)columnValues[i];
-                            columnValues[i] = columnValue != null ? (columnValue - average) / stdDev : null;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Standardize(params string[] columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        double average = columnValues.Average();
-                        double stdDev = columnValues.StandardDeviation(average);
-
-                        for (int i = 0; i < columnValues.DataCount; i++)
-                        {
-                            double? columnValue = (double?)columnValues[i];
-                            columnValues[i] = columnValue != null ? columnValue - average / stdDev : null;
+                            case "normalize":
+                                {
+                                    component = new NormalizeTransformation();
+                                    break;
+                                }
+                            case "rescale":
+                                {
+                                    component = new RescaleTransformation();
+                                    break;
+                                }
+                            case "standardize":
+                                {
+                                    component = new StandardizeTransformation();
+                                    break;
+                                }
+                            case "distribute":
+                                {
+                                    component = new LogToNormalDistributionTransformation();
+                                    break;
+                                }
+                            default:
+                                break;
                         }
 
-                    }
-
-
-                }
-            }
-        }
-
-        public void Normalize(IEnumerable<string> columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
-                        for (int i = 0; i < columnValues.DataCount; i++)
+                        if (component != null)
                         {
-                            double? value = (double?)columnValues[i];
-                            if (value != null)
-                            {
-                                columnValues[i] = value / columnExtremes.Max;
-                            }
-
+                            transforms.Add(component);
                         }
                     }
 
-
-                }
-            }
-
+                    transforms.ApplyTransformation(columnValue);
+                };
+            });
+            
         }
-
-        public void Normalize(params string[] columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
-                        for (int i = 0; i < columnValues.DataCount; i++)
-                        {
-                            double? value = (double?)columnValues[i];
-                            if (value != null)
-                            {
-                                columnValues[i] = value / columnExtremes.Max;
-                            }
-
-                        }
-                    }
-
-
-                }
-            }
-
-        }
-
-        public void Rescale(IEnumerable<string> columns, double min = 0, double max = 1)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
-                        double range = columnExtremes.Max - columnExtremes.Min;
-                        for (int i = 0; i < columnValues.DataCount; i++)
-                        {
-                            double? value = (double?)columnValues[i];
-                            if (value != null)
-                            {
-                                columnValues[i] = (value - columnExtremes.Min) / range;
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Rescale(double min = 0, double max = 1, params string[] columns)
-        {
-            foreach (string columnName in columns)
-            {
-                if (this.Data.TryGetValue(columnName, out IColumn column))
-                {
-                    if (!(column is ColumnString))
-                    {
-                        ColumnDouble columnValues = (ColumnDouble)column;
-                        ColumnExtremesStruct columnExtremes = columnValues.FindExtremes();
-                        double range = columnExtremes.Max - columnExtremes.Min;
-                        for (int i = 0; i < columnValues.DataCount; i++)
-                        {
-                            double? value = (double?)columnValues[i];
-                            if (value != null)
-                            {
-                                columnValues[i] = (value - columnExtremes.Min) / range;
-                            }
-
-                        }
-                    }
-
-
-                }
-            }
-        }
-
 
         /// <summary>
         /// Creates attribute headers
