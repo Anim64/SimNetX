@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityDetection", "Commu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Network", "Network\Network.csproj", "{FBC2DCB1-5F8D-43F6-B3C3-792806E3D76F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Columns", "Columns\Columns.csproj", "{6D967B5B-2C99-46E5-BF86-F36E8B6B65DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Columns", "Columns\Columns.csproj", "{6D967B5B-2C99-46E5-BF86-F36E8B6B65DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

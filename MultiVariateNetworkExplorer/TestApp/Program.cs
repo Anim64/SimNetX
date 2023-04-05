@@ -4,6 +4,10 @@ namespace TestApp
 {
     class Program
     {
+        //static double Sum<T>(T x, T y) where T : INumber<T>
+        //{
+
+        //}
         static void Main(string[] args)
         {
             //DataFrame v = new DataFrame();
