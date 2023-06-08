@@ -414,11 +414,11 @@ const fadeDisconnectedNodes = function(nodeId, opacity) {
     });
 
     node.style("stroke-opacity", function (o) {
-        thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
+        this.Opacity = isConnected(nodeId, o.id) ? 1 : opacity;
         return this.Opacity;
     });
     node.style("fill-opacity", function (o) {
-        thisOpacity = isConnected(nodeId, o.id) ? 1 : opacity;
+        this.Opacity = isConnected(nodeId, o.id) ? 1 : opacity;
         return this.Opacity;
     });
     // also style link accordingly
@@ -978,8 +978,8 @@ const updateNodes = function () {
 
     simulation
         .nodes(nodes)
-        .on("tick", ticked);
-        //.on("end", simulationEnd);
+        //.on("tick", ticked);
+        .on("end", simulationEnd);
 }
 
 const updateLinks = function () {

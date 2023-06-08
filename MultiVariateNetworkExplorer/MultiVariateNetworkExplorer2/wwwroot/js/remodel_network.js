@@ -243,7 +243,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             }
 
 
-            updateLinks();
+            updateNodesAndLinks();
             requestCommunityDetection();
             updateLinkColour(link);
             calculateAllMetrics();

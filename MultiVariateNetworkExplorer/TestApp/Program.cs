@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Metrics.Metrics;
+using MultiVariateNetworkLibrary;
+using System;
+using VectorConversion.VectorDataConversion;
 
 namespace TestApp
 {
@@ -17,10 +20,10 @@ namespace TestApp
             Type t = Nullable.GetUnderlyingType(typeof(double?));
             double? doubleValue = (double?)Convert.ChangeType(value, t);
             
-            //MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "./orto.csv" }, "na", "Number", null, new LRNet(), new GaussKernel(), false, false, true, ';');
+            MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "./dataset.csv" }, "na", "ID fixed", null, new LRNet(), new GaussKernel(), false, false, true, ';');
             //mvn.FindCommunities();
 
-            //mvn.Network.ToFile("orto-network.csv");
+            mvn.Network.ToFile("dataset-network.csv");
             /*Network g = new Network();
             //test network
             int edgecounter = 0;

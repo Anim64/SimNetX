@@ -16,699 +16,688 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Columns.Enums.ColumnEnums;
 
-namespace DataFrameLibrary
+namespace DataFrameLibrary;
+
+public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 {
-    public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
+    private static readonly string exceptionMessageResourceName = "DataUtility.DataStructures.DataFrameExceptions.ExceptionMessages";
+
+    private static readonly string jsonIdColumnName = "id";
+
+    /// <summary>
+    /// A dataframe that holds vector data
+    /// </summary>
+    public Dictionary<string, IColumn> Data { get; set; }
+
+    public IEnumerable<string> Columns { 
+        get 
+        {
+            return this.Data.Keys;
+        } 
+    }
+    /// <summary>
+    /// Gets the number of rows in the dataframe.
+    /// </summary>
+    public int DataCount { get; set; }
+
+    public string IdColumnName { get; private set; }
+    public ColumnString IdColumn { get; set; }
+
+    /// <summary>
+    /// Contains extremes of numerical attributes.
+    /// </summary>
+    public Dictionary<string, ColumnExtremesStruct> NumAtrrExtremes { get; set; }
+
+    /// <summary>
+    /// Contains distinct values for every categorical column.
+    /// </summary>
+    public Dictionary<string, List<string>> CatAttrValues { get; set; }
+
+    public Dictionary<string, double> Averages { get; set; }
+
+    /// <summary>
+    /// Creates an empty dataframe.
+    /// </summary>
+    public DataFrame()
     {
-        private static readonly string exceptionMessageResourceName = "DataUtility.DataStructures.DataFrameExceptions.ExceptionMessages";
+        Data = new Dictionary<string, IColumn>();
+        DataCount = 0;
+        IdColumnName = null;
+        IdColumn = new ColumnString();
 
-        private static readonly string jsonIdColumnName = "id";
+        NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
+        CatAttrValues = new Dictionary<string, List<string>>();
 
-        /// <summary>
-        /// A dataframe that holds vector data
-        /// </summary>
-        public Dictionary<string, IColumn> Data { get; set; }
+    }
 
-        public IEnumerable<string> Columns { 
-            get 
-            {
-                return this.Data.Keys;
-            } 
-        }
-        /// <summary>
-        /// Gets the number of rows in the dataframe.
-        /// </summary>
-        public int DataCount { get; set; }
+    public DataFrame(JObject jAttributes)
+    {
+        Data = new Dictionary<string, IColumn>();
+        DataCount = 0;
+        IdColumnName = jAttributes["id"] != null ? jAttributes["id"].ToObject<string>() : null;
+        jAttributes.Remove("id");
+        IdColumn = new ColumnString();
 
-        public string IdColumnName { get; private set; }
-        public ColumnString IdColumn { get; set; }
+        NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
+        CatAttrValues = new Dictionary<string, List<string>>();
 
-        /// <summary>
-        /// Contains extremes of numerical attributes.
-        /// </summary>
-        public Dictionary<string, ColumnExtremesStruct> NumAtrrExtremes { get; set; }
-
-        /// <summary>
-        /// Contains distinct values for every categorical column.
-        /// </summary>
-        public Dictionary<string, List<string>> CatAttrValues { get; set; }
-
-        public Dictionary<string, double> Averages { get; set; }
-
-        /// <summary>
-        /// Creates an empty dataframe.
-        /// </summary>
-        public DataFrame()
+        foreach (var property in jAttributes)
         {
-            Data = new Dictionary<string, IColumn>();
-            DataCount = 0;
+            string header = property.Key;
+            ColumnTypes columnTypeNumber = property.Value.ToObject<ColumnTypes>();
+
+            if(columnTypeNumber == ColumnTypes.Double)
+            {
+                this.Data[header] = new ColumnDouble();
+                continue;
+            }
+
+            this.Data[header] = new ColumnString();
+        }
+    }
+
+    /// <summary>
+    /// Creates a dataframe and fills it with data form a file.
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <param name="missingvalues"></param>
+    /// <param name="header"></param>
+    /// <param name="separator"></param>
+    public DataFrame(string fileName, string missingvalues, string idColumn, bool header = false, params char[] separator)
+    {
+        Data = new Dictionary<string, IColumn>();
+        DataCount = 0;
+
+        NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
+        CatAttrValues = new Dictionary<string, List<string>>();
+
+        this.ReadFromFile(fileName, missingvalues, header, separator);
+
+        if (!string.IsNullOrEmpty(idColumn))
+        {
+            idColumn = Utils.RemoveDiacritics(idColumn);
+            bool isParsable = int.TryParse(idColumn, out int result);
+            IdColumnName = (isParsable ? "Attribute" + idColumn : idColumn).Trim();
+            IdColumnName = Regex.Replace(IdColumnName, @"[\s]+", "");
+            IdColumn = this[IdColumnName].ToColumnString();
+            this.RemoveColumn(IdColumnName);
+        }
+
+        else
+        {
             IdColumnName = null;
-            IdColumn = new ColumnString();
-
-            NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
-            CatAttrValues = new Dictionary<string, List<string>>();
-
+            IdColumn = new ColumnString(Enumerable.Range(0, this.DataCount).Select(id => id.ToString()).ToList());
         }
+    }
 
-        public DataFrame(JObject jAttributes)
+    /// <summary>
+    /// </summary>
+    /// <param name="i">The row index</param>
+    /// <returns>Return a single row from source DataFrame as a new DataFrame</returns>
+    public DataFrame this[params int[] rows]
+    {
+        get
         {
-            Data = new Dictionary<string, IColumn>();
-            DataCount = 0;
-            IdColumnName = jAttributes["id"] != null ? jAttributes["id"].ToObject<string>() : null;
-            jAttributes.Remove("id");
-            IdColumn = new ColumnString();
-
-            NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
-            CatAttrValues = new Dictionary<string, List<string>>();
-
-            foreach (var property in jAttributes)
+            DataFrame selectedRows = new DataFrame();
+            foreach(var pair in Data)
             {
-                string header = property.Key;
-                ColumnTypes columnTypeNumber = property.Value.ToObject<ColumnTypes>();
+                selectedRows.Data.Add(pair.Key, (IColumn)Activator.CreateInstance(pair.Value.GetType()));
 
-                if(columnTypeNumber == ColumnTypes.Double)
+                foreach(int row in rows)
                 {
-                    this.Data[header] = new ColumnDouble();
-                    continue;
-                }
-
-                this.Data[header] = new ColumnString();
-
-            }
-        }
-
-        /// <summary>
-        /// Creates a dataframe and fills it with data form a file.
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <param name="missingvalues"></param>
-        /// <param name="header"></param>
-        /// <param name="separator"></param>
-        public DataFrame(string fileName, string missingvalues, string idColumn, bool header = false, params char[] separator)
-        {
-            Data = new Dictionary<string, IColumn>();
-            DataCount = 0;
-
-            NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
-            CatAttrValues = new Dictionary<string, List<string>>();
-
-            this.ReadFromFile(fileName, missingvalues, header, separator);
-
-            if (!String.IsNullOrEmpty(idColumn))
-            {
-                idColumn = Utils.RemoveDiacritics(idColumn);
-                bool isParsable = int.TryParse(idColumn, out int result);
-                IdColumnName = isParsable ? "Attribute" + idColumn : idColumn;
-                IdColumn = this[IdColumnName].ToColumnString();
-                this.RemoveColumn(IdColumnName);
-            }
-
-            else
-            {
-                IdColumnName = null;
-                IdColumn = new ColumnString(Enumerable.Range(0, this.DataCount).Select(id => id.ToString()).ToList());
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="i">The row index</param>
-        /// <returns>Return a single row from source DataFrame as a new DataFrame</returns>
-        public DataFrame this[params int[] rows]
-        {
-            get
-            {
-                DataFrame selectedRows = new DataFrame();
-                foreach(var pair in Data)
-                {
-                    selectedRows.Data.Add(pair.Key, (IColumn)Activator.CreateInstance(pair.Value.GetType()));
-
-                    foreach(int row in rows)
-                    {
-                        selectedRows.Data[pair.Key].AddData(this.Data[pair.Key].Data[row]);
-                    }
-                }
-                return selectedRows;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="column"></param>
-        /// <returns>An instance of class that implements <see cref="IColumn"/> interface</returns>
-        public IColumn this[string column]
-        {
-            get
-            {
-                return this.Data[column];
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="row"></param>
-        /// <returns>The value at a specified row and column</returns>
-        public object this[string column, int row]
-        {
-            get
-            {
-                return this.Data[column].Data[row];
-            }
-
-            set
-            {
-                try
-                {
-                    var type = this.Data[column].Data[row].GetType();
-                    var convertedValue = Convert.ChangeType(value, type);
-                    this.Data[column].Data[row] = convertedValue;
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine(e.Message);
+                    selectedRows.Data[pair.Key].AddData(this.Data[pair.Key].Data[row]);
                 }
             }
+            return selectedRows;
+        }
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="column"></param>
+    /// <returns>An instance of class that implements <see cref="IColumn"/> interface</returns>
+    public IColumn this[string column]
+    {
+        get
+        {
+            return this.Data[column];
+        }
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="column"></param>
+    /// <param name="row"></param>
+    /// <returns>The value at a specified row and column</returns>
+    public object this[string column, int row]
+    {
+        get
+        {
+            return this.Data[column].Data[row];
         }
 
-        public Dictionary<string, double> CalculateAverages(bool inplace = false, params string[] columns)
+        set
         {
-            Dictionary<string, double> result = new Dictionary<string, double>();
-
-            IEnumerable<string> columnList = columns.Length > 0 ? columns : this.Columns;
-
-            foreach(var column in columnList)
+            try
             {
-                IColumn columnValueList = this[column];
-                if(columnValueList is ColumnDouble)
-                {
-                    result[column] = ((ColumnDouble)columnValueList).Average();
-                }
+                var type = this.Data[column].Data[row].GetType();
+                var convertedValue = Convert.ChangeType(value, type);
+                this.Data[column].Data[row] = convertedValue;
             }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
 
-            this.Averages = result;
-            return result;
+    public Dictionary<string, double> CalculateAverages(bool inplace = false, params string[] columns)
+    {
+        Dictionary<string, double> result = new Dictionary<string, double>();
+
+        IEnumerable<string> columnList = columns.Length > 0 ? columns : this.Columns;
+
+        foreach(var column in columnList)
+        {
+            IColumn columnValueList = this[column];
+            if(columnValueList is ColumnDouble)
+            {
+                result[column] = ((ColumnDouble)columnValueList).Average();
+            }
         }
 
-        /// <summary>
-        /// Finds and extremes and distinct values for all column and saves them to <see cref="NumAtrrExtremes"/> and <see cref="CatAttrValues"/>.
-        /// </summary>
-        public void FindAttributeExtremesAndValues()
+        this.Averages = result;
+        return result;
+    }
+
+    /// <summary>
+    /// Finds and extremes and distinct values for all column and saves them to <see cref="NumAtrrExtremes"/> and <see cref="CatAttrValues"/>.
+    /// </summary>
+    public void FindAttributeExtremesAndValues()
+    {
+        foreach (var column in this.Data)
         {
-            foreach (var column in this.Data)
+            if (column.Value is ColumnDouble)
             {
-                if (column.Value is ColumnDouble)
-                {
-                    double min = double.PositiveInfinity;
-                    double max = double.NegativeInfinity;
+                double min = double.PositiveInfinity;
+                double max = double.NegativeInfinity;
                 
-                    foreach (var value in column.Value.Data)
-                    {
-                        if(value == null)
-                        {
-                            continue;
-                        }
-                        double dValue = Convert.ToDouble(value);
-
-                        if (dValue > max)
-                            max = dValue;
-
-                        if (dValue < min)
-                            min = dValue;
-                    }
-
-                    this.NumAtrrExtremes[column.Key] = new ColumnExtremesStruct(min, max);
-                }
-
-                else if (column.Value is ColumnString)
+                foreach (var value in column.Value.Data)
                 {
-                    this.CatAttrValues[column.Key] = ((List<string>)column.Value.Data).Distinct().ToList();
+                    if(value is null)
+                    {
+                        continue;
+                    }
+                    double dValue = Convert.ToDouble(value);
+
+                    if (dValue > max)
+                        max = dValue;
+
+                    if (dValue < min)
+                        min = dValue;
                 }
+
+                this.NumAtrrExtremes[column.Key] = new ColumnExtremesStruct(min, max);
             }
 
+            else if (column.Value is ColumnString)
+            {
+                    
+                this.CatAttrValues[column.Key] = ((List<string>)column.Value.Data).Distinct().ToList();
+            }
         }
 
-        public async Task ApplyJsonTransformationAsync(JObject jAttributeTransform)
+    }
+
+    public async Task ApplyJsonTransformationAsync(JObject jAttributeTransform)
+    {
+        await Task.Run(() =>
         {
-            await Task.Run(() =>
+            foreach (var attribute in jAttributeTransform)
             {
-                foreach (var attribute in jAttributeTransform)
+                ColumnDouble columnValue = (ColumnDouble)this[attribute.Key];
+
+                List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
+                TransformComposite transforms = new TransformComposite();
+
+                foreach (var transform in attributeTransforms)
                 {
-                    ColumnDouble columnValue = (ColumnDouble)this[attribute.Key];
-
-                    List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
-                    TransformComposite transforms = new TransformComposite();
-
-                    foreach (var transform in attributeTransforms)
+                    ITransformComponent component = transform switch
                     {
-                        ITransformComponent component = null;
-                        switch (transform)
-                        {
-                            case "normalize":
-                                {
-                                    component = new NormalizeTransformation();
-                                    break;
-                                }
-                            case "rescale":
-                                {
-                                    component = new RescaleTransformation();
-                                    break;
-                                }
-                            case "standardize":
-                                {
-                                    component = new StandardizeTransformation();
-                                    break;
-                                }
-                            case "distribute":
-                                {
-                                    component = new LogToNormalDistributionTransformation();
-                                    break;
-                                }
-                            default:
-                                break;
-                        }
+                        "normalize" => new NormalizeTransformation(),
+                        "rescale" => new RescaleTransformation(),
+                        "standardize" => new StandardizeTransformation(),
+                        "distribute" => new LogToNormalDistributionTransformation(),
+                        _ => null,
+                    };
 
-                        if (component != null)
-                        {
-                            transforms.Add(component);
-                        }
+                    if (component is not null)
+                    {
+                        transforms.Add(component);
                     }
+                }
 
-                    transforms.ApplyTransformation(columnValue);
-                };
-            });
+                transforms.ApplyTransformation(columnValue);
+            };
+        });
             
+    }
+
+    private bool IsValueMissing(string value, string missingValues)
+    {
+        return string.IsNullOrEmpty(value) || value == missingValues;
+    }
+
+    /// <summary>
+    /// Creates attribute headers
+    /// </summary>
+    /// <param name="sr"></param>
+    /// <param name="hasHeaders"></param>
+    /// <param name="vector"></param>
+    /// <param name="separator"></param>
+    /// <returns></returns>
+    private string[] PrepareHeaders(StreamReader sr, bool hasHeaders, string line, ref string[] vector, params char[] separator)
+    {
+        string[] headers;
+        if (hasHeaders)
+        {
+            line = line.RemoveDiacritics();
+            headers = line.Split(separator);
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+
+                headers[i] = headers[i].RemoveSpecialCharacters();
+            }
+
+            if ((line = sr.ReadLine()) is not null)
+            {
+                vector = line.Trim().Split(separator);
+            }
+            return headers;
         }
 
-        /// <summary>
-        /// Creates attribute headers
-        /// </summary>
-        /// <param name="sr"></param>
-        /// <param name="hasHeaders"></param>
-        /// <param name="vector"></param>
-        /// <param name="separator"></param>
-        /// <returns></returns>
-        private string[] PrepareHeaders(StreamReader sr, bool hasHeaders, string line, ref string[] vector, params char[] separator)
+        vector = line.Trim().Split(separator);
+        int columnCount = vector.Length;
+        headers = new string[columnCount];
+        for (int j = 0; j < columnCount; j++)
         {
-            string[] headers;
-            if (hasHeaders)
+            headers[j] = $"Attr{(j + 1)}";
+        }
+
+        return headers;
+
+            
+    }
+
+    private string[] GetHeadersFromFile(StreamReader sr, bool hasHeaders, params char[] separators)
+    {
+        if (hasHeaders)
+        {
+            string line;
+            var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
+
+            if (!((line = sr.ReadLine()) is null))
             {
+                string[] headers;
                 line = line.RemoveDiacritics();
-                headers = Regex.Replace(line, @"[\%\+\/\*\(\)]+", "").Split(separator);
+                headers = Regex.Replace(line, @"[\%\+\/\*\(\)]+", "").Split(separators);
                 for (int i = 0; i < headers.Length; i++)
                 {
                     headers[i] = Regex.Replace(headers[i], @"[\s]+", "");
                 }
 
-                if ((line = sr.ReadLine()) != null)
-                {
-                    vector = line.Trim().Split(separator);
-                }
-                return headers;
-            }
-
-            vector = line.Trim().Split(separator);
-            int columnCount = vector.Length;
-            headers = new string[columnCount];
-            for (int j = 0; j < columnCount; j++)
-            {
-                headers[j] = $"Attr{(j + 1)}";
-            }
-
-            return headers;
-
-            
-        }
-
-        private string[] GetHeadersFromFile(StreamReader sr, bool hasHeaders, params char[] separators)
-        {
-            if (hasHeaders)
-            {
-                string line;
-                var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
-
-                if ((line = sr.ReadLine()) != null)
-                {
-                    string[] headers;
-                    line = line.RemoveDiacritics();
-                    headers = Regex.Replace(line, @"[\%\+\/\*\(\)]+", "").Split(separators);
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        headers[i] = Regex.Replace(headers[i], @"[\s]+", "");
-                    }
-
-                    string[] commonHeaders = headers.Intersect(this.Columns).ToArray();
+                string[] commonHeaders = headers.Intersect(this.Columns).ToArray();
                     
-                    if (commonHeaders.Count() != this.Columns.Count())
-                    {
-                        throw new ColumnsDoNotMatchException(resourceManager.GetString("ColumnsDoNotMatch"));
-                    }
-
-                    return commonHeaders;
+                if (commonHeaders.Count() != this.Columns.Count())
+                {
+                    throw new ColumnsDoNotMatchException(resourceManager.GetString("ColumnsDoNotMatch"));
                 }
 
-                throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
+                return commonHeaders;
             }
 
-            return this.Columns.ToArray();
+            throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
         }
 
+        return this.Columns.ToArray();
+    }
 
-        /// <summary>
-        /// Determines the column data types based on the first column
-        /// </summary>
-        /// <param name="headers"></param>
-        /// <param name="vector"></param>
-        /// <param name="emptyAtrributeCount"></param>
-        /// <param name="nullIndeces"></param>
-        /// <param name="averages"></param>
-        private void PrepareColumns(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
-            Dictionary<string, double> averages)
+
+    /// <summary>
+    /// Determines the column data types based on the first column
+    /// </summary>
+    /// <param name="headers"></param>
+    /// <param name="vector"></param>
+    /// <param name="emptyAtrributeCount"></param>
+    /// <param name="nullIndeces"></param>
+    /// <param name="averages"></param>
+    private void PrepareColumns(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
+        Dictionary<string, double> averages)
+    {
+        int columnCount = headers.Length;
+        for (int i = 0; i < columnCount; i++)
         {
-            int columnCount = headers.Length;
-            for (int i = 0; i < columnCount; i++)
+            string header = headers[i];
+            string vectorValue = i < vector.Length ? vector[i] : "";
+            nullIndeces[header] = new List<int>();
+            averages[header] = 0;
+            if (IsValueMissing(vectorValue, missingValues) || i >= vector.Length)
             {
-                string header = headers[i];
-                string vectorValue = i < vector.Length ? vector[i] : "";
-                nullIndeces[header] = new List<int>();
-                averages[header] = 0;
-                if (String.IsNullOrEmpty(vectorValue) || vectorValue == missingValues || i >= vector.Length)
+                emptyAtrributeCount[header] = 1;
+                nullIndeces[header].Add(0);
+                continue;
+            }
+
+            bool isParsable = (double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !header.Contains("ID"));
+            if (isParsable)
+            {
+                this.Data[header] = new ColumnDouble();
+                this.Data[header].AddData(resultFloat);
+                averages[header] += resultFloat;
+                continue;
+
+            }
+
+            this.Data[header] = new ColumnString();
+            this.Data[header].AddData(vectorValue);
+        }
+    }
+
+    private void AddDataFromLine(string[] headers, string[] vector, string missingValues)
+    {
+
+        if(IdColumnName is null)
+        {
+            this.IdColumn.AddData(this.IdColumn.DataCount.ToString());
+        }
+        for (int i = 0; i < headers.Length; i++)
+        {
+            //keys.MoveNext();
+            /*if (this.Data[headers[i]] is List<int>)
+                this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
+            string header = headers[i];
+            string vectorValue = i < vector.Length ?  vector[i] : "";
+            if (header == this.IdColumnName)
+            {
+                this.IdColumn.AddData(vectorValue);
+                continue;
+            }
+
+            if (IsValueMissing(vectorValue, missingValues))
+            {
+                this.Data[header].AddData(null);
+                continue;
+            }
+
+            bool isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
+
+            if (isParsable)
+            {
+                this.Data[header].AddData(resultFloat);
+                continue;
+
+            }
+
+            this.Data[header].AddData(vectorValue);
+        }
+    }
+
+    /// <summary>
+    /// Adds data from file line to DataFrame
+    /// </summary>
+    /// <param name="headers"></param>
+    /// <param name="vector"></param>
+    /// <param name="missingValues"></param>
+    /// <param name="emptyAtrributeCount"></param>
+    /// <param name="nullIndeces"></param>
+    /// <param name="averages"></param>
+    private void AddDataFromLine(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, 
+        Dictionary<string, List<int>> nullIndeces, Dictionary<string, double> averages)
+    {
+        for (int i = 0; i < headers.Length; i++)
+        {
+            string header = headers[i];
+
+            string vectorValue = i < vector.Length ? vector[i] : "";
+            bool isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
+
+            if (emptyAtrributeCount.ContainsKey(header))
+            {
+
+                if (IsValueMissing(vectorValue, missingValues))
                 {
-                    emptyAtrributeCount[header] = 1;
-                    nullIndeces[header].Add(0);
+                    emptyAtrributeCount[header]++;
                     continue;
+
                 }
 
-                bool isParsable = (double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !header.Contains("ID"));
+
                 if (isParsable)
                 {
                     this.Data[header] = new ColumnDouble();
-                    this.Data[header].AddData(resultFloat);
-                    averages[header] += resultFloat;
-                    continue;
 
                 }
-
-                this.Data[header] = new ColumnString();
-                this.Data[header].AddData(vectorValue);
-            }
-        }
-
-        private void AddDataFromLine(string[] headers, string[] vector, string missingValues)
-        {
-
-            if(IdColumnName == null)
-            {
-                this.IdColumn.AddData(this.IdColumn.DataCount.ToString());
-            }
-
-            for (int i = 0; i < headers.Length; i++)
-            {
-                //keys.MoveNext();
-                /*if (this.Data[headers[i]] is List<int>)
-                    this.Data[headers[i]].Add(int.Parse(vector[i], NumberStyles.Any, CultureInfo.InvariantCulture));*/
-                string header = headers[i];
-                string vectorValue = i < vector.Length ?  vector[i] : "";
-                if (header == this.IdColumnName)
+                else
                 {
-                    this.IdColumn.AddData(vectorValue);
-                    continue;
+                    this.Data[header] = new ColumnString();
                 }
-
-                if (vectorValue == "" || vectorValue == missingValues)
-                {
-                    this.Data[header].AddData(null);
-                    continue;
-                }
-
-                bool isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
-
-                if (isParsable)
-                {
-                    this.Data[header].AddData(resultFloat);
-                    continue;
-
-                }
-
-                this.Data[header].AddData(vectorValue);
-            }
-        }
-
-        /// <summary>
-        /// Adds data from file line to DataFrame
-        /// </summary>
-        /// <param name="headers"></param>
-        /// <param name="vector"></param>
-        /// <param name="missingValues"></param>
-        /// <param name="emptyAtrributeCount"></param>
-        /// <param name="nullIndeces"></param>
-        /// <param name="averages"></param>
-        private void AddDataFromLine(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, 
-            Dictionary<string, List<int>> nullIndeces, Dictionary<string, double> averages)
-        {
-            for (int i = 0; i < headers.Length; i++)
-            {
-                string header = headers[i];
-
-                string vectorValue = i < vector.Length ? vector[i] : "";
-                bool isParsable = double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat);
-
-                if (emptyAtrributeCount.ContainsKey(header))
-                {
-
-                    if (String.IsNullOrEmpty(vectorValue) || vectorValue == missingValues)
-                    {
-                        emptyAtrributeCount[header]++;
-                        continue;
-
-                    }
-
-
-                    if (isParsable)
-                    {
-                        this.Data[header] = new ColumnDouble();
-
-                    }
-                    else
-                    {
-                        this.Data[header] = new ColumnString();
-                    }
                     
 
-                    for (int j = 0; j < emptyAtrributeCount[header]; j++)
+                for (int j = 0; j < emptyAtrributeCount[header]; j++)
+                {
+                    nullIndeces[header].Add(j);
+                    this.Data[header].AddData(null);
+                }
+
+                emptyAtrributeCount.Remove(header);
+            }
+
+            if (IsValueMissing(vectorValue, missingValues))
+            {
+                this.Data[header].AddData(null);
+                nullIndeces[header].Add(DataCount);
+                continue;
+            }
+
+            if (isParsable)
+            {
+                this.Data[header].AddData(resultFloat);
+                averages[header] += resultFloat;
+                continue;
+
+            }
+
+            this.Data[header].AddData(vectorValue);
+        }
+    }
+
+    /// <summary>
+    /// Reads vector data from a file and saves them to Dataframe
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <param name="header"></param>
+    /// <param name="separator"></param>
+    public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
+    {
+        Dictionary<string, int> emptyAtrributeCount = new Dictionary<string, int>();
+        Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
+        Dictionary<string, double> averages = new Dictionary<string, double>();
+            
+        using (StreamReader sr = new StreamReader(filename))
+        {
+
+            string[] headers = null;
+            string[] vector = null;
+            string line = null;
+
+            if ((line = sr.ReadLine()) != null)
+            {
+                        
+                headers = PrepareHeaders(sr, header, line, ref vector, separator);
+                PrepareColumns(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
+                DataCount++;
+
+                //Load Data to Frame
+                while ((line = sr.ReadLine()) != null)
+                {
+
+                    line = line.Trim();
+                    if (line == "")
                     {
-                        nullIndeces[header].Add(j);
-                        this.Data[header].AddData(null);
+                        continue;
                     }
 
-                    emptyAtrributeCount.Remove(header);
+                    vector = line.Split(separator);
+
+                    AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
+
+                    DataCount++;
                 }
 
-                if (string.IsNullOrEmpty(vectorValue) || vectorValue == missingValues)
+                foreach (var attribute in emptyAtrributeCount)
                 {
-                    this.Data[header].AddData(null);
-                    nullIndeces[header].Add(DataCount);
-                    continue;
+                    this.Data[attribute.Key] = new ColumnString(attribute.Value);
                 }
 
-                if (isParsable)
+                foreach (var attribute in this)
                 {
-                    this.Data[header].AddData(resultFloat);
-                    averages[header] += resultFloat;
-                    continue;
-
+                    if(attribute.Value.DataCount <= 0)
+                    {
+                        this.RemoveColumn(attribute.Key);
+                    }
                 }
 
-                this.Data[header].AddData(vectorValue);
+                this.Averages = averages;
+                FindAttributeExtremesAndValues();
+
+                return;
             }
-        }
 
-        /// <summary>
-        /// Reads vector data from a file and saves them to Dataframe
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <param name="header"></param>
-        /// <param name="separator"></param>
-        public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
+            var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
+            throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
+               
+                    
+        }
+            
+            
+
+        /*foreach(var pair in nullIndeces)
         {
-            Dictionary<string, int> emptyAtrributeCount = new Dictionary<string, int>();
-            Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
-            Dictionary<string, double> averages = new Dictionary<string, double>();
+            double columnAverage = averages[pair.Key] / DataCount;
+            foreach(int index in pair.Value)
+            {
+                this.Data[pair.Key].Data[index] = columnAverage;
+            }
+        }*/
+
+
+    }
+
+    public void ReadAndAppendFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
+    {
             
             using (StreamReader sr = new StreamReader(filename))
             {
 
-                string[] headers = null;
+                string[] headers = GetHeadersFromFile(sr, header, separator);
                 string[] vector = null;
                 string line = null;
-
-                if ((line = sr.ReadLine()) != null)
+                    
+                //Load Data to Frame
+                while ((line = sr.ReadLine()) != null)
                 {
-                        
-                    headers = PrepareHeaders(sr, header, line, ref vector, separator);
-                    PrepareColumns(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
+
+                    line = line.Trim();
+                    if (line == "")
+                    {
+                        continue;
+                    }
+
+                    vector = line.Split(separator);
+
+                    AddDataFromLine(headers, vector, missingvalues);
+
                     DataCount++;
-
-                    //Load Data to Frame
-                    while ((line = sr.ReadLine()) != null)
-                    {
-
-                        line = line.Trim();
-                        if (line == "")
-                        {
-                            continue;
-                        }
-
-                        vector = line.Split(separator);
-
-                        AddDataFromLine(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
-
-                        DataCount++;
-                    }
-
-                    foreach (var attribute in emptyAtrributeCount)
-                    {
-                        this.Data[attribute.Key] = new ColumnString(attribute.Value);
-                    }
-
-                    foreach (var attribute in this)
-                    {
-                        if(attribute.Value.DataCount <= 0)
-                        {
-                            this.RemoveColumn(attribute.Key);
-                        }
-                    }
-
-                    this.Averages = averages;
-                    FindAttributeExtremesAndValues();
-
-                    return;
                 }
-
-                var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
-                throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
-               
-                    
             }
-            
-            
+            this.Averages = CalculateAverages();
+            FindAttributeExtremesAndValues();
+    }
 
-            /*foreach(var pair in nullIndeces)
+
+    /// <summary>
+    /// Removes the specified column.
+    /// </summary>
+    /// <param name="column"></param>
+    public void RemoveColumn(string column)
+    {
+        this.Data.Remove(column);
+    }
+
+    public static DataFrame FromD3Json(JArray jNodes, JObject jAttributes)
+    {
+        DataFrame df = new DataFrame(jAttributes);
+            
+        foreach (var node in jNodes)
+        {
+            df.IdColumn.AddData(node[jsonIdColumnName].ToString());
+            foreach (string column in df.Columns)
             {
-                double columnAverage = averages[pair.Key] / DataCount;
-                foreach(int index in pair.Value)
-                {
-                    this.Data[pair.Key].Data[index] = columnAverage;
-                }
-            }*/
-
-
-        }
-
-        public void ReadAndAppendFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
-        {
-            
-                using (StreamReader sr = new StreamReader(filename))
-                {
-
-                    string[] headers = GetHeadersFromFile(sr, header, separator);
-                    string[] vector = null;
-                    string line = null;
-                    
-                    //Load Data to Frame
-                    while ((line = sr.ReadLine()) != null)
-                    {
-
-                        line = line.Trim();
-                        if (line == "")
-                        {
-                            continue;
-                        }
-
-                        vector = line.Split(separator);
-
-                        AddDataFromLine(headers, vector, missingvalues);
-
-                        DataCount++;
-                    }
-                }
-                this.Averages = CalculateAverages();
-                FindAttributeExtremesAndValues();
-        }
-
-
-        /// <summary>
-        /// Removes the specified column.
-        /// </summary>
-        /// <param name="column"></param>
-        public void RemoveColumn(string column)
-        {
-            this.Data.Remove(column);
-        }
-
-        public static DataFrame FromD3Json(JArray jNodes, JObject jAttributes)
-        {
-            DataFrame df = new DataFrame(jAttributes);
-            
-            foreach (var node in jNodes)
-            {
-                df.IdColumn.AddData(node[jsonIdColumnName].ToString());
-                foreach (string column in df.Columns)
-                {
-                    JToken attributeValue = node[column];
-                    object value = attributeValue.ToString() != null ? attributeValue.ToObject<object>() : null;
-                    df[column].AddData(value);
-                }
-                df.DataCount++;
+                JToken attributeValue = node[column];
+                object value = !(attributeValue.ToString() is null) ? attributeValue.ToObject<object>() : null;
+                df[column].AddData(value);
             }
+            df.DataCount++;
+        }
 
-            df.CalculateAverages(inplace: true);
+        df.CalculateAverages(inplace: true);
 
-            return df;
+        return df;
             
-        }
+    }
 
-        public JArray ToD3Json()
+    public JArray ToD3Json()
+    {
+        JArray jNodes = new JArray();
+        for (int i = 0; i < this.DataCount; i++)
         {
-            JArray jNodes = new JArray();
-            for (int i = 0; i < this.DataCount; i++)
+            string source = this.IdColumn[i].ToString();
+
+            JObject jNode = new JObject();
+            jNode[jsonIdColumnName] = source;
+
+            foreach (string column in this.Columns)
             {
-                string source = this.IdColumn[i].ToString();
-
-                JObject jNode = new JObject();
-                jNode[jsonIdColumnName] = source;
-
-                foreach (string column in this.Columns)
-                {
-                    jNode[column] = this[column, i] != null ? JToken.FromObject(this[column, i]) : JValue.CreateNull();
-                }
-                jNodes.Add(jNode);
+                jNode[column] = this[column, i] != null ? JToken.FromObject(this[column, i]) : JValue.CreateNull();
             }
-
-            return jNodes;
+            jNodes.Add(jNode);
         }
 
-        public JObject AttributesToD3Json()
+        return jNodes;
+    }
+
+    public JObject AttributesToD3Json()
+    {
+        JObject jAttributes = new JObject();
+        jAttributes[jsonIdColumnName] = this.IdColumnName;
+        foreach (var column in this.Data)
         {
-            JObject jAttributes = new JObject();
-            jAttributes[jsonIdColumnName] = this.IdColumnName;
-            foreach (var column in this.Data)
-            {
-                jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
-            }
-            return jAttributes;
+            jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
         }
+        return jAttributes;
+    }
 
 
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.Data.GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return this.Data.GetEnumerator();
+    }
 
-        IEnumerator<KeyValuePair<string, IColumn>> IEnumerable<KeyValuePair<string, IColumn>>.GetEnumerator()
-        {
-            return this.Data.GetEnumerator();
-        }
+    IEnumerator<KeyValuePair<string, IColumn>> IEnumerable<KeyValuePair<string, IColumn>>.GetEnumerator()
+    {
+        return this.Data.GetEnumerator();
     }
 }
+

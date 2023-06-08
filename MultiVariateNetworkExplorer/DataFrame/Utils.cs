@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DataFrameLibrary
 {
@@ -26,6 +27,11 @@ namespace DataFrameLibrary
             return stringBuilder
                 .ToString()
                 .Normalize(NormalizationForm.FormC);
+        }
+
+        public static string RemoveSpecialCharacters(this string text)
+        {
+            return Regex.Replace(text, @"[^0-9a-zA-Z]+", "");
         }
 
 

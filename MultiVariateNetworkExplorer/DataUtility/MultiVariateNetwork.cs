@@ -1,13 +1,10 @@
-﻿using Columns;
-using Columns.Types;
-using CommunityDetection;
+﻿using CommunityDetection;
 using DataFrameLibrary;
 using Metrics;
 using NetworkLibrary;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using VectorConversion;

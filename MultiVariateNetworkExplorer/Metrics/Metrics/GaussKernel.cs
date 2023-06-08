@@ -19,7 +19,8 @@ namespace Metrics.Metrics
             int dataCount = vectorData.DataCount;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
 
-            Parallel.For(0, dataCount, i =>
+            for(int i = 0; i < dataCount; i++)
+            //Parallel.For(0, dataCount, i =>
             {
                 for (int j = i; j < dataCount; j++)
                 {
@@ -56,7 +57,7 @@ namespace Metrics.Metrics
                     kernelMatrix[i, j] = kernelMatrix[j, i] = gauss4;
                     
                 }
-            });
+            }/*)*/
 
             return kernelMatrix;
         }

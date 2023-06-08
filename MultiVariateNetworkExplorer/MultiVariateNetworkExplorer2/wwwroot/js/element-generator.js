@@ -245,42 +245,12 @@ const generateAttributeFilters = function (filters) {
 }
 
 const generateRemodelAttributes = function (graph) {
-    const remodelAttributesDiv = d3.select("remodel-attributes");
+    const remodelAttributesSelect = d3.select("#remodel-network-select");
 
     for (const attribute in graph.attributes) {
-        const attributeGroup = remodelAttributesDiv.append("div")
-            .classed("remodel-attribute-group", true)
-
-        attributeGroup.append("label")
-            .attr("for", attribute + "-remodel-expand-button")
+        remodelAttributesSelect
+            .append("option")
             .html(attribute);
-
-        attributeGroup.append("button")
-            .attr("id", attribute + "-remodel-expand-button")
-            .on("click", function () { expandRemodelPanel(event, attribute + "-remodel-panel"); })
-            .append("i")
-            .classed("fas fa-chevron-right", true);
-
-        const remodelPanel = attributeGroup.append("div")
-            .classed("remodel-attribute-panel", true)
-            .attr("id", attribute + "-remodel-panel");
-
-        const transformCheckboxes = ["remodel", "normalize", "standardize", "distribution"];
-        const transformDataRoles = ["remodeling", "normalization", "standardization", "distribution"];
-
-        for (let i = 0; i < transformCheckboxes.length; i++) {
-            remodelPanel.append("label")
-                .attr("for", attribute + "-" + transformCheckboxes[i] + "-checkbox")
-                .html("Use for remodeling?");
-
-            remodelPanel.append("input")
-                .attr("type", "checkbox")
-                .attr("id", attribute + "-" + transformCheckboxes[i] + "-checkbox")
-                .property("value", attribute)
-                .attr("data-role", transformDataRoles[i])
-                .property("checked", transformCheckboxes[i] === "remodel");
-                
-        }
     }
 }
 
@@ -318,6 +288,13 @@ const deleteAttributeFilters = function () {
 }
 
 const deleteRemodelAttributes = function () {
-    const remodelAttributesDiv = document.getElementById("remodel-attributes");
-    remodelAttributesDiv.innerHTML = "";
+    for (const attribute in attributeTransform) {
+        delete attributeTransform[attribute];
+    }
+    excludedAttributes.length = 0;
+    const remodelAttributesSelect = document.getElementById("remodel-network-select");
+    remodelAttributesSelect.innerHTML = "";
+
+    const attributeTransformationList = document.getElementById("attribute-transformation-list");
+    attributeTransformationList.innerHTML = "";
 }
