@@ -1,10 +1,50 @@
 ﻿.nodes {
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: stretch;
+    justify-content: stretch;
+    overflow-y:hidden;
+
+    --node-nav-basis: 75%;
+}
+
+.node-block {
+    border-top: 1px solid white;
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
     overflow-y: scroll;
+    -webkit-scrollbar-width: thin;
+    -ms-scrollbar-width: thin;
+    -o-scrollbar-width: thin;
+    scrollbar-width: thin;
+    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+}
+
+.node-block:first-child {
+    border-top: none;
+}
+
+#node-section.node-block{
+    flex-basis: var(--node-nav-basis);
+}
+
+#node-neighbors-section.node-block {
+    flex-basis: calc(100% - var(--node-nav-basis));
 }
 
 .node-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
+    align-self: stretch;
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
 }
 
 
