@@ -3,7 +3,7 @@ using Columns.Types;
 
 namespace Columns
 {
-    public interface IColumn
+    public interface IColumn : IEnumerable
     {
         public enum ColumnTypes
         {

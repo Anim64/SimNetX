@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Columns.Types
 {
-    public class ColumnDouble : IColumn, IEnumerable
+    public class ColumnDouble : IColumn
     {
         public IList Data { get; private set; }
 
@@ -16,11 +16,11 @@ namespace Columns.Types
             }
         }
 
-        public object this[int index]
+        public double? this[int index]
         {
             get
             {
-                return Data[index];
+                return (double?)Data[index];
             }
 
             set

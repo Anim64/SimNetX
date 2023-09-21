@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Columns.Types
 {
-    public class ColumnString : IColumn, IEnumerable
+    public class ColumnString : IColumn
     {
         public IList Data { get; private set; } = new List<string>();
 
@@ -15,11 +15,11 @@ namespace Columns.Types
             }
         }
 
-        public object this[int index]
+        public string this[int index]
         {
             get
             {
-                return Data[index];
+                return Data[index].ToString();
             }
 
             set

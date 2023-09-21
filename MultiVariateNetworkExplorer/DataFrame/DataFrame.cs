@@ -70,6 +70,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
     }
 
+
     public DataFrame(JObject jAttributes)
     {
         Data = new Dictionary<string, IColumn>();
@@ -191,7 +192,58 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         }
     }
 
-    public Dictionary<string, double> CalculateAverages(bool inplace = false, params string[] columns)
+    public bool IsEmpty()
+    {
+        return this.Data.Count == 0;
+    }
+
+    public Dictionary<int, double> RowAverages(IEnumerable<int> rowIndeces = null)
+    {
+        Dictionary<int, double> result = new Dictionary<int, double>();
+        if(rowIndeces is not null)
+        {
+            foreach (int rowIndex in rowIndeces)
+            {
+                double rowAverage = 0;
+                foreach (string columnName in this.Columns)
+                {
+                    IColumn column = this[columnName];
+                    if (column is ColumnDouble)
+                    {
+                        double? value = ((ColumnDouble)column)[rowIndex];
+                        if (value != null)
+                        {
+                            rowAverage += (double)value;
+                        }
+                    }
+                }
+
+                result[rowIndex] = rowAverage;
+            }
+
+            return result;
+        }
+
+        for (int rowIndex = 0; rowIndex < this.DataCount; rowIndex++)
+        {
+            double rowAverage = 0;
+            foreach (string columnName in this.Columns)
+            {
+                IColumn column = this[columnName];
+                if (column is ColumnDouble)
+                {
+                    double? value = ((ColumnDouble)column)[rowIndex];
+                    rowAverage += value != null ? Convert.ToDouble(value) : this.Averages[columnName];
+                }
+            }
+
+            result[rowIndex] = rowAverage;
+        }
+
+        return result;
+    }
+
+    public Dictionary<string, double> ColumnAverages(bool inplace = false, params string[] columns)
     {
         Dictionary<string, double> result = new Dictionary<string, double>();
 
@@ -206,7 +258,10 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             }
         }
 
-        this.Averages = result;
+        if (inplace)
+        {
+            this.Averages = result;
+        }
         return result;
     }
 
@@ -222,7 +277,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                 double min = double.PositiveInfinity;
                 double max = double.NegativeInfinity;
                 
-                foreach (var value in column.Value.Data)
+                foreach (var value in column.Value)
                 {
                     if(value is null)
                     {
@@ -238,13 +293,10 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                 }
 
                 this.NumAtrrExtremes[column.Key] = new ColumnExtremesStruct(min, max);
+                continue;
             }
 
-            else if (column.Value is ColumnString)
-            {
-                    
-                this.CatAttrValues[column.Key] = ((List<string>)column.Value.Data).Distinct().ToList();
-            }
+            this.CatAttrValues[column.Key] = ((List<string>)column.Value.Data).Distinct().ToList();
         }
 
     }
@@ -337,14 +389,14 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             string line;
             var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
 
-            if (!((line = sr.ReadLine()) is null))
+            if ((line = sr.ReadLine()) is not null)
             {
                 string[] headers;
                 line = line.RemoveDiacritics();
                 headers = Regex.Replace(line, @"[\%\+\/\*\(\)]+", "").Split(separators);
                 for (int i = 0; i < headers.Length; i++)
                 {
-                    headers[i] = Regex.Replace(headers[i], @"[\s]+", "");
+                    headers[i] = Regex.Replace(headers[i], @"[\s]+", "-");
                 }
 
                 string[] commonHeaders = headers.Intersect(this.Columns).ToArray();
@@ -389,7 +441,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                 continue;
             }
 
-            bool isParsable = (double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && !header.Contains("ID"));
+            bool isParsable = (double.TryParse(vectorValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double resultFloat) && header != "ID");
             if (isParsable)
             {
                 this.Data[header] = new ColumnDouble();
@@ -621,10 +673,15 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                     DataCount++;
                 }
             }
-            this.Averages = CalculateAverages();
+            this.Averages = ColumnAverages();
             FindAttributeExtremesAndValues();
     }
 
+
+    public void AddColumn(string header, Type columnType)
+    {
+        this.Data.Add(header, (IColumn)Activator.CreateInstance(columnType));
+    }
 
     /// <summary>
     /// Removes the specified column.
@@ -651,7 +708,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             df.DataCount++;
         }
 
-        df.CalculateAverages(inplace: true);
+        df.ColumnAverages(inplace: true);
 
         return df;
             

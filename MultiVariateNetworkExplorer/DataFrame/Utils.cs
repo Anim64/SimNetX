@@ -31,10 +31,13 @@ namespace DataFrameLibrary
 
         public static string RemoveSpecialCharacters(this string text)
         {
-            return Regex.Replace(text, @"[^0-9a-zA-Z]+", "");
+            return Regex.Replace(text, @"[^0-9a-zA-Z-]+", "");
         }
 
-
+        public static bool IsNotBinary(this double x)
+        {
+            return x != 0 && x != 1;
+        }
 
 
     }

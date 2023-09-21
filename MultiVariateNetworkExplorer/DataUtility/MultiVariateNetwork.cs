@@ -163,6 +163,11 @@ namespace MultiVariateNetworkLibrary
             return json;
         }
 
+        public bool IsEmpty()
+        {
+            return this.VectorData.IsEmpty() && this.Network.IsEmpty();
+        }
+
         public string PartitionsToD3Json()
         {
            

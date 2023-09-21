@@ -3,23 +3,17 @@ using DataFrameLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Metrics.Metrics
 {
-    public class GaussKernel : IMetric
+    public class CooccuranceSimilarity : IMetric
     {
-        public double Sigma { get; set; }
-        public GaussKernel(double sigma = 1)
-        {
-            this.Sigma = sigma;
-        }
         public Matrix<double> GetMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
             int dataCount = vectorData.DataCount;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
-
-            //for(int i = 0; i < dataCount; i++)
             Parallel.For(0, dataCount, i =>
             {
                 for (int j = i; j < dataCount; j++)
@@ -31,7 +25,7 @@ namespace Metrics.Metrics
 
                     }
 
-                    double euclideanDistance = 0;
+
                     var columnNames = vectorData.Columns;
                     if (exclude != null)
                     {
@@ -39,30 +33,33 @@ namespace Metrics.Metrics
                     }
 
 
+                    double andCount = 0;
                     foreach (var columnName in columnNames)
                     {
                         var column = vectorData[columnName];
-                        if (!(column is ColumnString))
+                        if (column is not ColumnString)
                         {
-                            double vectorValueA = column.Data[i] != null ? Convert.ToDouble(column.Data[i]) : vectorData.Averages[columnName];
-                            double vectorValueB = column.Data[j] != null ? Convert.ToDouble(column.Data[j]) : vectorData.Averages[columnName];
-                            euclideanDistance += Math.Pow((vectorValueA - vectorValueB), 2);
-                        }
+                            double vectorValueA = column.Data[i] != null ? Convert.ToDouble(column.Data[i]) : 0;
+                            double vectorValueB = column.Data[j] != null ? Convert.ToDouble(column.Data[j]) : 0;
+                            if (vectorValueA.IsNotBinary() || vectorValueB.IsNotBinary())
+                            {
+                                throw new InvalidOperationException("Numerical columns in your data are not binary. " +
+                                    "Please check your data and try again");
+                            }
 
+                            if (vectorValueA >= 1 && vectorValueB >= 1)
+                            {
+                                andCount++;
+                            }
+                        }
                     }
 
-                    double gauss1 = 1.0 / (this.Sigma * Math.Sqrt(2 * Math.PI));
-                    double gauss2 = (-euclideanDistance) / (2 * Math.Pow(this.Sigma, 2));
-                    double gauss3 = Math.Pow(Math.E, (gauss2));
-                    double gauss4 = gauss1 * gauss3;
-                    kernelMatrix[i, j] = kernelMatrix[j, i] = gauss4;
-
+                    double coocurance = andCount / columnNames.Count();
+                    kernelMatrix[i, j] = kernelMatrix[j, i] = coocurance;
                 }
             });
 
             return kernelMatrix;
         }
-
-        
     }
 }
