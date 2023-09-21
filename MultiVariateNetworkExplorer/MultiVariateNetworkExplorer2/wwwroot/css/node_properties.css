@@ -1,13 +1,15 @@
 ﻿.nodes {
-    display: flex;
-    -ms-flex-direction: column;
+    display: block;
+   /* -ms-flex-direction: column;
     -webkit-flex-direction: column;
     flex-direction: column;
     -webkit-justify-content: stretch;
-    justify-content: stretch;
+    justify-content: stretch;*/
     overflow-y:hidden;
 
-    --node-nav-basis: 75%;
+    --node-nav-height: 75%;
+    --node-select-input-height: 20%;
+    --node-select-padding: 0.3rem;
 }
 
 .node-block {
@@ -31,20 +33,70 @@
     border-top: none;
 }
 
-#node-section.node-block{
-    flex-basis: var(--node-nav-basis);
+#node-section.node-block {
+    height: var(--node-nav-height);
 }
 
 #node-neighbors-section.node-block {
-    flex-basis: calc(100% - var(--node-nav-basis));
+    height: calc(100% - var(--node-nav-height));
 }
+
+#node-nav {
+    position: relative;
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    height: 4rem;
+    padding: 0 var(--node-select-padding);
+}
+
+.node-select-input {
+    height: 100%;
+    background-image: url(../icons/chevron-down-solid.svg);
+    background-position: 98% 50%;
+    background-size: 10px 10px, 10px 10px, 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.node-select-list {
+    position: absolute;
+    top: 100%;
+    display: none;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    max-height: 20rem;
+    z-index: 1;
+    width: calc(100% - 2*var(--node-select-padding));
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+    list-style-type: none;
+    background-color: white;
+    height: auto;
+    padding: 0;
+}
+
+.node-select-list::-webkit-scrollbar {
+    display: none;
+}
+
+.node-li {
+    text-decoration: none;
+    padding: 1rem 0;
+    padding-left: 1rem;
+    border-top: 1px solid rgba(140, 140, 140, 0.20);
+    border-bottom: 1px solid rgba(140, 140, 140, 0.20);
+}
+
+.node-li:hover {
+    background-color: rgba(140, 140, 140, 0.20);
+}
+
+
 
 .node-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    align-self: stretch;
-    -webkit-flex-grow: 1;
-    flex-grow: 1;
 }
 
 
@@ -80,7 +132,7 @@
     color: #333333;
     padding: 0;
     font-size: 2rem;
-    height: 40px;
+    min-height: 4rem;
     display: flex;
     -ms-flex-direction: column;
     -webkit-flex-direction: column;
@@ -170,49 +222,19 @@
 }
 
 .node-detail-container {
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: #fff;
-    border: 0.1rem solid black;
-    border-top: none;
-    -webkit-border-bottom-left-radius: 1rem;
-    border-bottom-left-radius: 1rem;
-    max-width: 100%;
-    max-height: 100%;
+    background-color: transparent;
+    width: 100%;
+    height: 100%;
     overflow-y: scroll;
-    -webkit-scrollbar-width: thin;
-    -ms-scrollbar-width: thin;
-    -o-scrollbar-width: thin;
-    scrollbar-width: thin;
-    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
-    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
-    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
-    scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
     padding: 0.5rem 1rem;
 }
 
-.node-detail-heading-container {
-    display: flex;
-    -ms-flex-direction: row;
-    -webkit-flex-direction: row;
-    flex-direction: row;
-    -webkit-justify-content: space-between;
-    justify-content: space-between;
+.node-detail-container::-webkit-scrollbar {
+    display: none;
 }
 
-.close-button {
-    background: none;
-    border: none;
-    outline: none;
-    font-size: 1.5rem;
-
-}
-
-.close-button:hover {
-    background: none;
-}
 
 .node-detail {
     display: flex;
@@ -228,17 +250,15 @@
     margin-bottom: 0.5rem;
 }
 
-.node-property-group label{
+.node-property-group label {
     margin-top: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .node-property-group input {
     max-width: 40%;
 }
-
-
-
-
 
 /* #accordion rotate icon option */
 

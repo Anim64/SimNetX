@@ -34,8 +34,47 @@
 
 ////    headingElement.classList.toggle('active-node-heading');
 ////}
+
+const prepareNodeDatalist = function () {
+    const nodeInput = document.getElementById("node-list-input");
+    const nodeDataList = document.getElementById("node-list");
+
+    nodeInput.addEventListener("focus", showNodeDataList)
+    nodeInput.addEventListener("keyup", filterNodeSearchList);
+    nodeInput.addEventListener("blur", function(){
+        nodeDataList.classList.remove("active-block");
+    });
+    nodeInput.addEventListener("mousedown", function () {
+        if (document.activeElement === nodeInput) {
+            nodeInput.blur();
+        }
+    })
+
+}
+
+const showNodeDataList = function () {
+    const nodeDataList = document.getElementById("node-list");
+    nodeDataList.classList.add('active-block');
+    
+}
+
+const filterNodeSearchList = function () {
+    const nodeInput = document.getElementById("node-list-input");
+    const filterValue = nodeInput.value.toLowerCase();
+    const nodeList = document.getElementById("node-list");
+    const nodeListItems = nodeList.getElementsByTagName("*");
+
+    for (const nodeListItem of nodeListItems) {
+        const nodeId = nodeListItem.textContent;
+        if (nodeId.startsWith(filterValue)) {
+            nodeListItem.style.display = "";
+            continue;
+        }
+        nodeListItem.style.display = "none";
+    }
+}
 const nodeHeadingClick = function (event, nodeId, nodeIndex) {
-    selectNode(event, nodeId);
+    selectNode(event,nodeId);
     toggleNodeDetails(nodeId, nodeIndex);
     showNodeNeighbors(nodeId);
 }
@@ -48,23 +87,20 @@ const selectNode = function (event, nodeId) {
     if (!event.shiftKey) {
         deselectAllNodes();
     }
-
-    const nodeHeadingElement = document.getElementById('heading-' + nodeId);
-    nodeHeadingElement.classList.add('node-heading-selected');
+    
     nodeGroups.classed('selected', function (d) {
         return d.selected = d.selected | d.id == nodeId;
     });
 }
 
-const toggleNodeDetails = function(nodeId, nodeIndex) {
-    const headingElement = document.getElementById('node-detail-heading');
+const toggleNodeDetails = function (nodeId, nodeIndex) {
+    const nodeInput = document.getElementById("node-list-input");
+    nodeInput.value = nodeId;
     const detailsElement = document.getElementById("node-detail-container");
     const attributesDiv = document.getElementById("node-attributes");
     const centralitiesDiv = document.getElementById("node-centralities");
 
     detailsElement.setAttribute('data-id', nodeId)
-
-    headingElement.innerHTML = "Node: " + nodeId;
 
     if (detailsElement.style.display === 'none' || detailsElement.style.display === '') {
         detailsElement.style.display = 'block';
@@ -89,12 +125,6 @@ const toggleNodeDetails = function(nodeId, nodeIndex) {
     };
 }
 
-
-
-const closeNodeDetails = function (nodeDetailsId) {
-    const nodeDetailsDiv = document.getElementById(nodeDetailsId);
-    nodeDetailsDiv.style.display = "none";
-}
 
 const showNodeNeighbors = function (nodeId) {
     const neighborsContainer = document.getElementById("node-neighbors-section");
@@ -125,9 +155,6 @@ const createNeighborHeadings = function (nodeId) {
         }
         
     }
-
-
-
 }
 
 const createNeighborHeading = function (neighborsGridElement, neighborId, neighborIndex) {

@@ -456,7 +456,6 @@ const mouseOut = function() {
 
 //Function for node dragging start
 const dragstarted = function (d) {
-    closeNodeDetails("node-detail-container");
     if (!d3.event.active)
         //resetSimulation();
     
@@ -505,7 +504,9 @@ const dragged = function(d) {
 const dragended = function(d) {
     if (!d3.event.active) simulation.alphaTarget(0);
 
-    toggleNodeDetails(d.id, d.index);
+    const { id: nodeId, index: nodeIndex } = d;
+    toggleNodeDetails(nodeId, nodeIndex);
+    showNodeNeighbors(nodeId);
     //node.filter(function (d) { return d.selected; })
     //    .each(function (d) {
     //        d.fx = null;
@@ -1117,20 +1118,26 @@ const calculateMetricAsync = function (current_graph, metricDiv) {
         properties[workerName] = e.data;
         const nodeDetailElement = document.getElementById('node-detail-container')
         const nodeId = nodeDetailElement.getAttribute('data-id');
-        nodeDetailElement.querySelector('#display-' + workerName).value = properties[workerName].values[nodeId];
+        const metricDisplayElement = nodeDetailElement.querySelector('#display-' + workerName);
+        if (metricDisplayElement !== null) {
+            metricDisplayElement.value = properties[workerName].values[nodeId];
+
+        }
 
     }
     
 }
 
 const calculateAllMetrics = function () {
-    const syncMetricsDivs = document.querySelectorAll('.network-metric-sync-content');
-    for (let metricDiv of syncMetricsDivs) {
-        getGraphProperty(graph, metricDiv);
-    }
-    const asyncMetricsDivs = document.querySelectorAll('.network-metric-async-content');
-    for (let metricDiv of asyncMetricsDivs) {
-        calculateMetricAsync(graph, metricDiv);
+    if (graph != null && Object.keys(graph).length > 0) {
+        const syncMetricsDivs = document.querySelectorAll('.network-metric-sync-content');
+        for (let metricDiv of syncMetricsDivs) {
+            getGraphProperty(graph, metricDiv);
+        }
+        const asyncMetricsDivs = document.querySelectorAll('.network-metric-async-content');
+        for (let metricDiv of asyncMetricsDivs) {
+            calculateMetricAsync(graph, metricDiv);
+        }
     }
 }
 

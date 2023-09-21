@@ -99,13 +99,15 @@
     background-color: #fff;
     font-size: 1.2rem;
     padding: 0 1em;
+    line-height: 1.42857143;
+    height: 3em;
+}
+
+.attribute-select-border {
     border: 0.125em solid #ccc;
     -moz-border-radius: 0.50em;
     -webkit-border-radius: 0.50em;
     border-radius: 0.50em;
-    line-height: 1.42857143;
-    background-image: none;
-    height: 3em;
 }
 
 /* alpha viewer */

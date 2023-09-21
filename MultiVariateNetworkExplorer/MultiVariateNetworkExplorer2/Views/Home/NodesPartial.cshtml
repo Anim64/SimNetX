@@ -11,13 +11,45 @@
         </div>
         <div class="column-content nodes" id="accordion">
             <div class="node-block" id="node-section">
-                <div class="node-grid" id="node-grid">
+                <div id="node-nav">
+                <input class="node-select-input attribute-select attribute-select-border" list="node-list" id="node-list-input" placeholder="Search node..." />
+                <ul class="node-select-list attribute-select attribute-select-border" id="node-list">
                     @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
                     {
-                        <div class="node-heading" role="tab" id="@("heading-" + Model.Mvn.VectorData.IdColumn[node])" onclick="nodeHeadingClick(event, '@(Model.Mvn.VectorData.IdColumn[node])', @(node))" onmouseover="nodeHeadingMouseOver('@(Model.Mvn.VectorData.IdColumn[node])', .2)" onmouseout="mouseOut()">
-                            <h5>@(Model.Mvn.VectorData.IdColumn[node])</h5>
-                        </div>
+                        string nodeId = Model.Mvn.VectorData.IdColumn[node];
+                        <li class="node-li" id="@("node-li-" + nodeId)" onmousedown="nodeHeadingClick(event, '@(nodeId)' , @(node))">@(nodeId)</li>
                     }
+                    </ul>
+                </div>
+                <div class="node-detail-container" id="node-detail-container">
+                    <div id="node-detail" class="node-detail">
+                        <div id="node-attributes">
+                            @if (!Model.Mvn.IsEmpty())
+                            {
+                                @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                                {
+                                    <div class="node-property-group">
+                                        <label title="@(attribute)" for="@("display-" + attribute)">@(
+                                    attribute + ":"
+                                    )</label>
+                                        <input type="text" id="@("display-" + attribute)" value="" data-attribute="@(
+                                $"{attribute}"
+                                )" readonly />
+                                    </div>
+                                }
+                                <div id="node-centralities">
+                                    <div class="node-property-group">
+                                        <label for="display-degree">Degree:</label>
+                                        <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
+                                    </div>
+                                    <div class="node-property-group">
+                                        <label for="display-closeness">Closeness:</label>
+                                        <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="node-block" id="node-neighbors-section">

@@ -17,6 +17,7 @@ const generateNodeDetails = function (graph) {
             .classed("node-property-group", true);
 
         attributeDiv.append("label")
+            .attr("title", attribute)
             .attr("for", "display - " + attribute)
             .html(attribute + ":");
 
@@ -30,23 +31,16 @@ const generateNodeDetails = function (graph) {
 }
 
 const generateNodeHeadings = function (graph) {
-    const nodeHeadingsGrid = d3.select("#node-grid");
+    const nodeHeadingsList = d3.select("#node-list");
     for (const node of graph.nodes) {
         const { id, index } = node;
-        nodeHeadingsGrid.append("div")
-            .classed("node-heading", true)
-            .classed("node-heading-disabled", function () {
-                return node.filters !== undefined && node.filters.length > 0;
-            })
-            .attr("role", "tab")
-            .attr("id", "heading-" + id)
-            .on("mouseout", function () { mouseOut() })
-            .on("click", function () { nodeHeadingClick(event, id, index) })
-            .on("mouseover", function () { nodeHeadingMouseOver(id, .2) })
-            .append("h5")
+        const nodeHeading = nodeHeadingsList.append("li")
+            .classed("node-li", true)
+            .attr("id", "node-li-" + node.id)
+            .on("mousedown", function () { nodeHeadingClick(id, index) })
             .html(id);
-             
     }
+    
 
     
 }
@@ -274,8 +268,8 @@ const deleteNodeDetailsAttributes = function () {
 }
 
 const deleteNodeHeadings = function () {
-    const nodeHeadingsDiv = document.getElementById("node-grid");
-    nodeHeadingsDiv.innerHTML = "";
+    const nodeHeadingsList = document.getElementById("node-list");
+    nodeHeadingsList.innerHTML = "";
 }
 
 const deleteForceAttributeList = function (forceSelectId) {

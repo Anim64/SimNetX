@@ -35,33 +35,7 @@
                 <script>
                     initGraph(@Html.Raw(Model.Graph));
                 </script>
-                <div class="node-detail-container" id="node-detail-container">
-                    <div class="node-detail-heading-container">
-                        <h4 id="node-detail-heading">Node:</h4>
-                        <button class="close-button" onclick="closeNodeDetails('node-detail-container')">X</button>
-                    </div>
-                    <div id="node-detail" class="node-detail">
-                        <div id="node-attributes">
-                            @foreach (var attribute in Model.Mvn.VectorData.Columns)
-                            {
-                                <div class="node-property-group">
-                                    <label for="@("display-" + attribute)">@(attribute + ":")</label>
-                                    <input type="text" id="@("display-" + attribute)" value="" data-attribute="@($"{attribute}")" readonly />
-                                </div>
-                            }
-                        </div>
-                        <div id="node-centralities">
-                            <div class="node-property-group">
-                                <label for="display-degree">Degree:</label>
-                                <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
-                            </div>
-                            <div class="node-property-group">
-                                <label for="display-closeness">Closeness:</label>
-                                <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
             <div id="selectionGraph" class="graph-content">
                 <svg></svg>

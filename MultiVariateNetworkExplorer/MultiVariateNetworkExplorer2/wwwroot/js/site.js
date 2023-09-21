@@ -54,7 +54,7 @@ window.addEventListener("load", function () {
     prepareInputForm();
     calculateAllMetrics();
 
-
+    prepareNodeDatalist();
     selectionNode.each(function (d) {
         setGroupColour(d);
     });
