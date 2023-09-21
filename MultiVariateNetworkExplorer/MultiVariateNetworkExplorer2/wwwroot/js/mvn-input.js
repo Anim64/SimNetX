@@ -32,20 +32,32 @@ const addFileButtonsEventListeners = function () {
     const inputs = document.getElementsByClassName('inputfile');
 
     for (const input of inputs) {
-
         const label = input.nextElementSibling;
-        const labelVal = label.innerHTML;
-        const textbox = label.previousElementSibling;
+        const labelTextElement = label.firstElementChild;
+        const labelVal = labelTextElement.innerHTML;
+        const labelTooltip = label.nextElementSibling;
 
         input.addEventListener('change', function (e) {
             let fileName = '';
             fileName = e.target.value.split('\\').pop();
             if (fileName) {
-                label.innerHTML = textbox.innerHTML = fileName;
-                label.style.backgroundColor = textbox.style.backgroundColor = "green";
+                labelTextElement.innerText = fileName;
+                labelTooltip.innerHTML = fileName;
+                label.style.backgroundColor = "green";
             }
             else
-                label.innerHTML = labelVal;
+                labelTextElement.innerText = labelVal;
+        });
+
+        
+        label.addEventListener('mouseover', function (e) {
+            if (label.style.backgroundColor === "green") {
+                labelTooltip.style.visibility = "visible";
+            }
+        });
+
+        label.addEventListener('mouseout', function (e) {
+            labelTooltip.style.visibility = "hidden";
         });
     }
 }

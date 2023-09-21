@@ -3,11 +3,16 @@
         <div class="file-buttons">
             <div class="file-button">
                 <input class="inputfile" type="file" id="fileVector" name="files" data-caption="{filePath}">
-                <label for="fileVector"><strong>Choose a file with vector data</strong></label>
+                <label for="fileVector">
+                    <strong>Choose a file with vector data</strong>
+                </label>
+                <span class="text-tooltip">Tooltip</span>
+                
             </div>
             <div class="file-button">
                 <input class="inputfile" type="file" id="fileNetwork" name="files" data-caption="{filePath}">
                 <label for="fileNetwork"><strong>Choose a file with network</strong></label>
+                <span class="text-tooltip">Tooltip</span>
             </div>
         </div>
         <div class="parameters">
@@ -85,6 +90,10 @@
                 <select name="metric" id="metric" onchange="displayMetricParameters(this.id)">
                     <option value="GaussKernel">Gaussian Kernel</option>
                     <option value="CosineSimilarity">Cosine Similarity</option>
+                    <option value="PearsonCorrelation">Pearson Correlation</option>
+                    <option value="SpearmanCorrelation">Spearman Correlation</option>
+                    <option value="CooccuranceSimilarity">Cooccurance</option>
+                    <option value="JaccardSimilarity">Jaccard</option>
                     <option value="EuclideanKernel">Euclidean Distance</option>
                 </select>
 
@@ -164,6 +173,7 @@
                 <select name="metric" id="append-metric" onchange="displayMetricParameters(this.id)">
                     <option value="GaussKernel">Gaussian Kernel</option>
                     <option value="CosineSimilarity">Cosine Similarity</option>
+                    <option value="PearsonCorrelation">Pearson Correlation</option>
                     <option value="EuclideanKernel">Euclidean Distance</option>
                 </select>
 
