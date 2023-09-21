@@ -269,6 +269,11 @@ namespace NetworkLibrary
             return outdict;
         }
 
+        public bool IsEmpty()
+        {
+            return this.Data.Count == 0;
+        }
+
         /// <summary>
         /// Adds a new node into the network.
         /// </summary>
