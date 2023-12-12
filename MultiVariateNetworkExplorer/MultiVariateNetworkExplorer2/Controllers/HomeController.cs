@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DataFrameLibrary;
 using Metrics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MultiVariateNetworkExplorer.Models;
@@ -20,6 +21,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 {
     public class HomeController : Controller
     {
+        [Authorize]
         private bool GraphErrorHandling(out ErrorInputModel eim, List<IFormFile> files, string separators, string missingvalues,
             string convert, string metric, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed,
             BooleanParameter header, BooleanParameter grouping)
@@ -41,7 +43,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
         }
 
-        
+        [Authorize]
         public IActionResult Graph()
         {
             GraphModel gm = new GraphModel();
@@ -50,7 +52,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             return View("Graph", gm);
         }
 
-       [HttpPost]
+       [HttpPost, Authorize]
         public async Task<IActionResult> LoadGraph(List<IFormFile> files, string separators, string missingvalues,
             string convert, string metric, double[] algsParams, double[] metricParams, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False,
             BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
@@ -114,7 +116,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost, Authorize]
         public async Task<IActionResult> LoadAndAppendNodes(string currentGraph, List<IFormFile> files, string separators, string missingvalues,
             string convert, string metric, List<double> algsParams, List<double> metricParams, string groupColumn, string idColumn,
             BooleanParameter header = BooleanParameter.False)
@@ -171,7 +173,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             return View("Graph", gm);
         }
 
-        [HttpPost]
+        [HttpPost, Authorize]
         public async Task<JsonResult> RemodelNetwork(string nodes, string attributes, string attributeTransform, string networkRemodelParams, string excludedAttributes)
         {
             JArray jNodes = JArray.Parse(nodes);
@@ -206,7 +208,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             
         }
 
-        [HttpPost]
+        [HttpPost, Authorize]
         public JsonResult GraphCommunityDetection(string graphNodes, string graphLinks)
         {
           

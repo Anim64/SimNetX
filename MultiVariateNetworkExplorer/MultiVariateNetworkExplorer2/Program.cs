@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(x => x.LoginPath="/Login/Login");
 
 var app = builder.Build();
 
@@ -25,11 +28,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Graph}/{id?}");
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
 customCulture.NumberFormat.NumberDecimalSeparator = ".";

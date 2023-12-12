@@ -1,18 +1,14 @@
 ﻿.toolbar {
     color: white;
     font-size: 16px;
-    margin-bottom: 1rem;
-    padding: 0 1rem;
+    padding: 2rem 1rem 1rem;
     display: flex;
     -ms-flex-direction: row;
     -webkit-flex-direction: row;
     flex-direction: row;
     -webkit-justify-content: flex-start;
     justify-content: flex-start;
-    border-bottom: 1px solid #eee;
 }
-
-
 
 .toolbar-container {
     overflow: hidden;
