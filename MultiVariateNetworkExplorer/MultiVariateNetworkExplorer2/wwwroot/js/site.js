@@ -59,6 +59,13 @@ window.addEventListener("load", function () {
         setGroupColour(d);
     });
 
+    const { numAttributes } = graph.attributes;
+    for (const attribute of numAttributes) {
+        const containerDivId = attribute + "-histogram-container";
+        createHistogram(containerDivId, graph.nodes, attribute);
+        
+    }
+
 
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select");

@@ -26,15 +26,32 @@
                         <div id="node-attributes">
                             @if (!Model.Mvn.IsEmpty())
                             {
-                                @foreach (var attribute in Model.Mvn.VectorData.Columns)
+                                @foreach (string numAttribute in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                                 {
                                     <div class="node-property-group">
-                                        <label title="@(attribute)" for="@("display-" + attribute)">@(
-                                    attribute + ":"
-                                    )</label>
-                                        <input type="text" id="@("display-" + attribute)" value="" data-attribute="@(
-                                $"{attribute}"
-                                )" readonly />
+                                        <label title="@(numAttribute)" for="@("display-" + numAttribute)">
+                                            @(
+                                                numAttribute + ":"
+                                                )
+                                        </label>
+                                        <input type="text" id="@("display-" + numAttribute)" value="" data-attribute="@(
+                                    $"{numAttribute}"
+                                    )" readonly />
+                                    </div>
+                                    <div id="@(numAttribute + "-histogram-container")"></div>
+                                }
+
+                                @foreach (string catAttribute in Model.Mvn.VectorData.CatAttrValues.Keys)
+                                {
+                                    <div class="node-property-group">
+                                        <label title="@(catAttribute)" for="@("display-" + catAttribute)">
+                                            @(
+                                                catAttribute + ":"
+                                                )
+                                        </label>
+                                        <input type="text" id="@("display-" + catAttribute)" value="" data-attribute="@(
+                                        $"{catAttribute}"
+                                        )" readonly />
                                     </div>
                                 }
                                 <div id="node-centralities">

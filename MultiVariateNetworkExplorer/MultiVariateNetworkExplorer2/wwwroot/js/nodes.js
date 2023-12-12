@@ -76,6 +76,7 @@ const filterNodeSearchList = function () {
 const nodeHeadingClick = function (event, nodeId, nodeIndex) {
     selectNode(event,nodeId);
     toggleNodeDetails(nodeId, nodeIndex);
+    
     showNodeNeighbors(nodeId);
 }
 
@@ -114,6 +115,8 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
         input.value = graph.nodes[nodeIndex][attributeName];
     };
 
+    showNodeValueInHistogram(nodeId, nodeIndex, attributesDiv);
+
     inputs = centralitiesDiv.getElementsByTagName('input');
 
     for (const input of inputs) {
@@ -123,8 +126,27 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
         input.value = attributeValues !== undefined ? attributeValues.values[nodeId] : "Calculating";
         
     };
+
+    
 }
 
+const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
+    const histogramSvgs = attributeDiv.getElementsByTagName("svg");
+    for (const histogram of histogramSvgs) {
+        //const d3Histogram = d3.select(histogram);
+        const attributeName = histogram.getAttribute('data-attribute');
+        const attributeValue = graph.nodes[nodeIndex][attributeName];
+        const bins = histogram.getElementsByTagName("rect");
+        d3.selectAll(bins).style("fill", "#ffeead");
+        for (const bin of bins) {
+            if (bin.getAttribute("data-max-value") > attributeValue) {
+                bin.style.fill = "red";
+                break;
+            }
+        }
+        
+    }
+}
 
 const showNodeNeighbors = function (nodeId) {
     const neighborsContainer = document.getElementById("node-neighbors-section");
