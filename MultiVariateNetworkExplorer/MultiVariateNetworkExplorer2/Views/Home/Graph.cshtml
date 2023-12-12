@@ -4,9 +4,14 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@if (User.Identity.IsAuthenticated)
+{
 <main class="main-div">
     <partial name="MvnInputPartial" />
-    <partial name="ToolBarPartial" />
+    <div class="d-flex flex-row border-bottom border-white" id="graph-header">
+        <partial name="ToolBarPartial" />
+        <partial name="LogoutPartial" />
+    </div>
     <div class="graph-section">
         <partial name="ControlsPartial" />
         <section id="graph" class="column graph-col">
@@ -22,7 +27,7 @@
                 </div>
             </div>
             <div id="networkGraph" class="graph-content">
-                <svg></svg>
+                <svg width="100%" height="100%" @*viewBox="0 0 100 80" preserveAspectRatio="none"*@></svg>
                 @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
                 <environment include="Development">
                     <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
@@ -46,19 +51,19 @@
             <div id="networkMetrics" class="graph-content">
                 <div class="network-metrics-container">
                     <div class="network-metric-sync-content" data-value="getNodeCount(graph)">
-                        <h5>Number of Nodes:</h5>
+                        <h4>Number of Nodes:</h4>
                         <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
                     </div>
                     <div class="network-metric-sync-content" data-value="getLinkCount(graph)">
-                        <h5>Number of Links:</h5>
+                        <h4>Number of Links:</h4>
                         <span class="metric-value" onclick="getGraphProperty(graph, this.parentNode);">Calculating...</span>
                     </div>
                     <div class="network-metric-async-content" data-value="degree">
-                        <h5>Average Degree:</h5>
+                        <h4>Average Degree:</h4>
                         <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
                     </div>
                     <div class="network-metric-async-content" data-value="closeness">
-                        <h5>Average Closeness:</h5>
+                        <h4>Average Closeness:</h4>
                         <span class="metric-value" onclick="calculateMetricAsync(graph, this.parentNode);">Calculating...</span>
                     </div>
                 </div>
@@ -71,12 +76,13 @@
         Version: 0.1.1
     </footer>
 </main>
-@if (TempData["ErrorMessage"] != null)
-{  
-    <script>
-        window.addEventListener("load", () => {
-            alert("@TempData["ErrorMessage"]");
-        });
-    </script>  
-} 
+    @if (TempData["ErrorMessage"] != null)
+    {  
+        <script>
+            window.addEventListener("load", () => {
+                alert("@TempData["ErrorMessage"]");
+            });
+        </script>  
+    } 
+}
 

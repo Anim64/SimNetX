@@ -43,8 +43,8 @@ let height = d3.select("#networkGraph svg").node().parentNode.clientHeight;
 
 
 let svg = d3.select("#networkGraph svg")
-    .attr('width', width)
-    .attr('height', height)
+//    .attr('width', width)
+//    .attr('height', height)
 let selectionSvg = null;
 
 let simulation = d3.forceSimulation()
@@ -65,8 +65,13 @@ let selectionSimulation = d3.forceSimulation()
     .force("forceY", d3.forceY())
     //.force("radial", d3.forceRadial());
 
-
-let groupColours = d3.scaleOrdinal(d3.schemeCategory20);
+const palette = ["#FF355E", "#FD5B78", "#FF6037", "#FF9966", "#FF9933",
+    "#FFCC33", "#FFFF66", "#CCFF00", "#66FF66", "#AAF0D1",
+    "#50BFE6", "#FF6EFF", "#EE34D2", "#FF00CC", "#FF3855", "#FD3A4A", "#FB4D46",
+    "#FA5B3D", "#FFAA1D", "#FFF700", "#299617", "#A7F432", "#2243B6", "#5DADEC",
+    "#5946B2", "#9C51B6", "#A83731", "#AF6E4D", "#1B1B1B", "#BFAFB2", "#FF5470", "#FFDB00",
+    "#FF7A00", "#FDFF00", "#87FF2A","#0048BA","#FF007C","#E936A7"];
+let groupColours = d3.scaleOrdinal().range(palette);
 //let groupColours = d3.scaleOrdinal(d3.interpolateSpectral);
 
 let xScale = d3.scaleLinear()
@@ -193,18 +198,11 @@ const prepareNodes = function () {
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
 
-
-
-
     //Add nodes to simulation
     simulation
         .nodes(nodes)
         //.on("tick", ticked)
         .on("end", simulationEnd);
-        
-
-    
-        
 }
 
 
@@ -257,13 +255,15 @@ const prepareNetworkBackground = function() {
     rect = gMain.append('rect')
         .attr("class", "background")
         .attr("id", "network-background-rect")
-        .attr('width', width)
-        .attr('height', height)
+        .attr('width', "100%")
+        .attr('height', "100%")
         .on('click', deselectAllNodes);
 }
 
 const prepareCanvas = function () {
     svg.selectAll('.g-main').remove();
+
+    
 
     gMain = svg.append('g')
         .classed('g-main', true)
@@ -271,6 +271,7 @@ const prepareCanvas = function () {
     prepareNetworkBackground();
 
     gDraw = gMain.append('g');
+   
 
     prepareBrush();
     prepareZoom();
@@ -289,6 +290,8 @@ const drawNetwork = function(data) {
     prepareLinks();
     prepareNodes();
     prepareText();
+
+    
 }
 
 const initGraph = function (data) {
@@ -803,6 +806,13 @@ const simulationEnd = function () {
     //}
     link.style("display", "block");
     nodeGroups.style("display", "block");
+
+    const rootSvgSize = svg.node().getBoundingClientRect();
+    const gDrawSize = gDraw.node().getBoundingClientRect();
+    const x = (rootSvgSize.x - gDrawSize.x) + (rootSvgSize.width - gDrawSize.width) / 2;
+    const y = (rootSvgSize.y - gDrawSize.y) +(rootSvgSize.height - gDrawSize.height) / 2;
+
+    gDraw.attr("transform", "translate(" + x + "," + y + ")");
 
     simulation.stop();
 }

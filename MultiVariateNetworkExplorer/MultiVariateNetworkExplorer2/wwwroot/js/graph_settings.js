@@ -274,6 +274,11 @@ const pickHex = function(color1, color2, weight) {
     return rgb;
 }
 
+const changeAttributeNodeColouring = function (colorProperty, color) {
+    forceProperties.attributeColouring[colorProperty] = color;
+    setAttributeNodeColouring("attribute-node-colouring");
+}
+
 const setAttributeNodeColouring = function (selectElement) {
     const { lowValue, highValue } = forceProperties.attributeColouring;
     const lowValueColour = hexToRgb(lowValue);
@@ -281,7 +286,6 @@ const setAttributeNodeColouring = function (selectElement) {
 
     const attributeName = selectElement.value;
     forceProperties.attributeColouring.attribute = attributeName;
-
 
     if (attributeName !== "") {
         forceProperties.attributeColouring.enabled = true;

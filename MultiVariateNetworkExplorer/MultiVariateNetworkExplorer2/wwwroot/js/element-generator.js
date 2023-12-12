@@ -5,29 +5,43 @@
 
 
 const generateGraphElements = function (graph) {
-    generateNodeDetails(graph);
     generateNodeHeadings(graph);
+    generateNodeDetails(graph);
 }
 
 
 const generateNodeDetails = function (graph) {
-    const nodeAttributesDiv = d3.select("#node-attributes")
-    for (const attribute in graph.attributes) {
-        const attributeDiv = nodeAttributesDiv.append("div")
-            .classed("node-property-group", true);
+    const nodeAttributesDiv = d3.select("#node-attributes");
+    const { numAttributes, catAttributes } = graph.attributes;
+    for (const attribute of numAttributes) {
+        generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
+        const containerDivId = attribute + "-histogram-container";
+        nodeAttributesDiv.append("div")
+            .attr("id", containerDivId);
 
-        attributeDiv.append("label")
-            .attr("title", attribute)
-            .attr("for", "display - " + attribute)
-            .html(attribute + ":");
-
-        attributeDiv.append("input")
-            .attr("type", "text")
-            .attr("id", "display-" + attribute)
-            .attr("value", "")
-            .attr("data-attribute", attribute)
-            .property("readonly", true);
+        createHistogram(containerDivId, graph.nodes, attribute);
     }
+
+    for (const attribute of catAttributes) {
+        generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
+    }
+}
+
+const generateNodeDetailDisplayElements = function (nodeAttributesDiv, attribute) {
+    const attributeDiv = nodeAttributesDiv.append("div")
+        .classed("node-property-group", true);
+
+    attributeDiv.append("label")
+        .attr("title", attribute)
+        .attr("for", "display-" + attribute)
+        .html(attribute + ":");
+
+    attributeDiv.append("input")
+        .attr("type", "text")
+        .attr("id", "display-" + attribute)
+        .attr("value", "")
+        .attr("data-attribute", attribute)
+        .property("readonly", true);
 }
 
 const generateNodeHeadings = function (graph) {
@@ -68,20 +82,21 @@ const generateGraphControls = function (graph, forceProperties, filters) {
     updateForceControlValue("link_IterationsSliderOutput", linkIterations);
 
     const { attributes } = graph;
-
+    const { numAttributes, catAttributes } = attributes;
+    const allAttributes = [...new Set([...numAttributes, ...catAttributes])];
     const { attribute: xAttribute } = forceProperties.forceX;
-    updateForceAttributeList("project-x-attributes", attributes, xAttribute);
+    updateForceAttributeList("project-x-attributes", numAttributes, xAttribute);
 
     const { attribute: yAttribute } = forceProperties.forceY;
-    updateForceAttributeList("project-y-attributes", attributes, yAttribute);
+    updateForceAttributeList("project-y-attributes", numAttributes, yAttribute);
 
     const { enabled: labelEnabled, attribute: labelAttribute } = forceProperties.labels;
     //updateForceState("label_EnabledCheckbox", labelEnabled);
-    const labelForceSelect = updateForceAttributeList("node-label-select", attributes, labelAttribute);
+    const labelForceSelect = updateForceAttributeList("node-label-select", allAttributes, labelAttribute);
     setNodeLabel(labelForceSelect);
 
     const { attribute: sizingAttribute } = forceProperties.sizing;
-    const sizingForceSelect = updateForceAttributeList("attribute-node-sizing", attributes, sizingAttribute);
+    const sizingForceSelect = updateForceAttributeList("attribute-node-sizing", numAttributes, sizingAttribute);
     setAttributeNodeSizing(sizingForceSelect);
 
     const { network, background } = forceProperties.colouring;
@@ -115,7 +130,7 @@ const updateForceState = function (forceCheckboxId, state) {
 const updateForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
     const forceSelect = d3.select("#" + forceSelectId);
     const attributeOptGroup = forceSelect.select('optgroup[label=Attributes]');
-    for (const attribute in attributes) {
+    for (const attribute of attributes) {
         attributeOptGroup.append("option")
             .property("value", attribute)
             .html(attribute);
@@ -128,19 +143,20 @@ const updateForceAttributeList = function (forceSelectId, attributes, chosenAttr
 
 const updateColouringForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
     const forceSelect = d3.select("#" + forceSelectId);
+    const { numAttributes, catAttributes } = attributes;
     const numericAttributeOptGroup = forceSelect.select('optgroup[label="Numeric Attributes"]');
-    const categoricalAttributeOptGroup = forceSelect.select('optgroup[label="Categorical Attributes"]');
-    for (const [attribute, type] of Object.entries(attributes)) {
-        if (type === 0) {
-            numericAttributeOptGroup.append("option")
-                .property("value", attribute)
-                .html(attribute);
-            continue;
-        }
-        //categoricalAttributeOptGroup.append("option")
-        //    .property("value", attribute)
-        //    .html(attribute);
+    for (const attribute of numAttributes) {
+        numericAttributeOptGroup.append("option")
+            .property("value", attribute)
+            .html(attribute);
     }
+
+    //const categoricalAttributeOptGroup = forceSelect.select('optgroup[label="Categorical Attributes"]');
+    //for (const attribute of catAttributes) {
+    //    categoricalAttributeOptGroup.append("option")
+    //        .property("value", attribute)
+    //        .html(attribute);
+    //}
 
     forceSelect.property("value", chosenAttribute);
 
@@ -191,7 +207,7 @@ const generateAttributeFilters = function (filters) {
             });
 
         sliderOutputsDiv.append("div")
-            .classed("col-md-4 col-md-offset-4", true)
+            .classed("col-md-4 offset-md-4", true)
             .append("input")
             .attr("type", "number")
             .attr("id", attribute + "-sliderOutputMax")
@@ -240,8 +256,8 @@ const generateAttributeFilters = function (filters) {
 
 const generateRemodelAttributes = function (graph) {
     const remodelAttributesSelect = d3.select("#remodel-network-select");
-
-    for (const attribute in graph.attributes) {
+    const { numAttributes} = graph.attributes;
+    for (const attribute of numAttributes) {
         remodelAttributesSelect
             .append("option")
             .html(attribute);
@@ -268,12 +284,12 @@ const deleteNodeDetailsAttributes = function () {
 }
 
 const deleteNodeHeadings = function () {
-    const nodeHeadingsList = document.getElementById("node-list");
-    nodeHeadingsList.innerHTML = "";
+    document.getElementById("node-list-input").value = "";
+    document.getElementById("node-list").innerHTML = "";
 }
 
 const deleteForceAttributeList = function (forceSelectId) {
-    d3.select("#" + forceSelectId).select("optgroup[label=Attributes]").html("");
+    d3.select("#" + forceSelectId).selectAll('optgroup[label]:not([label="Centralities"])').html("");
 }
 
 const deleteAttributeFilters = function () {

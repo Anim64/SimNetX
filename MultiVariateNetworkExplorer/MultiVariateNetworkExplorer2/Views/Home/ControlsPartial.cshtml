@@ -23,7 +23,7 @@
                         <div class="col-md-4">
                             <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Min" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', lower, false);">
                         </div>
-                        <div class="col-md-4 col-md-offset-4">
+                        <div class="col-md-4 offset-md-4">
                             <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Max" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', greater, true);">
                         </div>
                     </div>
@@ -161,6 +161,10 @@
                         <option value="">--None--</option>
                         <option value="id" selected>id</option>
                         <optgroup label="Attributes">
+                            @foreach (var key in Model.Mvn.VectorData.CatAttrValues.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
                             {
                                 <option value="@key">@key</option>
@@ -208,7 +212,7 @@
                 <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
                 <label class="attribute-selection-label" for="attribute-node-colouring">
                     Choose Attribute:
-                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring" onchange="setAttributeNodeColouring(this)">
+                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring" onchange="setAttributeNodeColouring(this.id)">
                         <option value="">--None--</option>
                         <optgroup label="Numeric Attributes">
                             @foreach(var key in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
@@ -231,11 +235,11 @@
                 <div class="colour-row">
                     <label class="colouring" for="low-value-colour">
                         Low value colour
-                        <input type="color" id="low-value-colour" value="#0000FF">
+                    <input type="color" id="low-value-colour" value="#0000FF" onchange="changeAttributeNodeColouring('lowValue', this.value)">
                     </label>
                     <label class="colouring" for="high-value-colour">
                         High value colour
-                        <input type="color" id="high-value-colour" value="#FF0000">
+                    <input type="color" id="high-value-colour" value="#FF0000" onchange="changeAttributeNodeColouring('highValue', this.value)">
                     </label>
                 </div>
                 
@@ -248,18 +252,18 @@
                 </label>
                 <div class="transformation-options">
                 @{
-                    List<string> transformationTypes = new List<string>
+                    List<Tuple<string, string>> transformationTypes = new List<Tuple<string, string>>
                     {
-                        "normalize",
-                        "rescale",
-                        "standardize",
-                        "distribute"                    
+                        new Tuple<string, string>("normalize", "Normalize"),
+                        new Tuple<string, string>("rescale", "Rescale"),
+                        new Tuple<string, string>("standardize", "Standardize"),
+                        new Tuple<string, string>("distribute", "Normal dist. to LogNormal")
                     };
 
-                    foreach(string transformationType in transformationTypes)
+                    foreach(var transformationType in transformationTypes)
                     {
-                        <div class="transformation-option" id="@(transformationType + "-option")" data-role="@transformationType">
-                            <h5>@string.Concat(transformationType[0].ToString().ToUpper(), transformationType.AsSpan(1))</h5>
+                        <div class="transformation-option" id="@(transformationType.Item1 + "-option")" data-role="@transformationType.Item1">
+                            <h5>@transformationType.Item2</h5>
                             <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
                             <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
                         </div>
