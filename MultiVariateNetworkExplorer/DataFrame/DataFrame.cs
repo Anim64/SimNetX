@@ -121,6 +121,8 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             IdColumnName = (isParsable ? "Attribute" + idColumn : idColumn).Trim();
             IdColumnName = Regex.Replace(IdColumnName, @"[\s]+", "");
             IdColumn = this[IdColumnName].ToColumnString();
+            IdColumn.Map(Utils.RemoveDiacritics);
+            IdColumn.Map(Utils.RemoveSpecialCharacters);
             this.RemoveColumn(IdColumnName);
         }
 
@@ -736,12 +738,32 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
     public JObject AttributesToD3Json()
     {
-        JObject jAttributes = new JObject();
-        jAttributes[jsonIdColumnName] = this.IdColumnName;
+
+        JObject jAttributes = new ()
+        {
+            [jsonIdColumnName] = this.IdColumnName
+        };
+
+        
+        JArray jNumAttributes = new();
+        JArray jCatAttributes = new();
+
         foreach (var column in this.Data)
         {
-            jAttributes[column.Key] = column.Value is ColumnDouble ? JToken.FromObject(IColumn.ColumnTypes.Double) : JToken.FromObject(IColumn.ColumnTypes.String);
+            if(column.Value is ColumnDouble)
+            {
+                jNumAttributes.Add(column.Key);
+                continue;
+            }
+            jCatAttributes.Add(column.Key);
         }
+
+        const string jsonNumAttributeName = "numAttributes";
+        const string jsonCatAttributeName = "catAttributes";
+
+        jAttributes[jsonNumAttributeName] = jNumAttributes;
+        jAttributes[jsonCatAttributeName] = jCatAttributes;
+
         return jAttributes;
     }
 

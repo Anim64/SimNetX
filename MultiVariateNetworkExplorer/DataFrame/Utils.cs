@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -31,7 +32,11 @@ namespace DataFrameLibrary
 
         public static string RemoveSpecialCharacters(this string text)
         {
-            return Regex.Replace(text, @"[^0-9a-zA-Z-]+", "");
+            string noSpecialChars = Regex.Replace(text, @"[^0-9a-zA-Z-\s]+", "");
+            string noMultipleDashesAndSpaces = Regex.Replace(noSpecialChars, @"\s+", "-");
+            string noDashes = Regex.Replace(noMultipleDashesAndSpaces, @"([-])\1+", "-");
+            string noDashedAtEnd = Regex.Replace(noDashes, @"-$", "");
+            return noDashedAtEnd;
         }
 
         public static bool IsNotBinary(this double x)

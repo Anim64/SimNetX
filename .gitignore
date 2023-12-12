@@ -332,3 +332,7 @@ ASALocalRun/
 /MultiVariateNetworkExplorer/TestApp/Data_Cortex_Nuclear.xls
 /MultiVariateNetworkExplorer/TestApp/data.csv
 /MultiVariateNetworkExplorer/TestApp/dataset.csv
+/MultiVariateNetworkExplorer/TestApp/elf_chain_email_processed_transposed.csv
+/MultiVariateNetworkExplorer/TestApp/Program.cs
+/MultiVariateNetworkExplorer/TestApp/TestApp.csproj
+/MultiVariateNetworkExplorer/TestApp/users_db.xml

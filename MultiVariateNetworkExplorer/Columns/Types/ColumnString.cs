@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Columns.Types
@@ -51,6 +52,18 @@ namespace Columns.Types
             foreach (var data in col)
             {
                 Data.Add(data.ToString());
+            }
+        }
+
+        public void Map(Func<string, string> mapFunction)
+        {
+            for (int i = 0; i < DataCount; i++)
+            {
+                object columnValue = this[i];
+                if (columnValue != null)
+                {
+                    this[i] = mapFunction((string)columnValue);
+                }
             }
         }
         public void AddData(object value)

@@ -490,7 +490,7 @@ namespace NetworkLibrary
             {
                 foreach(var node1 in this)
                 {
-                    foreach (var node2 in node1.Value.Where(x => String.Compare(x.Key, node1.Key) > 0))
+                    foreach (var node2 in node1.Value.Where(x => string.Compare(x.Key, node1.Key) > 0))
                     {
                         string edge = node1.Key + " " + node2.Key;
                         sw.WriteLine(edge);

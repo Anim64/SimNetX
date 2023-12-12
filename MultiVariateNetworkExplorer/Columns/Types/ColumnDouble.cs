@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Columns.Types
 {
@@ -102,8 +104,8 @@ namespace Columns.Types
         public double Sum()
         {
             double result = 0;
-
-            foreach (double? value in Data)
+            List<double?> dataList = new List<double?>((IList<double?>)this.Data);
+            foreach (double? value in dataList)
             {
                 if (value != null)
                 {
@@ -169,10 +171,77 @@ namespace Columns.Types
                     squareSum += differenceFromAverage * differenceFromAverage;
                 }
             }
-
             return Math.Sqrt(squareSum / (DataCount - 1));
         }
 
+        private List<double?> GetSortedAndClearedData()
+        {
+            List<double?> dataList = new List<double?>((IList<double?>)this.Data);
+            dataList.RemoveAll((double? x) => { return x == null; });
+            dataList.Sort();
+            return dataList;
+        }
+
+
+        public double? Q1()
+        {
+
+            List<double?> dataList = GetSortedAndClearedData();
+            int dataCount = dataList.Count;
+            if(dataCount == 0)
+            {
+                return null;
+            }
+
+            int Q1Index = (int)Math.Ceiling(dataList.Count / 4.0);
+            double? Q1 = dataList[Q1Index];
+
+            return Q1;
+        }
+
+        public double? Q1(List<double?> dataList)
+        {
+            int dataCount = dataList.Count;
+            int Q1Index = (int)Math.Ceiling(dataList.Count / 4.0);
+            double? Q1 = dataList[Q1Index];
+
+            return Q1;
+        }
+
+        public double? Q3() 
+        {
+            List<double?> dataList = GetSortedAndClearedData();
+            int dataCount = dataList.Count;
+            if (dataCount == 0)
+            {
+                return null;
+            }
+
+            int Q3Index = (int)Math.Ceiling(dataCount * (3.0 / 4.0));
+            double? Q3 = dataList[Q3Index];
+
+            return Q3;
+        }
+
+        public double? Q3(List<double?> dataList)
+        {
+            int dataCount = dataList.Count;
+            int Q3Index = (int)Math.Ceiling(dataCount * (3.0 / 4.0));
+            double? Q3 = dataList[Q3Index];
+
+            return Q3;
+        }
+
+        public double? IQR()
+        {
+            List<double? > dataList = GetSortedAndClearedData();
+            if(dataList.Count == 0) 
+            { 
+                return null; 
+            }
+
+            return Q3(dataList) - Q1(dataList);
+        }
         public ColumnString ToColumnString()
         {
             ColumnString result = new ColumnString(this);

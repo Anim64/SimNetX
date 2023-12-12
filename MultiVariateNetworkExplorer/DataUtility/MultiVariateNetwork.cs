@@ -155,9 +155,11 @@ namespace MultiVariateNetworkLibrary
 
             JArray jNodes = new JArray();
             JArray jLinks = new JArray();
+            JObject jAttributes = new JObject();
 
             root["nodes"] = jNodes;
             root["links"] = jLinks;
+            root["attributes"] = jAttributes;
 
             string json = root.ToString();
             return json;
