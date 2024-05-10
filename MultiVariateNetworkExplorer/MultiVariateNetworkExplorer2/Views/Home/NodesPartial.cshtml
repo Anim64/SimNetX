@@ -1,5 +1,4 @@
-﻿@model MultiVariateNetworkExplorer2.Models.GraphModel
-
+﻿
 <section class="column right-col" id="rightpanel">
         <div class="navigation">
             <div class="tab-nav">
@@ -75,21 +74,32 @@
             </div>
         </div>
         <div class="column-content selections" id="selections">
+            <label class="attribute-selection-label" for="project-x-attributes">
+                Assign partitions
+                <select id="partitions-selection-attributes" class="attribute-select attribute-select-border" name="partitions-selection-attributes">
+                    <option value="modularity">Modularity</option>
+                    @foreach (var key in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
+                    {
+                        <option value="@key">@key</option>
+                    }
+                </select>
+            <button onclick="assignAttributePartitions('partitions-selection-attributes', currentGraph)">Run</button>
+            </label>
+
             <div class="selection-edit">
                 <input type="button" onclick="addNewSelection();" value="Add New Selection" />
-            
-            <input type="button" onclick="deleteAllSelections();" value="Delete All Selections" />
+                <input type="button" onclick="deleteAllSelections(currentGraph);" value="Delete All Selections" />
             </div>
             <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
                 @if (Model.GraphModel.Mvn.Partition != null)
                 {
                     foreach (var selection in Model.GraphModel.Mvn.Partition.Values.Distinct())
                     {
-                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection')">
+                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection',currentGraph)">
                             <h4 class="panel-title">
                                 @("Selection " + selection)
                             </h4>
-                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, '@selection')" />
+                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, '@selection', currentGraph)" />
                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, '@selection.ToString()')"><i class="fa fa-plus-square"></i></button>
                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, '@selection.ToString()')"><i class="fa fa-trash"></i></button>
                         </div>

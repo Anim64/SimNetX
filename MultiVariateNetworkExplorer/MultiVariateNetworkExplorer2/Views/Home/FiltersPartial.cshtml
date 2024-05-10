@@ -1,0 +1,34 @@
+﻿<div class="column-content attributes" id="attributes">
+    @foreach (var pair in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes)
+    {
+        string sliderId = @pair.Key;
+        <div class="numeric">
+            <h4>@sliderId</h4>
+            <div id="@(sliderId + "-slider")"></div>
+            <script>createDoubleSlider('@(sliderId + "-slider")', '@(sliderId)', '@(sliderId + "-sliderOutputMin")', '@(sliderId + "-sliderOutputMax")', @pair.Value.Min, @pair.Value.Max)</script>
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="number" id="@(sliderId + "-sliderOutputMin")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Min" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', lower, false);">
+                </div>
+                <div class="col-md-4 offset-md-4">
+                    <input type="number" id="@(sliderId + "-sliderOutputMax")" min="@pair.Value.Min" max="@pair.Value.Max" value="@pair.Value.Max" step="0.01" onchange="$('#' + '@(pair.Key + "-slider")').slider('option', 'value', this.value); filterByValue(this, '@pair.Key', greater, true);">
+                </div>
+            </div>
+        </div>
+    }
+
+    @foreach (var pair in Model.GraphModel.Mvn.VectorData.CatAttrValues)
+    {
+        <div class="categorical scrollbar-thin">
+            <h4>@pair.Key</h4>
+            <div class="checkboxes">
+                @foreach (string category in pair.Value)
+                {
+                    <label for="@(category + "-checkbox")">@(category)</label>
+                    <input type="checkbox" id="@(category + "-checkbox")" value="@category" onchange="filterByCategory('@pair.Key', '@category', this.checked)" checked />
+                }
+            </div>
+        </div>
+    }
+
+</div>
