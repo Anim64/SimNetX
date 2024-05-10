@@ -1,6 +1,6 @@
 ﻿self.importScripts('../algorithms.js', '../queue.js');
 
-const calculateClosenessCentrality = function (graph, linkedByIndex) {
+const calculateClosenessCentrality = function (graph) {
     const closeness = {
         'average': -1,
         'min': Number.MAX_VALUE,
@@ -8,7 +8,7 @@ const calculateClosenessCentrality = function (graph, linkedByIndex) {
         'values': {}
     };
 
-    const paths = shortestPathsBFS(graph, linkedByIndex);
+    const paths = shortestPathsBFS(graph);
     let averageCloseness = 0;
     const { nodes: { length }, nodes} = graph;
     for (const node1 of nodes) {

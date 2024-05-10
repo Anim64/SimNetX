@@ -245,7 +245,7 @@ const setAttributeNodeSizing = function (selectElement) {
         node.attr("r", function (d) {
             const attributeValue = getValueFunction(d, attributeName);
             if (attributeValue == "") {
-                
+
                 return d.r = defaultRadius / 2;
             }
 
@@ -388,10 +388,10 @@ const projectAttributeYAxis = function (selectElement) {
         currentGraph.toggleYForce(true);
         currentGraph.resetSimulation();
         return;
-                }
+    }
     currentGraph.toggleYForce(false);
     currentGraph.resetSimulation();
-    }
+}
 
 
 const createDoubleSlider = function (sliderId, attributeName, minValueId, maxValueId, minValue, maxValue, lowValue = minValue, highValue = maxValue) {
@@ -420,12 +420,14 @@ const createDoubleSlider = function (sliderId, attributeName, minValueId, maxVal
 
 
 
-const changeNetworkNodeColour = function(colour) {
-    forceProperties.colouring.network = colour;
+const changeNetworkNodeColour = function (colourInputId) {
+    const colour = $(`#${colourInputId}`).val();
+    nodeVisualProperties.colouring.network = colour;
     updateNodeAndLinkColour(node, link);
 }
 
-const changeNetworkBackgroundColour = function (colour) {
-    forceProperties.colouring.background = colour;
+const changeNetworkBackgroundColour = function (colourInputId) {
+    const colour = $(`#${colourInputId}`).val();
+    nodeVisualProperties.colouring.background = colour;
     $('#network-background-rect.background').css("fill", colour);
 }
