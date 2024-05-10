@@ -16,11 +16,14 @@ const displayAttributeTransformation = function (attribute, transformationListId
             addTransformationElement(transformationListId, transformation, transformationName);
         }
     }
+    //const remodelCheckbox = document.getElementById("remodel-checkbox");
+    //const isIn = excludedAttributes.includes(attribute);
+    //remodelCheckbox.checked = !isIn;
 } 
 
 const updateRemodelingAttributes = function (optionCheckbox, attributeSelectId) {
     const attributeSelect = document.getElementById(attributeSelectId);
-    const attribute = attributeSelect.value;
+    const attribute = optionCheckbox.value;
 
     if (!optionCheckbox.checked) {
         excludedAttributes.push(attribute);
@@ -194,20 +197,40 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             break;
     }
 
-    switch (selectedAlgorithm) {
-        default:
-            break;
-        case 'EpsilonKNN':
-            const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
-            const k = parseInt(document.getElementById('kNNmin').value);
-            const algorithmParams = networkRemodelParams["algorithm"]["params"];
-            algorithmParams.push(epsilonRadius);
-            algorithmParams.push(k);
-            break;
+    const selectedParametersDiv = selectedAlgorithm.toLowerCase() + "-parameters-remodel";
+    const algorithmParametersDiv = document.getElementById(selectedParametersDiv);
+    const parameterInputs = algorithmParametersDiv.querySelectorAll("input[type=number]");
+    const algorithmParams = networkRemodelParams["algorithm"]["params"];
+    for (const parameter of parameterInputs) {
+        algorithmParams.push(parseFloat(parameter.value));
     }
+    //switch (selectedAlgorithm) {
+    //    default:
+    //        break;
+    //    case "lrnet-parameters-remodel": {
+    //        const lrnetKNNElement = document.getElementById('lrnet-kNNmin-remodel');
+    //        const lrnetReduction = parseFloat(document.getElementById('lrnet-reduction-remodel').value);
+    //        const lrNetK = parseInt(lrnetKNNElement.value);
+    //        const algorithmParams = networkRemodelParams["algorithm"]["params"];
+    //        algorithmParams.push(lrnetReduction);
+    //        algorithmParams.push(lrNetK);
+    //        break;
+    //    }
+            
 
-    const nodes_string = JSON.stringify(graph.nodes);
-    const attributes_string = JSON.stringify(graph.attributes);
+    //    case 'epsilon-parameters-remodel': {
+    //        const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
+    //        const k = parseInt(document.getElementById('kNNmin').value);
+    //        const algorithmParams = networkRemodelParams["algorithm"]["params"];
+    //        algorithmParams.push(epsilonRadius);
+    //        algorithmParams.push(k);
+    //        break;
+    //    }
+            
+    //}
+
+    const nodes_string = JSON.stringify(dataStore.getNodeData);
+    const attributes_string = JSON.stringify(currentGraph.attributes);
     const attribute_transform_string = JSON.stringify(attributeTransform);
     const network_remodel_params_string = JSON.stringify(networkRemodelParams);
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
@@ -231,27 +254,20 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         success: function (result) {
             if (result.newVectorData != "") {
                 const newVectorData = JSON.parse(result.newVectorData);
-                graph.nodes = newVectorData;
-                store.nodes = [...newVectorData];
-                updateNodes();
+                //currentGraph.nodes = newVectorData;
+                dataStore.nodes = newVectorData;
+                //updateNodes();
             }
             const newNet = JSON.parse(result.newNetwork);
-            graph.links = newNet;
-            store.links = [...newNet];//$.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
+            currentGraph.links = newNet;
+            //store.links = [...newNet];//$.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
 
 
-            linkedByIndex = {};
-            for (let l of graph.links) {
-                const index = l.source + "," + l.target
-                linkedByIndex[index] = 1;
-            }
-
-
+            currentGraph.updateLinkIndeces();
             updateNodesAndLinks();
-            requestCommunityDetection();
-            updateLinkColour(link);
+            requestCommunityDetection(currentGraph);
             calculateAllMetrics();
-            resetSimulation();
+            currentGraph.resetSimulation();
 
         },
         error: function (xhr, ajaxOptions, thrownError) {

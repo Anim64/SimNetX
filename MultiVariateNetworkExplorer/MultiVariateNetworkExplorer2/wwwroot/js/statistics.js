@@ -1,14 +1,3 @@
-const getAttributeValueList = function (nodes, attribute) {
-    const attributeValueList = [];
-    for (const node of nodes) {
-        const { [attribute]: attributeValue } = node;
-        if (attributeValue !== null) {
-            attributeValueList.push(attributeValue);
-        }
-    }
-    return attributeValueList;
-}
-
 const Q1 = function (attributeValueList) {
     const attributeValueListCount = attributeValueList.length;
     const Q1Index = Math.floor(attributeValueListCount / 4.0);
@@ -36,7 +25,7 @@ const Q3 = function (attributeValueList) {
 }
 
 
-const IQR = function (nodes, attribute) {
+const IQR = function (currentGraph, attribute) {
     const attributeValueList = getAttributeValueList(nodes, attribute);
     if (attributeValueList.length <= 2) {
         return -1;

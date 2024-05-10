@@ -160,41 +160,48 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
 }
 
 const handleForceEnablement = function(value, force, forceUpdateDelegate){
-    forceProperties[force].enabled = value;
+    currentGraph.setForcePropertyValue(force, "enabled", value)
     forceUpdateDelegate();
-    resetSimulation();
+    currentGraph.resetSimulation();
 }
 
 const handleForceChange = function (value, sliderOutputId, force, property, forceUpdateDelegate) {
     d3.select('#' + sliderOutputId).text(value);
-    forceProperties[force][property] = Number(value);
+    currentGraph.setForcePropertyValue(force, property, Number(value))
     forceUpdateDelegate();
-    resetSimulation();
+    currentGraph.resetSimulation();
 }
 
 const getNodeAttribute = function (d, attributeName) {
-    return d[attributeName];
+    return currentGraph.getNodeDataValue(d.id, attributeName);
 };
 const getNodeProperty = function (d, attributeName) {
-    return graph.properties[attributeName].values[d.id];
+    return currentGraph.getPropertyValue(d.id, attributeName);;
 };
 
 const enableNodeLabels = function () {
-    nodeText.classed('invisible', !forceProperties.labels.enabled);
+    nodeText.classed('invisible', !nodeVisualProperties.labels.enabled);
 }
 
 const setNodeLabel = function (selectElement) {
     const attributeName = selectElement.value;
     const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup');
-    forceProperties.labels.attribute = attributeName;
+    nodeVisualProperties.labels.attribute = attributeName;
     if (attributeName === "") {
         nodeText.style("display", "none");
-        return
+        return;
     }
 
     nodeText.style("display", "block");
 
     let getValueFunction = getNodeAttribute;
+
+    if (attributeName === "id") {
+        nodeText.text(function (d) {
+            return d.id;
+        });
+        return;
+    }
 
     if (optgroup !== null) {
         const optGroupLabel = optgroup.getAttribute('label');
@@ -211,11 +218,11 @@ const setNodeLabel = function (selectElement) {
 }
 const setAttributeNodeSizing = function (selectElement) {
     const attributeName = selectElement.value;
-    const { radius: defaultRadius } = forceProperties.collide;
-    forceProperties.sizing.attribute = attributeName;
+    const defaultRadius = currentGraph.getForcePropertyValue(Graph.forceNames.collide, "radius");
+    nodeVisualProperties.sizing.attribute = attributeName;
 
     if (attributeName !== "") {
-        forceProperties.sizing.enabled = true;
+        nodeVisualProperties.sizing.enabled = true;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -225,12 +232,14 @@ const setAttributeNodeSizing = function (selectElement) {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
             getValueFunction = getNodeAttribute;
+            
         }
 
         else if (optgroup === "Centralities") {
-            attributeMax = graph.properties[attributeName].max;
-            attributeMin = graph.properties[attributeName].min;
+            attributeMax = currentGraph.getPropertyAttributeValue(attributeName, "max");
+            attributeMin = currentGraph.getPropertyAttributeValue(attributeName, "min");
             getValueFunction = getNodeProperty;
+            
         }
 
         node.attr("r", function (d) {
@@ -246,11 +255,9 @@ const setAttributeNodeSizing = function (selectElement) {
 
         setNodeFontSize();
         return;
-
-        
     }
 
-    forceProperties.sizing.enabled = false;
+    nodeVisualProperties.sizing.enabled = false;
     node.attr("r", function (d) {
         return d.r = defaultRadius;
     });
@@ -275,20 +282,20 @@ const pickHex = function(color1, color2, weight) {
 }
 
 const changeAttributeNodeColouring = function (colorProperty, color) {
-    forceProperties.attributeColouring[colorProperty] = color;
+    nodeVisualProperties.attributeColouring[colorProperty] = color;
     setAttributeNodeColouring("attribute-node-colouring");
 }
 
 const setAttributeNodeColouring = function (selectElement) {
-    const { lowValue, highValue } = forceProperties.attributeColouring;
+    const { lowValue, highValue } = nodeVisualProperties.attributeColouring;
     const lowValueColour = hexToRgb(lowValue);
     const highValueColour = hexToRgb(highValue);
 
     const attributeName = selectElement.value;
-    forceProperties.attributeColouring.attribute = attributeName;
+    nodeVisualProperties.attributeColouring.attribute = attributeName;
 
     if (attributeName !== "") {
-        forceProperties.attributeColouring.enabled = true;
+        nodeVisualProperties.attributeColouring.enabled = true;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -301,15 +308,15 @@ const setAttributeNodeColouring = function (selectElement) {
         }
 
         else if (optgroup === "Centralities") {
-            attributeMax = graph.properties[attributeName].max;
-            attributeMin = graph.properties[attributeName].min;
+            attributeMax = currentGraph.getPropertyAttributeValue(attributeName, "max");
+            attributeMin = currentGraph.getPropertyAttributeValue(attributeName, "min");
             getValueFunction = getNodeProperty;
         }
 
         node.style("fill", function (d) {
             const attributeValue = getValueFunction(d, attributeName);
             if (attributeValue === "") {
-                return forceProperties.colouring.network;
+                return nodeVisualProperties.colouring.network;
             }
             
             const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
@@ -323,118 +330,69 @@ const setAttributeNodeColouring = function (selectElement) {
         return;
     }
 
-    forceProperties.attributeColouring.enabled = false;
+    nodeVisualProperties.attributeColouring.enabled = false;
     updateNodeAndLinkColour(node, link);
 }
 
 const projectAttributeXAxis = function(selectElement) {
     const attributeName = selectElement.value;
-    const { strength, enabled, x } = forceProperties.forceX;
-    const forceName = "forceX";
-
-    simulation.force(forceName)
-        .strength(strength * enabled);
 
     if (attributeName !== "") {
 
-        forceProperties.forceX.enabled = true;
-        forceProperties.forceX.attribute = attributeName;
-        
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
-        let getValueFunction = null;
 
         if (optgroup === "Attributes") {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
-            getValueFunction = getNodeAttribute;
+            currentGraph.updateXForceAttribute(attributeName, attributeMax, attributeMin);
         }
 
         else if (optgroup === "Centralities"){
             attributeMax = graph.properties[attributeName].max;
             attributeMin = graph.properties[attributeName].min;
-            getValueFunction = getNodeProperty;
+            currentGraph.updateXForceProperty(attributeName);
         }
 
-        
-        simulation.force(forceName)
-            .x(function (d) {
-                const attributeValue = getValueFunction(d, attributeName);
-                if (attributeValue == "") {
-                    return width / 2;
-                }
-
-                const resultXCoord = width * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
-                return resultXCoord;
-            });
-
-        updateForces();
+        currentGraph.toggleXForce(true);
+        currentGraph.resetSimulation();
         return;
     }
-    forceProperties.forceX.enabled = false;
-
-    simulation.force(forceName)
-        .x(width * x);
-
-    updateForces();
+    currentGraph.toggleXForce(false);
+    currentGraph.resetSimulation();
 }
 
 
 const projectAttributeYAxis = function (selectElement) {
     const attributeName = selectElement.value;
-    const { strength, enabled, y } = forceProperties.forceY;
-    const forceName = "forceY";
-
-    const getNodeAttribute = function (d, attributeName) { return d[attributeName]; };
-    const getNodeProperty = function (d, attributeName) { return graph.properties[attributeName].values[d.id] };
-
-    simulation.force(forceName)
-        .strength(strength * enabled);
 
     if (attributeName !== "") {
-        forceProperties.forceY.enabled = true;
-        forceProperties.forceY.attribute = attributeName;
+
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
-        let getValueFunction = null;
 
         if (optgroup === "Attributes") {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
-            getValueFunction = getNodeAttribute;
+            currentGraph.updateYForceAttribute(attributeName, attributeMax, attributeMin);
         }
 
         else if (optgroup === "Centralities") {
             attributeMax = graph.properties[attributeName].max;
             attributeMin = graph.properties[attributeName].min;
-            getValueFunction = getNodeProperty;
+            currentGraph.updateYForceProperty(attributeName);
         }
 
-        simulation.force(forceName)
-            .y(function (d) {
-                const attributeValue = getValueFunction(d, attributeName);
-                if (attributeValue == "") {
-                    return height / 2;
-                }
-
-                const resultYCoord = height - (height * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)));
-                return resultYCoord;
-            });
-
-        updateForces();
+        currentGraph.toggleYForce(true);
+        currentGraph.resetSimulation();
         return;
+                }
+    currentGraph.toggleYForce(false);
+    currentGraph.resetSimulation();
     }
 
-    forceProperties.forceY.enabled = false;
-
-    simulation.force(forceName)
-        .y(height * y);
-
-    updateForces();
-    
-}
 
 const createDoubleSlider = function (sliderId, attributeName, minValueId, maxValueId, minValue, maxValue, lowValue = minValue, highValue = maxValue) {
     $("#" + sliderId).slider({

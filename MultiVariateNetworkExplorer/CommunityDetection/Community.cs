@@ -125,7 +125,7 @@ namespace CommunityDetection
             var ret = new Dictionary<A, string>();
             var new_values = new Dictionary<string, string>();
 
-            foreach (A key in dict.Keys.OrderBy(a => int.Parse(a.ToString(), CultureInfo.InvariantCulture)))
+            foreach (A key in dict.Keys.OrderBy(a => a/*int.Parse(a.ToString(), CultureInfo.InvariantCulture)*/))
             {
                 string value = dict[key];
                 if (!new_values.TryGetValue(value, out string new_value))

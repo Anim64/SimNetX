@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Resources;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -82,19 +83,18 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
         CatAttrValues = new Dictionary<string, List<string>>();
 
-        foreach (var property in jAttributes)
+        foreach (var property in jAttributes["num"])
         {
-            string header = property.Key;
-            ColumnTypes columnTypeNumber = property.Value.ToObject<ColumnTypes>();
+            string header = property.ToString();
+            this.Data[header] = new ColumnDouble();
+        }
 
-            if(columnTypeNumber == ColumnTypes.Double)
-            {
-                this.Data[header] = new ColumnDouble();
-                continue;
-            }
-
+        foreach (var property in jAttributes["cat"])
+        {
+            string header = property.ToString();
             this.Data[header] = new ColumnString();
         }
+        
     }
 
     /// <summary>
@@ -694,17 +694,17 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         this.Data.Remove(column);
     }
 
-    public static DataFrame FromD3Json(JArray jNodes, JObject jAttributes)
+    public static DataFrame FromD3Json(JObject jNodes, JObject jAttributes)
     {
-        DataFrame df = new DataFrame(jAttributes);
+        DataFrame df = new(jAttributes);
             
         foreach (var node in jNodes)
         {
-            df.IdColumn.AddData(node[jsonIdColumnName].ToString());
+            df.IdColumn.AddData(node.Key.ToString());
             foreach (string column in df.Columns)
             {
-                JToken attributeValue = node[column];
-                object value = !(attributeValue.ToString() is null) ? attributeValue.ToObject<object>() : null;
+                JToken attributeValue = node.Value[column];
+                object value = attributeValue.ToString() is not null ? attributeValue.ToObject<object>() : null;
                 df[column].AddData(value);
             }
             df.DataCount++;
@@ -716,24 +716,40 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             
     }
 
-    public JArray ToD3Json()
+    public JToken ToD3Json()
     {
-        JArray jNodes = new JArray();
+        
+        JObject jNodeData = new ();
+        
         for (int i = 0; i < this.DataCount; i++)
         {
             string source = this.IdColumn[i].ToString();
 
-            JObject jNode = new JObject();
-            jNode[jsonIdColumnName] = source;
-
+            JObject jData = new ();
             foreach (string column in this.Columns)
             {
-                jNode[column] = this[column, i] != null ? JToken.FromObject(this[column, i]) : JValue.CreateNull();
+                jData[column] = this[column, i] != null ? JToken.FromObject(this[column, i]) : JValue.CreateNull();
             }
-            jNodes.Add(jNode);
+            jNodeData[source] = jData;
         }
 
-        return jNodes;
+        return jNodeData;
+    }
+
+    public JArray NodesToD3Json()
+    {
+        JArray jNodeGraph = new();
+        for (int i = 0; i < this.DataCount; i++)
+        {
+            string source = this.IdColumn[i].ToString();
+
+            JObject jNode = new()
+            {
+                [jsonIdColumnName] = source
+            };
+            jNodeGraph.Add(jNode);
+        }
+        return jNodeGraph;
     }
 
     public JObject AttributesToD3Json()
@@ -758,8 +774,8 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             jCatAttributes.Add(column.Key);
         }
 
-        const string jsonNumAttributeName = "numAttributes";
-        const string jsonCatAttributeName = "catAttributes";
+        const string jsonNumAttributeName = "num";
+        const string jsonCatAttributeName = "cat";
 
         jAttributes[jsonNumAttributeName] = jNumAttributes;
         jAttributes[jsonCatAttributeName] = jCatAttributes;

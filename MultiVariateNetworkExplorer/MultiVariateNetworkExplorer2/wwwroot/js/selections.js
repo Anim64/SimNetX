@@ -9,22 +9,22 @@ const stopClickPropagation = function(event) {
     event.stopPropagation();
 }
 
-const selectNodesBySelection = function(selectionId) {
+const selectNodesBySelection = function(selectionId, graphRef) {
     deselectAllNodes();
     nodeGroups.filter(function (n) {
-        return graph.partitions[n.id] === selectionId;
+        return graphRef.getPartition(n.id) === selectionId;
     }).classed('selected', function (d) {
         d.previouslySelected = d.selected;
         return d.selected = true;
     });
 }
 
-const changeGroupColour = function(input, selectionId) {
+const changeGroupColour = function(input, selectionId, graphRef) {
     const selectionPanel = input.parentNode;
     const newBackgroundColour = input.value;
-    
+    selectionPanel.style.backgroundColor = newBackgroundColour;
     const selectionNodes = node.filter(function (n) {
-        return graph.partitions[n.id] === selectionId;
+        return graphRef.getPartition(n.id) === selectionId;
     });
 
     selectionNodes.style("fill", function (d) {
@@ -269,11 +269,8 @@ const addNodesToSelection = function (event, selectionId) {
 }
 
 //Deletes all selections
-const deleteAllSelections = function () {
-    const { partitions } = graph;
-    for (const node in partitions) {
-        partitions[node] = "";
-    }
+const deleteAllSelections = function (graphRef) {
+    graphRef.clearPartitions();
 
     const { network: networkColour } = forceProperties.colouring;
     const lightness = fontLightness(networkColour);
@@ -290,13 +287,9 @@ const deleteAllSelections = function () {
     const selectionList = document.getElementById('list-selections');
     selectionList.innerHTML = "";
 
-    if (!forceProperties.attributeColouring.enabled) {
         updateNodeAndLinkColour(node, link);
     }
     
-
-}
-
 
 
 //Deletes one specific selection
@@ -357,13 +350,9 @@ const stringifyCommunityDetectionLinkReplacer = function (key, value) {
 
 //Request for community detection on server
 const requestCommunityDetection = function () {
-    store.nodes.forEach(function (d) {
-        graph.partitions[d.id] = "";
-    });
-
     //const graph_string = JSON.stringify(graph);
-    const nodes_string = JSON.stringify(graph.nodes, ["id"]);
-    const links_string = JSON.stringify(graph.links, stringifyCommunityDetectionLinkReplacer);
+    const nodes_string = JSON.stringify(currentGraph.nodes, ["id"]);
+    const links_string = JSON.stringify(currentGraph.links, stringifyCommunityDetectionLinkReplacer);
     
     $.ajax({
         url: '/Home/GraphCommunityDetection',
@@ -373,13 +362,17 @@ const requestCommunityDetection = function () {
         // request header to application/json because
         // that's how the client will send the request
         //contentType: 'application/json',
-        data: { graphNodes: nodes_string, graphLinks: links_string },
+        data: {
+            nodes: nodes_string,
+            links: links_string
+        },
         //cache: false,
         success: function (result) {
-            deleteAllSelections();
+            deleteAllSelections(currentGraph);
 
-            graph.partitions = JSON.parse(result.newPartitions);
-            store.partitions = graph.partitions;
+            const temp = JSON.parse(result.newPartitions);
+            currentGraph.partitions = JSON.parse(result.newPartitions);
+            //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
 
             selectionGraph.nodes.forEach(function (d) {
@@ -393,7 +386,7 @@ const requestCommunityDetection = function () {
                 return;
             }
 
-            updateHeadingColour(node);
+            //updateHeadingColour(node);
 
             
             //updateSelectionForces();

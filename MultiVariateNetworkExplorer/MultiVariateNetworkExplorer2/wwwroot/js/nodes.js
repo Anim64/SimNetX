@@ -112,7 +112,7 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
     for (const input of inputs) {
         //let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
         const attributeName = input.getAttribute('data-attribute');
-        input.value = graph.nodes[nodeIndex][attributeName];
+        input.value = currentGraph.getNodeDataValue(nodeId, attributeName)
     };
 
     showNodeValueInHistogram(nodeId, nodeIndex, attributesDiv);
@@ -122,8 +122,8 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
     for (const input of inputs) {
         //let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
         const attributeName = input.getAttribute('data-attribute');
-        const { [attributeName]: attributeValues } = graph.properties;
-        input.value = attributeValues !== undefined ? attributeValues.values[nodeId] : "Calculating";
+        const attributeValue = currentGraph.getPropertyValue(nodeId, attributeName)
+        input.value = attributeValue !== undefined ? attributeValue : "Calculating";
         
     };
 
@@ -135,7 +135,7 @@ const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
     for (const histogram of histogramSvgs) {
         //const d3Histogram = d3.select(histogram);
         const attributeName = histogram.getAttribute('data-attribute');
-        const attributeValue = graph.nodes[nodeIndex][attributeName];
+        const attributeValue = currentGraph.getNodeDataValue(nodeId, attributeName);
         const bins = histogram.getElementsByTagName("rect");
         d3.selectAll(bins).style("fill", "#ffeead");
         for (const bin of bins) {
@@ -162,7 +162,7 @@ const createNeighborHeadings = function (nodeId) {
     const neighborsGridElement = d3.select("#neighbors-nav");
     neighborsGridElement.html("");
 
-    for (const link of graph.links) {
+    for (const link of currentGraph.links) {
         let neighbor = null;
         if (link.source.id === nodeId) {
             neighbor = link.target;

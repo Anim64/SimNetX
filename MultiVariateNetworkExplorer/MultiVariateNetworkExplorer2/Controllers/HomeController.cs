@@ -177,7 +177,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         [HttpPost, Authorize]
         public async Task<JsonResult> RemodelNetwork(string nodes, string attributes, string attributeTransform, string networkRemodelParams, string excludedAttributes)
         {
-            JArray jNodes = JArray.Parse(nodes);
+            JObject jNodes = JObject.Parse(nodes);
             JObject jAttributes = JObject.Parse(attributes);
             JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
@@ -203,29 +203,26 @@ namespace MultiVariateNetworkExplorer.Controllers
 
 
             //TODO Return only transformed columns and then assign then into global json graph
-            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, excludedAttributesList);
+            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, doNulify, excludedAttributesList);
             return Json(new { newVectorData = jAttributeTransform.HasValues ? 
                 nodeAttributes.ToD3Json().ToString() : 
                 JValue.CreateNull().ToString(), 
-                newNetwork = remodeledNetwork.ToD3Json().ToString() }); 
+                newNetwork = remodeledNetwork.LinksToD3Json().ToString() }); 
             
         }
 
         [HttpPost, Authorize]
-        public JsonResult GraphCommunityDetection(string graphNodes, string graphLinks)
+        public JsonResult GraphCommunityDetection(string nodes, string links)
         {
-          
-            JArray nodes = JArray.Parse(graphNodes);
-            JArray links = JArray.Parse(graphLinks);
-            Network filteredNetwork = Network.FromD3Json(links);
-            JObject partitions = new JObject();
+            JArray jNodes = JArray.Parse(nodes);
+            JArray jLinks = JArray.Parse(links);
+            Network filteredNetwork = Network.FromD3Json(jNodes, jLinks);
 
-            MultiVariateNetwork mvnTemp = new MultiVariateNetwork();
-
+            MultiVariateNetwork mvnTemp = new ();
             mvnTemp.FindCommunities(filteredNetwork);
             mvnTemp.Network = filteredNetwork;
 
-
+            JObject partitions = new();
             foreach (var node in mvnTemp.Partition)
             {
                 partitions[node.Key] = node.Value;
