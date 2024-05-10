@@ -224,7 +224,6 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Views\Home\Graph.cshtml" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\graph.js" />
     <_ContentIncludedByDefault Remove="wwwroot\js\statistics.js" />
   </ItemGroup>
 

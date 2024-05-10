@@ -10,7 +10,8 @@
       "wwwroot/css/mvn_input.css",
       "wwwroot/css/node_properties.css",
       "wwwroot/css/selections.css",
-      "wwwroot/css/toolbar.css"
+      "wwwroot/css/toolbar.css",
+      "wwwroot/css/plots.css"
     ],
     "minify": {
       "enabled": true,
@@ -30,7 +31,8 @@
       "wwwroot/js/nodes.js",
       "wwwroot/js/queue.js",
       "wwwroot/js/selections.js",
-      "wwwroot/js/remodel_network.js"
+      "wwwroot/js/remodel_network.js",
+      "wwwroot/js/plots.js"
     ],
     "minify": {
       "enabled": true,
@@ -42,7 +44,7 @@
   {
     "outputFileName": "wwwroot/js/graph.min.js",
     "inputFiles": [
-      "wwwroot/js/graph.js"
+      "wwwroot/js/graph-drawing.js"
     ],
     "minify": {
       "enabled": true,

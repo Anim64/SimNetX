@@ -152,14 +152,14 @@
     transition: all 0.1s;
 }
 
-.node-heading-selected {
+/*.node-heading-selected {
     border: 0.2rem solid black;
     -moz-transform: scale(0.9);
     -ms-transform: scale(0.9);
     -o-transform: scale(0.9);
     -webkit-transform: scale(0.9);
     transform: scale(0.9);
-}
+}*/
 
 .node-heading:hover {
     -moz-filter: brightness(0.9);

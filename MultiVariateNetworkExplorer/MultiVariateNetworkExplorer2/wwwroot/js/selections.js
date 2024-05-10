@@ -1,7 +1,4 @@
-﻿
-
-
-const inputColorClick = function(selection_panel) {
+﻿const inputColorClick = function(selection_panel) {
     selection_panel.querySelector('input').click();
 }
 
@@ -28,12 +25,6 @@ const changeGroupColour = function(input, selectionId, graphRef) {
     });
 
     selectionNodes.style("fill", function (d) {
-        const nodeHeading = document.getElementById('heading-' + d.id);
-        const lightness = fontLightness(newBackgroundColour);
-        nodeHeading.style.color = 'hsl(0, 0%, ' + String(lightness) + '%)';
-        nodeHeading.style.backgroundColor = ("backgroundColor", newBackgroundColour);
-        
-        
         link.filter(function (l) { return l.source === d.id || l.source.id === d.id })
             .style("stroke", newBackgroundColour);
         return newBackgroundColour;
@@ -51,9 +42,11 @@ const getGroupColour = function (d) {
     return document.getElementById("selection_color_" + d.id).value;
 }
 
-const addNewSelection = function () {
+const addNewSelection = function (newId = null, mccObject) {
     const { length, [length - 1]: lastNode } = selectionGraph.nodes;
-    const newId = length === 0 ? 0 : lastNode.id + 1;
+    if (newId === null) {
+        newId = length === 0 ? 0 : lastNode.id + 1;
+    }
 
     const newSelection = {};
     newSelection['id'] = newId;
@@ -79,22 +72,23 @@ const addNewSelection = function () {
         }
     }
 
-    addSelectionDiv(newSelection)
-    updateSelectionNodesAndLinks();
+    addSelectionDiv(newSelection, mccObject);
 }
 
 //Add new custom's group div
-const addSelectionDiv = function(selection) {
+const addSelectionDiv = function (selection, mccObject) {
 
     const newId = selection.id.toString();
+    const idWithoutWhitespaces = newId.replace(/[\s,]+/g, '-');
 
     const mainDiv = d3.select('#list-selections');
+
 
     const panel = mainDiv
         .append('div')
         .classed('selection-panel', true)
-        .attr('id', 'selection_panel_' + newId)
-        .attr('onclick', 'selectNodesBySelection(\'' +(newId) + '\')');
+        .attr('id', 'selection_panel_' + idWithoutWhitespaces)
+        .attr('onclick', "selectNodesBySelection(\'" + (newId) + "\', currentGraph)");
 
     panel.append('h4')
         .attr('class', 'panel-title')
@@ -104,9 +98,9 @@ const addSelectionDiv = function(selection) {
 
     const input = panel.append('input')
         .attr('type', 'color')
-        .attr('id', 'selection_color_' + newId)
+        .attr('id', 'selection_color_' + idWithoutWhitespaces)
         .attr('value', groupColours(newId))
-        .attr('onchange', 'changeGroupColour(this,' + newId + ')');
+        .attr('onchange', "changeGroupColour(this,\'" + newId + "\', currentGraph)");
 
     panel.style('background-color', input.attr('value'));
 
@@ -116,7 +110,7 @@ const addSelectionDiv = function(selection) {
         .attr('data-toggle', 'tooltip')
         .attr('data-placement', 'top')
         .attr('title', 'Add Selected Nodes To This Group')
-        .attr('onclick', 'addNodesToSelection(event,' + newId + ')');
+        .attr('onclick', "addNodesToSelection(event,\'" + newId + "\')");
 
     panel_list_add_btn.append('i')
         .attr('class', 'fa fa-plus-square');
@@ -127,12 +121,29 @@ const addSelectionDiv = function(selection) {
         .attr('data-toggle', 'tooltip')
         .attr('data-placement', 'top')
         .attr('title', 'Delete')
-        .attr('onclick', 'deleteSelection(event,' + newId + ')');
+        .attr('onclick', "deleteSelection(event,'" + newId + "')");
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
 
+    const mccDiv = mainDiv.append("div")
+        .attr("class", "col-2-table");
+
+    for (const mccPair of mccObject[newId]) {
+        const { className, value } = mccPair;
+        mccDiv.append("span")
+            .text(className + ": " + value.toFixed(2))
+            .style("border", "0.1rem solid white")
+    }
+
+
+    const barplotID = `barplot-mcc-${newId}`;
+    mainDiv.append("div")
+        .attr("id", barplotID)
+        .style("position", "relative");
+    barplot(barplotID, mccObject[newId], -1, 1, newId)
     
+
 
 }
 
@@ -174,7 +185,7 @@ const fontLightness = function (newColour) {
 
 //Move nodes to different selection
 const addNodesToSelection = function (event, selectionId) {
-    event.stopPropagation();
+    stopClickPropagation(event);
     const newColour = document.getElementById("selection_color_" + selectionId).value;
     const lightness = fontLightness(newColour);
 
@@ -272,13 +283,6 @@ const addNodesToSelection = function (event, selectionId) {
 const deleteAllSelections = function (graphRef) {
     graphRef.clearPartitions();
 
-    const { network: networkColour } = forceProperties.colouring;
-    const lightness = fontLightness(networkColour);
-    d3.selectAll('.node-heading')
-        .style("background-color", networkColour)
-        .style("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
-
-
     selectionGraph.nodes = [];
     selectionGraph.links = [];
 
@@ -287,9 +291,9 @@ const deleteAllSelections = function (graphRef) {
     const selectionList = document.getElementById('list-selections');
     selectionList.innerHTML = "";
 
-        updateNodeAndLinkColour(node, link);
-    }
-    
+    updateNodeAndLinkColour(node, link);
+}
+
 
 
 //Deletes one specific selection
@@ -348,6 +352,101 @@ const stringifyCommunityDetectionLinkReplacer = function (key, value) {
     }
 }
 
+const fillPartitionsWithAttribute = function (attributeName, currentGraphRef) {
+    for (const node in currentGraphRef.nodes) {
+        currentGraphRef.setPartition(node, currentGraphRef.getNodeDataValue(node, attributeName));
+    }
+}
+
+
+const assignAttributePartitions = function (attributeSelect, currentGraphRef) {
+    deleteAllSelections(currentGraphRef);
+    const attributeName = document.getElementById(attributeSelect).value;
+    if (attributeName === "modularity") {
+        requestCommunityDetection();
+        return;
+    }
+
+    const attributesDistinctValues = currentGraphRef.getDistinctValues(attributeName);
+    fillPartitionsWithAttribute(attributeName, currentGraphRef);
+
+    const mccObject = matthewsCorrelationCoeficient();
+    for (const value of attributesDistinctValues) {
+        addNewSelection(value, mccObject);
+    }
+
+    updateSelectionNodesAndLinks();
+    updateNodeAndLinkColour(node, link);
+}
+
+
+const matthewsCorrelationCoeficient = function () {
+    const distinctPartitions = currentGraph.getDistinctPartitions();
+    const distinctClasses = currentGraph.getDistinctClasses();
+
+    if (!distinctClasses || !distinctPartitions) {
+        return null;
+    }
+
+
+    const confusionMatrices = {};
+    for (const partition of distinctPartitions) {
+        confusionMatrices[partition] = {};
+        const partitionObject = confusionMatrices[partition];
+        for (const className of distinctClasses) {
+            partitionObject[className] = {
+                TP: 0,
+                FN: 0,
+                TN: 0,
+                FP: 0
+            };
+        }
+    }
+
+    for (const [node, nodePartition] of Object.entries(currentGraph.partitions)) {
+        const nodeRealClass = currentGraph.getClass(node);
+
+        for (const partition in confusionMatrices) {
+            if (partition === nodePartition) {
+                for (const className in confusionMatrices[partition]) {
+                    if (className === nodeRealClass) {
+                        confusionMatrices[partition][className].TP += 1;
+                        continue;
+                    }
+                    confusionMatrices[partition][className].FP += 1;
+                }
+                continue;
+            }
+
+            for (const className in confusionMatrices[partition]) {
+                if (className === nodeRealClass) {
+                    confusionMatrices[partition][className].FN += 1;
+                    continue;
+                }
+                confusionMatrices[partition][className].TN += 1;
+            }
+
+        }
+    }
+
+    const mccObject = {};
+    for (const partition of distinctPartitions) {
+        mccObject[partition] = [];
+        const partitionArray = mccObject[partition];
+        for (const className of distinctClasses) {
+            const { TP, FP, FN, TN } = confusionMatrices[partition][className];
+
+            const mccNumerator = (TN * TP) - (FN * FP);
+            const mccDenominator = Math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN));
+            const mcc = mccNumerator / mccDenominator;
+            partitionArray.push({ "className": className, value: mcc });
+        }
+    }
+
+
+    return mccObject;
+
+}
 //Request for community detection on server
 const requestCommunityDetection = function () {
     //const graph_string = JSON.stringify(graph);
@@ -375,16 +474,14 @@ const requestCommunityDetection = function () {
             //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
 
+            const mccObject = matthewsCorrelationCoeficient();
             selectionGraph.nodes.forEach(function (d) {
-                addSelectionDiv(d);
+                addSelectionDiv(d, mccObject);
             });
 
             updateSelectionNodesAndLinks();
 
-            if (!forceProperties.attributeColouring.enabled) {
-                updateNodeAndLinkColour(node, link);
-                return;
-            }
+            updateNodeAndLinkColour(node, link);
 
             //updateHeadingColour(node);
 

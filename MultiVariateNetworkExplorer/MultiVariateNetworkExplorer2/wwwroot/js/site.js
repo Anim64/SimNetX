@@ -59,16 +59,17 @@ window.addEventListener("load", function () {
         setGroupColour(d);
     });
 
-    const { numAttributes } = graph.attributes;
+    const { num: numAttributes = [] } = currentGraph.attributes;
     for (const attribute of numAttributes) {
         const containerDivId = attribute + "-histogram-container";
-        createHistogram(containerDivId, graph.nodes, attribute);
+
+        hist(containerDivId, currentGraph, attribute);
         
     }
 
 
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
-    displayAlgorithmParameters("remodel-algorithm-select");
+    displayAlgorithmParameters("remodel-algorithm-select", "-parameters-remodel");
     displayMetricParameters("remodel-metric-select");
 
 });

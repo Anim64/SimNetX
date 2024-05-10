@@ -19,7 +19,7 @@ const generateNodeDetails = function (graph) {
         nodeAttributesDiv.append("div")
             .attr("id", containerDivId);
 
-        createHistogram(containerDivId, graph.nodes, attribute);
+        hist(containerDivId, graph.nodes, attribute);
     }
 
     for (const attribute of catAttributes) {

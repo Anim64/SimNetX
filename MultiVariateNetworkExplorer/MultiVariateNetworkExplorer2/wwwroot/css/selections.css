@@ -44,6 +44,16 @@
     outline: none;
 }
 
+.col-2-table{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.col-2-table span{
+    border: 0.1rem solid white;
+    padding: 0.1rem 0.5rem;
+}
+
 .selection-panel h4 {
     margin-right: auto;
     --switch: calc((var(--light) - var(--threshold)) * -100%);

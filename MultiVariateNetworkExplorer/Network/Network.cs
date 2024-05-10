@@ -187,6 +187,26 @@ namespace NetworkLibrary
 
         }
 
+        public Network(JArray jNodes, JArray jLinks)
+        {
+            this.Data = new SortedDictionary<string, SortedDictionary<string, double>>();
+            this.NumberOfVertices = jNodes.Count;
+            //this.TotalWeight = 0;
+            foreach (var node in jNodes)
+            {
+                this.Data[node[jsonLinkIdName].ToString()] = new SortedDictionary<string, double>();
+            }
+            foreach (var link in jLinks)
+            {
+                string source = (string)link[jsonLinkSourceName];
+                string target = (string)link[jsonLinkTargetName];
+                double value = (double)link[jsonLinkValueName];
+                this.SetIndirectedEdge(source, target, value);
+            }
+
+
+        }
+
         /// <summary>
         /// Constructs a copy of the input network.
         /// </summary>
@@ -490,9 +510,9 @@ namespace NetworkLibrary
             {
                 foreach(var node1 in this)
                 {
-                    foreach (var node2 in node1.Value.Where(x => string.Compare(x.Key, node1.Key) > 0))
+                    foreach (var node2 in node1.Value.Where(x => String.Compare(x.Key, node1.Key) > 0))
                     {
-                        string edge = node1.Key + " " + node2.Key;
+                        string edge = node1.Key + ";" + node2.Key;
                         sw.WriteLine(edge);
                     }
                 }
@@ -500,9 +520,9 @@ namespace NetworkLibrary
             
         }
 
-        public JArray ToD3Json()
+        public JObject ToD3Json()
         {
-            JArray jLinks = new JArray();
+            JObject jLinks = new JObject();
             int edgeId = -1;
 
             foreach (var source in this)
@@ -512,35 +532,45 @@ namespace NetworkLibrary
 
                 foreach (var target in links.Where(node => string.Compare(sourceId, node.Key) < 0))
                 {
-                    string targetId = target.Key;
                     double weight = target.Value;
-                    JObject newLink = new JObject
+                    JObject newLink = new();
+                    
+                    jLinks[(++edgeId).ToString()] = newLink;
+                }
+            }
+            return jLinks;
+        }
+
+        public JArray LinksToD3Json()
+        {
+            JArray jLinks = new JArray();
+            int edgeId = -1;
+            foreach (var source in this)
+            {
+                string sourceId = source.Key;
+                var links = source.Value;
+
+                foreach (var target in links.Where(node => string.Compare(sourceId, node.Key) < 0))
+                {
+                    double weight = target.Value;
+                    string targetId = target.Key;
+                    JObject linkDataRef = new JObject
                     {
                         [jsonLinkSourceName] = sourceId,
                         [jsonLinkTargetName] = target.Key,
-                        [jsonLinkValueName] = target.Value,
+                        [jsonLinkValueName] = weight,
                         [jsonLinkIdName] = ++edgeId
                     };
-                    jLinks.Add(newLink);
+                    jLinks.Add(linkDataRef);
                 }
             }
 
             return jLinks;
-
         }
 
-        public static Network FromD3Json(JArray jlinks)
+        public static Network FromD3Json(JArray jNodes, JArray jLinks)
         {
-            Network network = new Network();
-
-            foreach (var link in jlinks)
-            {
-                string source = (string)link[jsonLinkSourceName];
-                string target = (string)link[jsonLinkTargetName];
-                double value = (double)link[jsonLinkValueName];
-                network.SetIndirectedEdge(source, target, value);
-            }
-
+            Network network = new(jNodes, jLinks);
             return network;
         }
 

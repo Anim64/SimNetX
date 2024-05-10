@@ -35,36 +35,37 @@ const IQR = function (currentGraph, attribute) {
     return Q3(attributeValueList) - Q1(attributeValueList);
 }
 
-const mean = function (nodes, attribute) {
+const mean = function (attributeValues) {
     let result = 0;
-    for (const node of nodes) {
-        result += node[attribute];
+    for (const value of attributeValues) {
+        result += value;
     }
-    result /= nodes.length;
+    result /= attributeValues.length;
     return result;
 }
 
-const standardDeviation = function (nodes, attribute, iMean = null) {
+const standardDeviation = function (attributeValues, iMean = null) {
     let result = 0;
-    let attributeMean = iMean === null ? mean(nodes, attribute) : iMean;
-    for (const node of nodes) {
-        const difference = node[attribute] - attributeMean;
+    
+    let attributeMean = iMean === null ? mean(attributeValues) : iMean;
+    for (const value of attributeValues) {
+        const difference = value - attributeMean;
         result += Math.pow(difference, 2);
     }
 
-    result /= (nodes.length - 1);
+    result /= (attributeValues.length - 1);
     return result;
 }
 
-const skewness = function (nodes, attribute) {
+const skewness = function (attributeValues) {
     let result = 0;
-    const attributeMean = mean(nodes, attribute);
-    const attributeStd = standardDeviation(nodes, attribute, attributeMean);
+    const attributeMean = mean(attributeValues);
+    const attributeStd = standardDeviation(attributeValues, attributeMean);
 
-    for (const node of nodes) {
-        const difference = node[attribute] - attributeMean;
+    for (const value of attributeValues) {
+        const difference = value - attributeMean;
         result += Math.pow(difference, 3);
     }
-    result /= ((nodes.length - 1) * Math.pow(attributeStd, 3));
+    result /= ((attributeValues.length - 1) * Math.pow(attributeStd, 3));
     return result;
 }

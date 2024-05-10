@@ -62,6 +62,17 @@ footer {
     border-color: black transparent transparent transparent;
 }
 
+.scrollbar-thin {
+    -webkit-scrollbar-width: thin;
+    -ms-scrollbar-width: thin;
+    -o-scrollbar-width: thin;
+    scrollbar-width: thin;
+    -webkit-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -ms-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    -o-scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+    scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
+}
+
 .active-block {
     display: block !important;
 }
