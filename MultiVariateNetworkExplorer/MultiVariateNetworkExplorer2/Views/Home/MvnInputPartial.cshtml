@@ -76,9 +76,14 @@
                 </select>
 
                 <div class="algorithm-parameters-container">
-                    <div class="algorithm-parameters" id="epsilon-parameters">
-                        <label for="epsilonRadius">Choose a radius</label>
-                        <input type="number" id="epsilonRadius" name="algsParams[0]" step="0.00001" min="0" max="1" value="1" />
+                    <div class="algorithm-parameters" id="lrnet-parameters">
+
+                        <label asp-for="InputModel.ConversionAlgorithmParams[0]">Choose a reduction coefficient</label>
+                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[0]" min="0.1" step="0.1" max="10" value="1"/>
+
+                        <label asp-for="InputModel.ConversionAlgorithmParams[1]">Choose a minimal number of neighbours</label>
+                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[1]" min="0" max="20" step="1" value="1" />
+                    </div>
 
                         <label for="kNNmin">Choose a minimal number of neighbours</label>
                         <input type="number" id="kNNmin" name="algsParams[1]" min="0" value="1" />
@@ -103,6 +108,9 @@
                         <input type="number" id="sigma" name="metricParams[0]" step="0.001" min="0" value="1" />
                     </div>
                 </div>
+
+                @Html.LabelFor(m => m.InputModel.Nulify, "Nulify?")
+                @Html.CheckBoxFor(m => m.InputModel.Nulify)
 
                 <input type="hidden" id="current-graph" name="current-graph" />
             </div>
@@ -159,7 +167,15 @@
                 </select>
 
                 <div class="algorithm-parameters-container">
-                    <div class="algorithm-parameters" id="epsilon-parameters">
+                    <div class="algorithm-parameters" id="lrnet-parameters-append">
+                        <label for="lrnet-reduction">Choose a reduction coefficient</label>
+                        <input type="number" id="lrnet-reduction" name="algsParams" min="0.1" max="10" value="1" />
+
+                        <label for="lrnet-kNNmin">Choose a minimal number of neighbours</label>
+                        <input type="number" id="lrnet-kNNmin" name="algsParams" min="0" max="20" step="1" value="1" />
+
+                        
+                    </div>
                         <label for="epsilonRadius">Choose a radius</label>
                         <input type="number" id="epsilonRadius" name="algsParams" step="0.00001" min="0" max="1" value="1" />
 
@@ -182,6 +198,9 @@
                         <label for="sigma">Choose a standard deviation</label>
                         <input type="number" id="sigma" name="metricParams" step="0.001" min="0" value="1" />
                     </div>
+                    @Html.LabelFor(m => m.InputModel.Nulify, "Nulify?")
+                    @Html.CheckBoxFor(m => m.InputModel.Nulify)
+                    
                 </div>
 
                 <input type="hidden" id="currentGraph" name="currentGraph" />

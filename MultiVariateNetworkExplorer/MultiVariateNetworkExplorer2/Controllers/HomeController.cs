@@ -191,11 +191,13 @@ namespace MultiVariateNetworkExplorer.Controllers
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
             object[] metricParams = jMetric["params"].ToObject<object[]>();
+            bool doNulify = jMetric["nulify"].ToObject<bool>();
             IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams);
 
             JToken jAlgorithm = jNetworkRemodelParams["algorithm"];
             Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == jAlgorithm["name"].ToString());
             object[] algorithmParams = jAlgorithm["params"].ToObject<object[]>();
+            
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
 

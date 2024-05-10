@@ -14,7 +14,7 @@ namespace Metrics.Metrics
         {
             this.Sigma = sigma;
         }
-        public Matrix<double> GetMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
+        protected override Matrix<double> CalculateMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
             int dataCount = vectorData.DataCount;
             Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);

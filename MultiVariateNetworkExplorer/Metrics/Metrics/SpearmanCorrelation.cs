@@ -7,16 +7,16 @@ namespace Metrics.Metrics
 {
     public class SpearmanCorrelation : IMetric
     {
-        public Matrix<double> GetMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
+        protected override Matrix<double> CalculateMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
             DataFrame orderDataFrame = GetValueOrderDataFrame(vectorData, exclude);
-            PearsonCorrelation pc = new PearsonCorrelation();
-            return pc.GetMetricMatrix(orderDataFrame);
+            PearsonCorrelation pc = new();
+            return pc.GetMetricMatrix(orderDataFrame, false, null);
         }
 
         private DataFrame GetValueOrderDataFrame(DataFrame vectorData, IEnumerable<string> exclude)
         {
-            DataFrame result = new DataFrame()
+            DataFrame result = new()
             {
                 DataCount = vectorData.DataCount
             };

@@ -162,15 +162,19 @@ const addTransformationToAll = function (transformationBtn, attributeSelectId) {
 }
 
 
-const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId) {
+const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId, nulifyId) {
     const selectedAlgorithm = document.getElementById(algorithmSelectId).value;
     const selectedMetric = document.getElementById(metricSelectId).value;
+    const nulify = document.getElementById(nulifyId).checked;
+
+
 
     const networkRemodelParams =
     {
         "metric": {
             "name": selectedMetric,
-            "params": []
+            "params": [],
+            "nulify": nulify
 
 
         },

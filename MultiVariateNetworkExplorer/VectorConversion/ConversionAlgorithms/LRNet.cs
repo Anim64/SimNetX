@@ -10,14 +10,24 @@ namespace VectorConversion.VectorDataConversion
 {
     public class LRNet : IVectorConversion
     {
-        
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IEnumerable<string> exclude = null)
+        private double Reduction { get; }
+
+        private double K { get; }
+
+
+        public LRNet(double reduction, double k)
+        {
+            this.Reduction = reduction;
+            this.K = k;
+        }
+
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, bool doNulify = false, IEnumerable<string> exclude = null)
         {
             ColumnString idColumn = vectorData.IdColumn;
-            Network resultNet = new Network(idColumn);
-            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData);
-            Dictionary<int, int> degrees = new Dictionary<int, int>();
-            Dictionary<int, int> significances = new Dictionary<int, int>();
+            Network resultNet = new(idColumn);
+            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData, doNulify, exclude);
+            Dictionary<int, int> degrees = new();
+            Dictionary<int, int> significances = new();
 
             Dictionary<int, double> representativeness = new Dictionary<int, double>();
             
@@ -26,17 +36,18 @@ namespace VectorConversion.VectorDataConversion
             {
                 int nearestNeighbour = -1;
                 double maxSimilarity = -1;
-                for (int j = 0; j < kernelMatrix.Cols; j++)
+
+                if (!degrees.ContainsKey(i))
+                {
+                    degrees[i] = 0;
+                    significances[i] = 0;
+                }
+
+                for (int j = 0 ; j < kernelMatrix.Cols; j++)
                 {
                     if (i == j)
                     {
                         continue;
-                    }
-
-                    if (!degrees.ContainsKey(i))
-                    {
-                        degrees[i] = 0;
-                        significances[i] = 0;
                     }
 
                     if (kernelMatrix[i, j] > 0)
@@ -50,12 +61,6 @@ namespace VectorConversion.VectorDataConversion
                             nearestNeighbour = j;
                         }
                     }
-
-                    //if (kernelMatrix[i, j] > maxSimilarity)
-                    //{
-                    //    maxSimilarity = kernelMatrix[i, j];
-                    //    nearestNeighbour = j;
-                    //}
                 }
 
                 if (!significances.ContainsKey(nearestNeighbour))
@@ -70,38 +75,36 @@ namespace VectorConversion.VectorDataConversion
 
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
-                //if (significances[i] > 0)
-                //{
-                //    representativeness[i] = 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i])));
-                //}
-
-                //else
-                //{
-                //    representativeness[i] = 0;
-                //}
 
                 representativeness[i] = significances[i] > 0 ? 1.0 / (Math.Pow((1 + degrees[i]), (1.0 / significances[i]))) : 0;
-
-                int k = ((int)Math.Round(representativeness[i] * degrees[i]));
 
                 double[] vertexSimilarities = kernelMatrix.GetRow(i);
                 List<int> potentialNeighbours = Enumerable.Range(0, vectorData.DataCount).ToList();
                 potentialNeighbours = potentialNeighbours.OrderByDescending(kv => vertexSimilarities[kv]).ToList();
 
-                int finalNumberOfNeighbors = k > 0 ? k + 1 : 2;
+                int k = (int)Math.Round(representativeness[i] * this.Reduction * degrees[i]);
+                k = k > this.K ? k + 1 : (int)this.K;
                 
-                for (int n = 0; n < finalNumberOfNeighbors; n++)
+                int finalNumberOfNeighbors = Math.Min(k, potentialNeighbours.Count - 1);
+                
+                for (int n = 1; n < finalNumberOfNeighbors; n++)
                 {
-                    if (i != potentialNeighbours[n])
+                    resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
+                }
+
+                double lastNeighbourSimilarityValue = vertexSimilarities[potentialNeighbours[finalNumberOfNeighbors - 1]];
+                if (lastNeighbourSimilarityValue > 0)
+                {
+                    int n = finalNumberOfNeighbors;
+                    while (n < potentialNeighbours.Count && vertexSimilarities[potentialNeighbours[n]] == lastNeighbourSimilarityValue)
                     {
                         resultNet.SetIndirectedEdge(idColumn[i].ToString(), idColumn[potentialNeighbours[n]].ToString(), 1);
-
+                        n++;
                     }
                 }
-                
 
-               
             };
+
             return resultNet;
         }
     }

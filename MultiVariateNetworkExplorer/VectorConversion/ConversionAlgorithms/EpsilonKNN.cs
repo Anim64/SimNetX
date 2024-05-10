@@ -3,6 +3,7 @@ using DataFrameLibrary;
 using Metrics;
 using NetworkLibrary;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 
 namespace VectorConversion.VectorDataConversion
@@ -17,17 +18,19 @@ namespace VectorConversion.VectorDataConversion
             this.Radius = radius;
             this.K = k;
         }
+
+        
        
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, IEnumerable<string> exclude = null)
+        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, bool doNulify = false, IEnumerable<string> exclude = null)
         {
             ColumnString idColumn = vectorData.IdColumn;
-            Network result = new Network(idColumn);
-            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData);
+            Network result = new(idColumn);
+            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData, doNulify, exclude);
 
 
             for (int i = 0; i < kernelMatrix.Rows; i++)
             {
-                Dictionary<int, double> dict = new Dictionary<int, double>();
+                Dictionary<int, double> dict = new();
 
                 for (int j = i; j < kernelMatrix.Cols; j++)
                 {
