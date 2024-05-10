@@ -14,9 +14,9 @@
                 <div id="node-nav">
                 <input class="node-select-input attribute-select attribute-select-border" list="node-list" id="node-list-input" placeholder="Search node..." />
                 <ul class="node-select-list attribute-select attribute-select-border" id="node-list">
-                    @for (int node = 0; node < Model.Mvn.VectorData.DataCount; node++)
+                    @for (int node = 0; node < Model.GraphModel.Mvn.VectorData.DataCount; node++)
                     {
-                        string nodeId = Model.Mvn.VectorData.IdColumn[node];
+                        string nodeId = Model.GraphModel.Mvn.VectorData.IdColumn[node];
                         <li class="node-li" id="@("node-li-" + nodeId)" onmousedown="nodeHeadingClick(event, '@(nodeId)' , @(node))">@(nodeId)</li>
                     }
                     </ul>
@@ -24,9 +24,9 @@
                 <div class="node-detail-container" id="node-detail-container">
                     <div id="node-detail" class="node-detail">
                         <div id="node-attributes">
-                            @if (!Model.Mvn.IsEmpty())
+                            @if (!Model.GraphModel.Mvn.IsEmpty())
                             {
-                                @foreach (string numAttribute in Model.Mvn.VectorData.NumAtrrExtremes.Keys)
+                                @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                                 {
                                     <div class="node-property-group">
                                         <label title="@(numAttribute)" for="@("display-" + numAttribute)">
@@ -41,7 +41,7 @@
                                     <div id="@(numAttribute + "-histogram-container")"></div>
                                 }
 
-                                @foreach (string catAttribute in Model.Mvn.VectorData.CatAttrValues.Keys)
+                                @foreach (string catAttribute in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
                                 {
                                     <div class="node-property-group">
                                         <label title="@(catAttribute)" for="@("display-" + catAttribute)">
@@ -81,9 +81,9 @@
             <input type="button" onclick="deleteAllSelections();" value="Delete All Selections" />
             </div>
             <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
-                @if (Model.Mvn.Partition != null)
+                @if (Model.GraphModel.Mvn.Partition != null)
                 {
-                    foreach (var selection in Model.Mvn.Partition.Values.Distinct())
+                    foreach (var selection in Model.GraphModel.Mvn.Partition.Values.Distinct())
                     {
                         <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection')">
                             <h4 class="panel-title">

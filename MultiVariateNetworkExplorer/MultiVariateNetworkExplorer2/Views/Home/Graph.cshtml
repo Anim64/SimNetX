@@ -1,4 +1,5 @@
-﻿@model MultiVariateNetworkExplorer2.Models.GraphModel
+﻿@* @model MultiVariateNetworkExplorer2.Models.GraphModel *@
+@model MultiVariateNetworkExplorer2.Models.ApplicationModels
 @{
     ViewData["Title"] = "Graph";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -38,14 +39,14 @@
                     <script src="~/js/graph.min.js" type="text/javascript" asp-append-version="true"></script>
                 </environment>
                 <script>
-                    initGraph(@Html.Raw(Model.Graph));
+                    initGraph(@Html.Raw(Model.GraphModel.Graph));
                 </script>
                 
             </div>
             <div id="selectionGraph" class="graph-content">
                 <svg></svg>
                 <script>
-                    drawSelectionNetwork(@Html.Raw(Model.Selection));
+                    drawSelectionNetwork(@Html.Raw(Model.GraphModel.Selection));
                 </script>
             </div>
             <div id="networkMetrics" class="graph-content">

@@ -106,98 +106,45 @@ const displayMetricParameters = function (metricSelectId) {
     const metric_select_value = metric_select.value;
     const parameter_container = metric_select.nextElementSibling;
 
+    hideConversionParameters(parameter_container, "metric-parameters");
     switch (metric_select_value) {
 
         case "GaussKernel": {
-            hideConversionParameters(parameter_container, "metric-parameters");
             displayParametersElements(parameter_container, "gauss-parameters");
             break;
         }
-        default: {
-            hideConversionParameters(parameter_container, "metric-parameters");
-            break;
-        }
-
-
     }
 
-    //recalculateCollapsibleContentHeight("conversion-collapsible-content");
 }
 
-const displayAlgorithmParameters = function (algorithmSelectId) {
+const displayAlgorithmParameters = function (algorithmSelectId, parameterDivSuffix) {
     const algorithm_select = document.getElementById(algorithmSelectId);
-    const algorithm_select_value = algorithm_select.value;
+    const algorithm_parameter_id = algorithm_select.value.toLowerCase() + parameterDivSuffix;
     const parameter_container = algorithm_select.nextElementSibling;
-    switch (algorithm_select_value) {
 
-        case "EpsilonKNN": {
-            hideConversionParameters(parameter_container, "algorithm-parameters");
-            displayParametersElements(parameter_container, "epsilon-parameters");
-            break;
-        }
-
-        default: {
-            hideConversionParameters(parameter_container, "algorithm-parameters");
-            break;
-        }
-
-
-    }
-
-    //recalculateCollapsibleContentHeight("conversion-collapsible-content");
+    hideConversionParameters(parameter_container, "algorithm-parameters");
+    displayParametersElements(parameter_container, algorithm_parameter_id);
+    
 }
 
-//const displayInputMetricParameters = function (metricSelectId) {
+const selectDropDownOption = function (dropDownId, optionValue) {
+    document
+        .getElementById(dropDownId)
+        .querySelector(`option[value="${optionValue}"]`)
+        .setAttribute("selected", "selected");
 
-//    const metric_select_value = document.getElementById("metric").value;
-
-//    switch (metric_select_value) {
-
-//        case "GaussKernel": {
-//            hideConversionParameters("input-metric-parameters");
-//            displayParametersElements("input-gauss-parameters", "input-metric-parameters-headline");
-//            break;
-//        }
-//        default: {
-//            hideConversionParameters("input-metric-parameters");
-//            break;
-//        }
-
-
-//    }
-
-//    recalculateCollapsibleContentHeight("conversion-collapsible-content");
-//}
-
-//const displayInputAlgorithmParameters = function () {
-//    const algorithm_select_value = document.getElementById("convert").value;
-
-//    switch (algorithm_select_value) {
-
-//        case "EpsilonKNN": {
-//            hideConversionParameters("input-algorithm-parameters");
-//            displayParametersElements("input-epsilon-parameters", "input-algorithm-parameters-headline");
-//            break;
-//        }
-
-//        default: {
-//            hideConversionParameters("input-algorithm-parameters");
-//            break;
-//        }
-
-
-//    }
-
-//    recalculateCollapsibleContentHeight("conversion-collapsible-content");
-//}
+}
 
 const prepareInputForm = function () {
     addFileButtonsEventListeners();
     addCollapsibleEventListeners();
-    displayMetricParameters("metric");
-    displayAlgorithmParameters("convert");
+    displayMetricParameters("InputModel_MetricName");
+    displayAlgorithmParameters("InputModel_ConversionAlgorithmName", "-parameters");
     displayMetricParameters("append-metric");
-    displayAlgorithmParameters("append-convert");
+    displayAlgorithmParameters("append-convert", "-parameters-append");
+
+    selectDropDownOption("InputModel_Directed", 1);
+    selectDropDownOption("InputModel_CommunityDetection", 1);
 
     const mvn_input_section = document.getElementById("mvn-input-section");
     mvn_input_section.addEventListener("click", toggleNetworkInput);
@@ -206,6 +153,23 @@ const prepareInputForm = function () {
             e.stopPropagation();
         });
     }
+
+    $("mvn-input-form").on("submit", function (e) {
+        e.preventDefault();
+        const isValid = validateNewNetworkForm(this);
+        if (isValid) {
+            $.ajax({
+            type: "POST",
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            url: '/Home/LoadGraph',
+            data: formData
+            });
+        }
+
+        return isValid;
+
+    });
+
     $("#mvn-append-form").submit(function (e) {
         const current_graph_input = e.currentTarget.querySelector("#currentGraph");
         current_graph_input.value = JSON.stringify(store);
@@ -228,7 +192,7 @@ const validateNewNetworkForm = function (form) {
         isValid = false;
     }
 
-    const separators = form.querySelector("#separators").value;
+    const separators = form.querySelector("#Separators").value;
     if (isNullOrEmpty(separators)) {
         errorMessage += "Please enter the data separating character.<br>";
         isValid = false;

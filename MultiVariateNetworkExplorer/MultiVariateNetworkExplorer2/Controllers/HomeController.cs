@@ -23,8 +23,8 @@ namespace MultiVariateNetworkExplorer.Controllers
     {
         [Authorize]
         private bool GraphErrorHandling(out ErrorInputModel eim, List<IFormFile> files, string separators, string missingvalues,
-            string convert, string metric, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed,
-            BooleanParameter header, BooleanParameter grouping)
+             string groupColumn, string idColumn)
+
         {
             eim = new ErrorInputModel();
             if (files.Count == 0)
@@ -46,29 +46,30 @@ namespace MultiVariateNetworkExplorer.Controllers
         [Authorize]
         public IActionResult Graph()
         {
-            GraphModel gm = new GraphModel();
+            ApplicationModels model = new();
             //ErrorInputModel gm = new ErrorInputModel();
             TempData["ErrorMessage"] = null;
-            return View("Graph", gm);
+            return View("Graph", model);
         }
 
        [HttpPost, Authorize]
-        public async Task<IActionResult> LoadGraph(List<IFormFile> files, string separators, string missingvalues,
-            string convert, string metric, double[] algsParams, double[] metricParams, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False,
-            BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
+        //public async Task<IActionResult> LoadGraph(List<IFormFile> files, string separators, string missingvalues,
+        //    string convert, double[] algsParams, string metric, double[] metricParams, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False,
+        //    BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
+        public async Task<IActionResult> LoadGraph([FromForm] InputModel inputModel)
         {
 
-            if (!GraphErrorHandling(out ErrorInputModel eim, files, separators, missingvalues, convert,
-                metric, groupColumn, idColumn, epsilonRadius, kNNmin, directed, header, grouping))
+            if (!GraphErrorHandling(out ErrorInputModel eim, inputModel.Files, inputModel.Separators, inputModel.MissingValues
+                ,inputModel.GroupColumnName, inputModel.IdColumnName))
             {
                 TempData["ErrorMessage"] = "Input files were not loaded correctly.";
                 return Redirect(HttpContext.Request.Headers["Referer"].ToString());
             }
 
-            long size = files.Sum(f => f.Length);
+            long size = inputModel.Files.Sum(f => f.Length);
             var filePaths = new List<string>();
 
-            foreach (var formFile in files)
+            foreach (var formFile in inputModel.Files)
             {
                 if (formFile.Length <= 0)
                 {
@@ -84,30 +85,30 @@ namespace MultiVariateNetworkExplorer.Controllers
                 }
             }
 
-            char[] separatorArray = string.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
+            char[] separatorArray = string.IsNullOrEmpty(inputModel.Separators) ? " ".ToCharArray() : inputModel.Separators.Trim().ToCharArray();
 
 
-            bool hasHeaders = header == BooleanParameter.True;
-            bool isDirected = directed == BooleanParameter.True;
-            bool doCommunityDetection = grouping == BooleanParameter.True;
+            bool hasHeaders = inputModel.Header == BooleanParameter.Yes;
+            bool isDirected = inputModel.Directed == BooleanParameter.Yes;
+            bool doCommunityDetection = inputModel.CommunityDetection == BooleanParameter.Yes;
 
-            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == metric);
-            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams.Cast<object>().ToArray());
+            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == inputModel.MetricName);
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, inputModel.MetricParams.Cast<object>().ToArray());
 
-            Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == convert);
-            IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algsParams.Cast<object>().ToArray());
-
-            
+            Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == inputModel.ConversionAlgorithmName);
+            var conversionAlgorithmParams = inputModel.ConversionAlgorithmParams.Cast<object>().ToArray();
+            IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, conversionAlgorithmParams);
 
             try
             {
-                MultiVariateNetwork multiVariateNetwork = new MultiVariateNetwork(filePaths, missingvalues, idColumn, groupColumn, chosenConversion,
-                chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
+                MultiVariateNetwork multiVariateNetwork = new(filePaths, inputModel.MissingValues, inputModel.IdColumnName, inputModel.GroupColumnName, chosenConversion,
+                inputModel.Nulify ,chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
 
-                GraphModel gm = new GraphModel(multiVariateNetwork);
+                GraphModel gm = new(multiVariateNetwork);
+                ApplicationModels appModel = new(gm);
 
                 ModelState.Clear();
-                return View("Graph", gm);
+                return View("Graph", appModel);
             }
             catch (Exception e)
             {
@@ -119,7 +120,7 @@ namespace MultiVariateNetworkExplorer.Controllers
         [HttpPost, Authorize]
         public async Task<IActionResult> LoadAndAppendNodes(string currentGraph, List<IFormFile> files, string separators, string missingvalues,
             string convert, string metric, List<double> algsParams, List<double> metricParams, string groupColumn, string idColumn,
-            BooleanParameter header = BooleanParameter.False)
+            BooleanParameter header = BooleanParameter.No)
         {
             long size = files.Sum(f => f.Length);
             var filePaths = new List<string>();
@@ -139,7 +140,7 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             char[] separatorArray = string.IsNullOrEmpty(separators) ? " ".ToCharArray() : separators.Trim().ToCharArray();
 
-            bool hasHeaders = header == BooleanParameter.True;
+            bool hasHeaders = header == BooleanParameter.Yes;
 
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == metric);
             IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams.Cast<object>().ToArray());

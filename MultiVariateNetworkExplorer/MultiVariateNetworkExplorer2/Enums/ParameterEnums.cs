@@ -4,8 +4,8 @@
     {
         public enum BooleanParameter
         {
-            True,
-            False
+            Yes,
+            No
         }
     }
 }

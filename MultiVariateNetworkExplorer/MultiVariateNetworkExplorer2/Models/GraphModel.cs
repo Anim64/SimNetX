@@ -13,7 +13,7 @@ namespace MultiVariateNetworkExplorer2.Models
         public GraphModel()
         {
             Mvn = new MultiVariateNetwork();
-            Graph = Mvn.EmptyD3Json().ToString();
+            Graph = MultiVariateNetwork.EmptyD3Json().ToString();
             Selection = Mvn.PartitionsToD3Json();
         }
 
