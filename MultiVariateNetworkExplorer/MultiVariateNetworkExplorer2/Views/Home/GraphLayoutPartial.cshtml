@@ -162,42 +162,6 @@
         </div>
     </div>
     <div class="force">
-        <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
-        <label class="attribute-selection-label" for="attribute-node-colouring">
-            Choose Attribute:
-            <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring" onchange="setAttributeNodeColouring(this)">
-                <option value="">--None--</option>
-                <optgroup label="Numeric Attributes">
-                    @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-                    {
-                        <option value="@key">@key</option>
-                    }
-                </optgroup>
-                @*<optgroup label="Categorical Attributes">
-                @foreach(var key in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
-                {
-                <option value="@key">@key</option>
-                }
-                </optgroup>*@
-                <optgroup label="Centralities">
-                    <option value="degree">Degree</option>
-                    <option value="closeness">Closeness</option>
-                </optgroup>
-            </select>
-        </label>
-        <div class="colour-row">
-            <label class="colouring" for="low-value-colour">
-                Low value colour
-                <input type="color" id="low-value-colour" value="#0000FF" onchange="changeAttributeNodeColouring('lowValue', this.value)">
-            </label>
-            <label class="colouring" for="high-value-colour">
-                High value colour
-                <input type="color" id="high-value-colour" value="#FF0000" onchange="changeAttributeNodeColouring('highValue', this.value)">
-            </label>
-        </div>
-
-    </div>
-    <div class="force">
         <p><label>Remodel the network</label> With option to exclude some attributes</p>
         <label class="attribute-selection-label" for="remodel-network-select">
             Choose Attribute:

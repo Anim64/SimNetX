@@ -68,6 +68,8 @@ window.addEventListener("load", function () {
     }
 
 
+    changeAttributeCategoryColouringList('categorical-attribute-node-colouring', 'categorical-colour-list');
+
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select", "-parameters-remodel");
     displayMetricParameters("remodel-metric-select");

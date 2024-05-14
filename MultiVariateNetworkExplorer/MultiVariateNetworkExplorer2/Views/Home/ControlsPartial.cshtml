@@ -12,7 +12,8 @@
                 <a class="tab-link" href="#" onclick="openTab(event, 'visuals', 'leftpanel', '.column-content')">Visuals</a>
             </div>
         </div>
-        @Html.PartialAsync("FiltersPartial")
-        @Html.PartialAsync("GraphLayoutPartial")
-        @Html.PartialAsync("GraphVisualsPartial")
+        <partial name="FiltersPartial" />
+        <partial name="GraphLayoutPartial" />
+        <partial name="GraphVisualsPartial" />
+        
 </section>

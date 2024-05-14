@@ -281,57 +281,122 @@ const pickHex = function(color1, color2, weight) {
     return rgb;
 }
 
-const changeAttributeNodeColouring = function (colorProperty, color) {
-    nodeVisualProperties.attributeColouring[colorProperty] = color;
-    setAttributeNodeColouring("attribute-node-colouring");
+const changeAttributeGradientColouringFromSettings = function (attributeSelectId, lowColourId, highColourId) {
+    const attributeSelect = document.getElementById(attributeSelectId);
+    const optgroup = attributeSelect.options[attributeSelect.selectedIndex].closest('optgroup').getAttribute('label');
+    const attributeName = attributeSelect.value;
+
+    const lowColour = document.getElementById(lowColourId).value;
+    const highColour = document.getElementById(highColourId).value;
+    setAttributeGradientColouring(attributeName, optgroup, lowColour, highColour);
 }
 
-const setAttributeNodeColouring = function (selectElement) {
-    const { lowValue, highValue } = nodeVisualProperties.attributeColouring;
-    const lowValueColour = hexToRgb(lowValue);
-    const highValueColour = hexToRgb(highValue);
+const saveAttributeGradientColouring = function(attributeSelectId, lowColourId, highColourId)
+{
+    const attributeSelect = document.getElementById(attributeSelectId);
+    const optgroup = attributeSelect.options[attributeSelect.selectedIndex].closest('optgroup').getAttribute('label');
+    const attributeName = attributeSelect.value;
 
-    const attributeName = selectElement.value;
-    nodeVisualProperties.attributeColouring.attribute = attributeName;
+    const lowColour = document.getElementById(lowColourId);
+    const highColour = document.getElementById(highColourId);
+}
 
-    if (attributeName !== "") {
-        nodeVisualProperties.attributeColouring.enabled = true;
-        const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
-        let attributeMax = null;
-        let attributeMin = null;
-        let getValueFunction = null;
+const setAttributeGradientColouring = function (attributeName, optgroup, lowColour, highColour) {
+    const attributeColouringProperty = nodeVisualProperties.attributeColouring;
+    attributeColouringProperty.attribute = attributeName;
+    attributeColouringProperty.lowValue = lowColour;
+    attributeColouringProperty.highValue = highColour;
 
-        if (optgroup === "Numeric Attributes") {
-            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
-            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
-            getValueFunction = getNodeAttribute;
-        }
+    const lowValueColourRGB = hexToRgb(lowColour);
+    const highValueColourRGB = hexToRgb(highColour);
+    
+    attributeColouringProperty.enabled = true;
+    let attributeMax = null;
+    let attributeMin = null;
+    let getValueFunction = null;
 
-        else if (optgroup === "Centralities") {
-            attributeMax = currentGraph.getPropertyAttributeValue(attributeName, "max");
-            attributeMin = currentGraph.getPropertyAttributeValue(attributeName, "min");
-            getValueFunction = getNodeProperty;
-        }
-
-        node.style("fill", function (d) {
-            const attributeValue = getValueFunction(d, attributeName);
-            if (attributeValue === "") {
-                return nodeVisualProperties.colouring.network;
-            }
-            
-            const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
-            const resultColour = pickHex(lowValueColour, highValueColour, resultValue);
-            const lightness = fontLightness(resultColour);
-            const node_text = $('#' + d.id + '_node_text');
-            node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
-            return rgbObjectToString(resultColour);
-        });
-        link.style("stroke", 'white');
-        return;
+    if (optgroup === "Numeric Attributes") {
+        attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+        attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+        getValueFunction = getNodeAttribute;
     }
 
-    nodeVisualProperties.attributeColouring.enabled = false;
-    updateNodeAndLinkColour(node, link);
+    else { 
+        attributeMax = currentGraph.getPropertyAttributeValue(attributeName, "max");
+        attributeMin = currentGraph.getPropertyAttributeValue(attributeName, "min");
+        getValueFunction = getNodeProperty;
+    }
+
+    node.style("fill", function (d) {
+        const attributeValue = getValueFunction(d, attributeName);
+        if (attributeValue === "") {
+            return nodeVisualProperties.colouring.network;
+        }
+            
+        const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
+        const resultColour = pickHex(lowValueColourRGB, highValueColourRGB, resultValue);
+        const lightness = fontLightness(resultColour);
+        const node_text = $('#' + d.id + '_node_text');
+        node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
+        return rgbObjectToString(resultColour);
+    });
+    link.style("stroke", nodeVisualProperties.colouring.network);
+}
+
+
+const changeAttributeCategoryColouringList = function (attributeSelectId, colourListId) {
+    const attributeName = document.getElementById(attributeSelectId).value;
+    const colourList = d3.select(`#${colourListId}`);
+
+    const attributeDistinctValues = currentGraph.getDistinctValues(attributeName);
+
+    colourList.html("");
+    for (const value of attributeDistinctValues) {
+        const newDistinctColourRow = colourList.append("li");
+        newDistinctColourRow.append("span")
+            .html(value);
+        newDistinctColourRow.append("input")
+            .attr("type", "color")
+            .property("value", groupColours(value));
+    }
+}
+
+//TO DO - Get attribute name and colour listin form of object from settings tab
+const changeAttributeCategoryColouringFromSettings = function (attributeSelectId, colourListId) {
+    const attributeName = document.getElementById(attributeSelectId).value;
+    const colourList = document.getElementById(colourListId);
+
+    const colourObject = {};
+    for (const colourLI of colourList.children) {
+        const distinctValue = colourLI.querySelector("span").innerHTML;
+        const colour = colourLI.querySelector("input").value;
+        colourObject[distinctValue] = colour;
+    }
+
+    setAttributeCategoryColouring(attributeName, colourObject);
+}
+
+
+const saveAttributeCategoryColouring = function (attributeSelectId, colourListId) {
+    
+}
+
+
+//TO DO - Get node colour based on attribute category
+const setAttributeCategoryColouring = function (attributeName, colourObject) {
+    node.style("fill", function (d) {
+        const attributeValue = getNodeAttribute(d, attributeName);
+        if (attributeValue === "") {
+            return nodeVisualProperties.colouring.network;
+        }
+
+        const resultColour = hexToRgb(colourObject[attributeValue]);
+        const lightness = fontLightness(resultColour);
+        const node_text = $('#' + d.id + '_node_text');
+        node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
+        return rgbObjectToString(resultColour);
+    });
+    link.style("stroke", nodeVisualProperties.colouring.network);
 }
 
 const projectAttributeXAxis = function(selectElement) {

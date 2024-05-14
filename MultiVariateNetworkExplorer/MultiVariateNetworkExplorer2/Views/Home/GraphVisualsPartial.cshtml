@@ -13,13 +13,7 @@
             <option value="numerical-colour-setting">Numerical Attribute</option>
             <option value="categorical-colour-setting">Categorical Attribute</option>
         </select>
-        <div class="force" id="background-colour-setting">
-            <label class="colouring">
-                Background colour
-                <input type="color" id="background-colour-input" value="#000000">
-            </label>
-            <button onclick="changeNetworkBackgroundColour('background-colour-input')"></button>
-        </div>
+
         <div class="force" id="monochrome-colour-setting">
             <div class="colour-row">
                 <label class="colouring">
@@ -27,15 +21,14 @@
                     <input type="color" id="network-colour-input" value="#FFFFFF" onchange="changeNetworkNodeColour(value)">
                 </label>
             </div>
-            <button onclick="changeNetworkNodeColour('network-colour-input')"></button>
+            <button onclick="changeNetworkNodeColour('network-colour-input')">Run</button>
         </div>
 
         <div class="force" id="numerical-colour-setting">
             <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
             <label class="attribute-selection-label" for="attribute-node-colouring">
                 Choose Attribute:
-                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring" onchange="setAttributeNodeColouring(this)">
-                    <option value="">--None--</option>
+                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring">
                     <optgroup label="Numeric Attributes">
                         @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                         {
@@ -58,36 +51,33 @@
                     <input type="color" id="high-value-colour" value="#FF0000" onchange="changeAttributeNodeColouring('highValue', this.value)">
                 </label>
             </div>
+            <button onclick="saveAttributeGradientColouring('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Save</button>
+            <button onclick="changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Run</button>
         </div>
 
         <div class="force" id="categorical-colour-setting">
             <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
             <label class="attribute-selection-label" for="attribute-node-colouring">
                 Choose Attribute:
-                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring" onchange="setAttributeNodeColouring(this)">
-                    <option value="">--None--</option>
-                    <optgroup label="Numeric Attributes">
-                        @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-                        {
-                            <option value="@key">@key</option>
-                        }
-                    </optgroup>
-                    <optgroup label="Centralities">
-                        <option value="degree">Degree</option>
-                        <option value="closeness">Closeness</option>
-                    </optgroup>
+                <select id="categorical-attribute-node-colouring" class="attribute-select attribute-select-border" 
+                name="categorical-attribute-node-colouring" 
+                onchange="changeAttributeCategoryColouringList(this.id, 'categorical-colour-list')">
+                    @foreach (var key in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
+                    {
+                        <option value="@key">@key</option>
+                    }
                 </select>
             </label>
-            <div class="colour-row">
-                <label class="colouring" for="low-value-colour">
-                    Low value colour
-                    <input type="color" id="low-value-colour" value="#0000FF" onchange="changeAttributeNodeColouring('lowValue', this.value)">
-                </label>
-                <label class="colouring" for="high-value-colour">
-                    High value colour
-                    <input type="color" id="high-value-colour" value="#FF0000" onchange="changeAttributeNodeColouring('highValue', this.value)">
-                </label>
-            </div>
+            <ol type="1" class="colour-list" id="categorical-colour-list"></ol>
+            <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
+            <button onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
+        </div>
+        <div class="force" id="background-colour-setting">
+            <label class="colouring">
+                Background colour
+                <input type="color" id="background-colour-input" value="#000000">
+            </label>
+            <button onclick="changeNetworkBackgroundColour('background-colour-input')">Run</button>
         </div>
     <div class="column-content" id="visuals-profiles">
 
