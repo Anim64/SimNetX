@@ -399,6 +399,33 @@ const setAttributeCategoryColouring = function (attributeName, colourObject) {
     link.style("stroke", nodeVisualProperties.colouring.network);
 }
 
+
+const setPartitionColouring = function (colourListId) {
+    const colourList = document.getElementById(`${colourListId}`);
+
+    const colourObject = {};
+    for (const colourLI of colourList.children) {
+        const distinctPartition = colourLI.querySelector("span").innerHTML;
+        const colour = colourLI.querySelector("input").value;
+        colourObject[distinctValue] = colour;
+    }
+
+    node.style("fill", function (d) {
+        const { id } = d;
+        const partition = getPartition(id);
+        if (partition === "") {
+            return nodeVisualProperties.colouring.network;
+        }
+
+        const resultColour = hexToRgb(colourObject[attributeValue]);
+        const lightness = fontLightness(resultColour);
+        const node_text = $('#' + id + '_node_text');
+        node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
+        return rgbObjectToString(resultColour);
+    });
+    link.style("stroke", nodeVisualProperties.colouring.network);
+}
+
 const projectAttributeXAxis = function(selectElement) {
     const attributeName = selectElement.value;
 

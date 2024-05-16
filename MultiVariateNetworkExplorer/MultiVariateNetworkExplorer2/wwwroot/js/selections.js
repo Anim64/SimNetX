@@ -73,34 +73,30 @@ const addNewSelection = function (newId = null, mccObject) {
     }
 
     addSelectionDiv(newSelection, mccObject);
+
 }
 
 //Add new custom's group div
-const addSelectionDiv = function (selection, mccObject) {
-
-    const newId = selection.id.toString();
-    const idWithoutWhitespaces = newId.replace(/[\s,]+/g, '-');
-
+const addSelectionDiv = function (selectionId, mccObject) {
     const mainDiv = d3.select('#list-selections');
-
 
     const panel = mainDiv
         .append('div')
         .classed('selection-panel', true)
-        .attr('id', 'selection_panel_' + idWithoutWhitespaces)
-        .attr('onclick', "selectNodesBySelection(\'" + (newId) + "\', currentGraph)");
+        .attr('id', `selection_panel_${selectionId}`)
+        .attr('onclick', `selectNodesBySelection(${selectionId}, ${currentGraph})`);
 
     panel.append('h4')
         .attr('class', 'panel-title')
         .attr('contenteditable', 'true')
         .attr('onclick', 'stopClickPropagation(event)')
-        .html("Selection " + newId);
+        .html(`Selection ${selectionId}`);
 
     const input = panel.append('input')
         .attr('type', 'color')
-        .attr('id', 'selection_color_' + idWithoutWhitespaces)
-        .attr('value', groupColours(newId))
-        .attr('onchange', "changeGroupColour(this,\'" + newId + "\', currentGraph)");
+        .attr('id', `selection_color_${selectionId}`)
+        .attr('value', groupColours(selectionId))
+        .attr('onchange', `changeGroupColour(this, ${selectionId}, ${currentGraph})`);
 
     panel.style('background-color', input.attr('value'));
 
@@ -110,7 +106,7 @@ const addSelectionDiv = function (selection, mccObject) {
         .attr('data-toggle', 'tooltip')
         .attr('data-placement', 'top')
         .attr('title', 'Add Selected Nodes To This Group')
-        .attr('onclick', "addNodesToSelection(event,\'" + newId + "\')");
+        .attr('onclick', `addNodesToSelection(event, ${selectionId})`);
 
     panel_list_add_btn.append('i')
         .attr('class', 'fa fa-plus-square');
@@ -121,7 +117,7 @@ const addSelectionDiv = function (selection, mccObject) {
         .attr('data-toggle', 'tooltip')
         .attr('data-placement', 'top')
         .attr('title', 'Delete')
-        .attr('onclick', "deleteSelection(event,'" + newId + "')");
+        .attr('onclick', `deleteSelection(event, ${selectionId})`);
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
@@ -142,9 +138,16 @@ const addSelectionDiv = function (selection, mccObject) {
         .attr("id", barplotID)
         .style("position", "relative");
     barplot(barplotID, mccObject[newId], -1, 1, newId)
+}
+
+const addPartitionColour = function (partition, colourList) {
+    const newDistinctColourRow = colourList.append("li");
+    newDistinctColourRow.append("span")
+        .html(partition);
+    newDistinctColourRow.append("input")
+        .attr("type", "color")
+        .property("value", groupColours(partition));
     
-
-
 }
 
 const hexToRgb = function (hex) {
@@ -288,8 +291,8 @@ const deleteAllSelections = function (graphRef) {
 
     updateSelectionNodesAndLinks();
 
-    const selectionList = document.getElementById('list-selections');
-    selectionList.innerHTML = "";
+    document.getElementById('list-selections').innerHTML = "";
+    document.getElementById("partition-colour-list").innerHTML = "";
 
     updateNodeAndLinkColour(node, link);
 }
@@ -468,15 +471,18 @@ const requestCommunityDetection = function () {
         //cache: false,
         success: function (result) {
             deleteAllSelections(currentGraph);
-
-            const temp = JSON.parse(result.newPartitions);
             currentGraph.partitions = JSON.parse(result.newPartitions);
             //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
 
             const mccObject = matthewsCorrelationCoeficient();
+
+            const partitionColourList = d3.select("#partition-colour-list");
             selectionGraph.nodes.forEach(function (d) {
-                addSelectionDiv(d, mccObject);
+                const selectionId = d.id.toString();
+                const idWithoutWhitespaces = selectionId.replace(/[\s,]+/g, '-');
+                addSelectionDiv(idWithoutWhitespaces, mccObject);
+                addPartitionColour(idWithoutWhitespaces, partitionColourList);
             });
 
             updateSelectionNodesAndLinks();

@@ -72,6 +72,12 @@
             <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
             <button onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
         </div>
+        <div class="force" id="categorical-colour-setting">
+            <p><label>Partition Colours</label>Modify colour of node based on its assigned partition</p>
+            <ol type="1" class="colour-list" id="partition-colour-list"></ol>
+            <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
+            <button onclick="setPartitionColouring('partition-colour-list')">Run</button>
+        </div>
         <div class="force" id="background-colour-setting">
             <label class="colouring">
                 Background colour
