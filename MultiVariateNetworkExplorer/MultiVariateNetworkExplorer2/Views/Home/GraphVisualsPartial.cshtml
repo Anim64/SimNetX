@@ -15,11 +15,10 @@
         </select>
 
         <div class="force" id="monochrome-colour-setting">
-            <div class="colour-row">
-                <label class="colouring">
-                    Default node colour
-                    <input type="color" id="network-colour-input" value="#FFFFFF" onchange="changeNetworkNodeColour(value)">
-                </label>
+            <p><label>Single Node Colour</label>Modify colour of all nodes</p>
+            <div class="colour-row-single">
+                <label for="network-colour-input">Node colour</label>
+                <input type="color" id="network-colour-input" value="#FFFFFF">
             </div>
             <button onclick="changeNetworkNodeColour('network-colour-input')">Run</button>
         </div>
@@ -41,16 +40,21 @@
                     </optgroup>
                 </select>
             </label>
-            <div class="colour-row">
-                <label class="colouring" for="low-value-colour">
-                    Low value colour
-                    <input type="color" id="low-value-colour" value="#0000FF" onchange="changeAttributeNodeColouring('lowValue', this.value)">
-                </label>
-                <label class="colouring" for="high-value-colour">
-                    High value colour
-                    <input type="color" id="high-value-colour" value="#FF0000" onchange="changeAttributeNodeColouring('highValue', this.value)">
-                </label>
-            </div>
+            <ol type="1" class="colour-list scrollbar-thin" id="numerical-colour-list">
+                <li>
+                    <div class="colour-row-list">
+                        <label class="colouring" for="low-value-colour"></label>
+                        <input type="color" id="low-value-colour" value="#0000FF">
+                    </div>
+                </li>
+                <li>
+                    <div class="colour-row-list">
+                        <label class="colouring" for="high-value-colour"></label>
+                        <input type="color" id="high-value-colour" value="#FF0000">
+                    </div>
+                </li>
+            </ol>
+            
             <button onclick="saveAttributeGradientColouring('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Save</button>
             <button onclick="changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Run</button>
         </div>
@@ -68,21 +72,22 @@
                     }
                 </select>
             </label>
-            <ol type="1" class="colour-list" id="categorical-colour-list"></ol>
+            <ol type="1" class="colour-list scrollbar-thin" id="categorical-colour-list"></ol>
             <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
             <button onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
         </div>
         <div class="force" id="categorical-colour-setting">
             <p><label>Partition Colours</label>Modify colour of node based on its assigned partition</p>
-            <ol type="1" class="colour-list" id="partition-colour-list"></ol>
+            <ol type="1" class="colour-list scrollbar-thin" id="partition-colour-list"></ol>
             <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
             <button onclick="setPartitionColouring('partition-colour-list')">Run</button>
         </div>
         <div class="force" id="background-colour-setting">
-            <label class="colouring">
-                Background colour
+            <p><label>Background Colour</label>Modify the colour of network's background</p>
+            <div class="colour-row-single">
+                <label for="background-colour-input">Background colour</label>
                 <input type="color" id="background-colour-input" value="#000000">
-            </label>
+            </div>
             <button onclick="changeNetworkBackgroundColour('background-colour-input')">Run</button>
         </div>
     <div class="column-content" id="visuals-profiles">

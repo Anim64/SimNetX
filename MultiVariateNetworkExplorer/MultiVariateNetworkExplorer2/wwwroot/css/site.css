@@ -73,6 +73,29 @@ footer {
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
 }
 
+input[type=color] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+input[type=color]::-webkit-color-swatch {
+    border: none;
+    border-radius: 10px;
+    border: 0.125rem solid black;
+}
+
+input[type=color]::-moz-color-swatch {
+    border: none;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    border: 0.125rem solid black;
+}
+
 .active-block {
     display: block !important;
 }

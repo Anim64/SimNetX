@@ -92,13 +92,7 @@ const addSelectionDiv = function (selectionId, mccObject) {
         .attr('onclick', 'stopClickPropagation(event)')
         .html(`Selection ${selectionId}`);
 
-    const input = panel.append('input')
-        .attr('type', 'color')
-        .attr('id', `selection_color_${selectionId}`)
-        .attr('value', groupColours(selectionId))
-        .attr('onchange', `changeGroupColour(this, ${selectionId}, ${currentGraph})`);
-
-    panel.style('background-color', input.attr('value'));
+    panel.style('background-color', groupColours(selectionId));
 
     const panel_list_add_btn = panel.append('button')
         .attr('class', 'btn btn-danger btn-sm rounded-0')
@@ -125,7 +119,7 @@ const addSelectionDiv = function (selectionId, mccObject) {
     const mccDiv = mainDiv.append("div")
         .attr("class", "col-2-table");
 
-    for (const mccPair of mccObject[newId]) {
+    for (const mccPair of mccObject[selectionId]) {
         const { className, value } = mccPair;
         mccDiv.append("span")
             .text(className + ": " + value.toFixed(2))
@@ -133,22 +127,14 @@ const addSelectionDiv = function (selectionId, mccObject) {
     }
 
 
-    const barplotID = `barplot-mcc-${newId}`;
+    const barplotID = `barplot-mcc-${selectionId}`;
     mainDiv.append("div")
         .attr("id", barplotID)
         .style("position", "relative");
-    barplot(barplotID, mccObject[newId], -1, 1, newId)
+    barplot(barplotID, mccObject[selectionId], -1, 1, selectionId)
 }
 
-const addPartitionColour = function (partition, colourList) {
-    const newDistinctColourRow = colourList.append("li");
-    newDistinctColourRow.append("span")
-        .html(partition);
-    newDistinctColourRow.append("input")
-        .attr("type", "color")
-        .property("value", groupColours(partition));
-    
-}
+
 
 const hexToRgb = function (hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
@@ -344,14 +330,13 @@ const deleteSelection = function (event, selectionId) {
 const stringifyCommunityDetectionLinkReplacer = function (key, value) {
     switch (key) {
         case "source":
-        case "target": 
-            { 
-                return value.id;
-            }
-        default:
-            {
+        case "target": {
+            return value.id;
+        }
+            
+        default: {
                 return value;
-            }
+        }
     }
 }
 
@@ -480,14 +465,14 @@ const requestCommunityDetection = function () {
             const partitionColourList = d3.select("#partition-colour-list");
             selectionGraph.nodes.forEach(function (d) {
                 const selectionId = d.id.toString();
-                const idWithoutWhitespaces = selectionId.replace(/[\s,]+/g, '-');
+                const idWithoutWhitespaces = removeSpacesAndCommas(selectionId);
                 addSelectionDiv(idWithoutWhitespaces, mccObject);
-                addPartitionColour(idWithoutWhitespaces, partitionColourList);
+                addListColour(idWithoutWhitespaces, "partition", partitionColourList);
             });
 
             updateSelectionNodesAndLinks();
 
-            updateNodeAndLinkColour(node, link);
+            setPartitionColouring("partition-colour-list");
 
             //updateHeadingColour(node);
 

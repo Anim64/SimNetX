@@ -291,6 +291,22 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
     setAttributeGradientColouring(attributeName, optgroup, lowColour, highColour);
 }
 
+const addListColour = function (value, idPrefix, colourList) {
+    const valueWithoutWhitespaces = removeSpacesAndCommas(value);
+    const id = `${idPrefix}-colour-${valueWithoutWhitespaces}`;
+    const newDistinctColourRow = colourList.append("li")
+        .append("div")
+        .classed("colour-row-list", true);
+    newDistinctColourRow.append("label")
+        .attr("for", id)
+        .html(value);
+    newDistinctColourRow.append("input")
+        .attr("type", "color")
+        .attr("id", id)
+        .property("value", groupColours(value));
+
+}
+
 const saveAttributeGradientColouring = function(attributeSelectId, lowColourId, highColourId)
 {
     const attributeSelect = document.getElementById(attributeSelectId);
@@ -352,12 +368,7 @@ const changeAttributeCategoryColouringList = function (attributeSelectId, colour
 
     colourList.html("");
     for (const value of attributeDistinctValues) {
-        const newDistinctColourRow = colourList.append("li");
-        newDistinctColourRow.append("span")
-            .html(value);
-        newDistinctColourRow.append("input")
-            .attr("type", "color")
-            .property("value", groupColours(value));
+        addListColour(value, "category", colourList);
     }
 }
 
@@ -368,7 +379,7 @@ const changeAttributeCategoryColouringFromSettings = function (attributeSelectId
 
     const colourObject = {};
     for (const colourLI of colourList.children) {
-        const distinctValue = colourLI.querySelector("span").innerHTML;
+        const distinctValue = colourLI.querySelector("label").innerHTML;
         const colour = colourLI.querySelector("input").value;
         colourObject[distinctValue] = colour;
     }
@@ -405,25 +416,34 @@ const setPartitionColouring = function (colourListId) {
 
     const colourObject = {};
     for (const colourLI of colourList.children) {
-        const distinctPartition = colourLI.querySelector("span").innerHTML;
+        const distinctPartition = colourLI.querySelector("label").innerHTML;
         const colour = colourLI.querySelector("input").value;
-        colourObject[distinctValue] = colour;
+        colourObject[distinctPartition] = colour;
     }
 
     node.style("fill", function (d) {
         const { id } = d;
-        const partition = getPartition(id);
+        const partition = currentGraph.getPartition(id);
         if (partition === "") {
             return nodeVisualProperties.colouring.network;
         }
 
-        const resultColour = hexToRgb(colourObject[attributeValue]);
+        const resultColour = hexToRgb(colourObject[partition]);
         const lightness = fontLightness(resultColour);
         const node_text = $('#' + id + '_node_text');
         node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
         return rgbObjectToString(resultColour);
     });
-    link.style("stroke", nodeVisualProperties.colouring.network);
+    link.style("stroke", function (l) {
+        const { id } = l.source;
+        const partition = currentGraph.getPartition(id);
+        if (partition === "") {
+            return nodeVisualProperties.colouring.network;
+        }
+
+        return colourObject[partition];
+
+    });
 }
 
 const projectAttributeXAxis = function(selectElement) {

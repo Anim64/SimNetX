@@ -46,32 +46,7 @@
     text-align: center;
 }
 
-.controls input[type="color"] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none; 
-    width: 100%;
-    min-height: 50px;
-    margin: auto;
-    border: none;
-    cursor: pointer;
-    background-color: transparent;
-    
-}
 
-.controls input[type="color"]::-webkit-color-swatch {
-    border: none;
-    border-radius: 10px;
-    border: 0.125rem solid black;
-}
-
-.controls input[type="color"]::-moz-color-swatch {
-    border: none;
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    border: 0.125rem solid black;
-}
 
 .controls .colouring {
     text-align: center;
@@ -79,14 +54,75 @@
     flex-grow: 1;
 }
 
-.controls .colour-row {
+.colour-list {
+    counter-reset: bullet;
+    width: 100%;
+    padding-left: 2rem;
+    max-height: 25vh;
+    overflow-y: scroll;
+}
+
+.colour-list li {
     display: flex;
     -ms-flex-direction: row;
     -webkit-flex-direction: row;
     flex-direction: row;
-    -webkit-justify-content: stretch;
-    justify-content: stretch;
+    align-items: center;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+    list-style-type: none;
+    
 }
+
+.colour-list li:hover {
+    border-bottom: 0.15rem solid grey;
+}
+
+.colour-list li:before {
+    counter-increment: bullet;
+    content: counter(bullet)". ";
+    display: inline;
+    -webkit-flex-grow: 0;
+    flex-grow: 0;
+}
+
+.colour-row-list, .colour-row-single {
+    display: flex;
+    align-items: center;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
+    max-width: 90%;
+}
+
+.colour-row-list label, .colour-row-single label {
+    margin-right:auto;
+    margin-left: 1rem;
+    margin-bottom: 0;
+    cursor: pointer;
+    flex-shrink: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    
+}
+
+.colour-row-list input {
+    flex-shrink: 0;
+    min-width: 20%;
+}
+
+
+.colour-row-single input {
+    
+}
+
 
 .attribute-selection-label {
     width: 100%;

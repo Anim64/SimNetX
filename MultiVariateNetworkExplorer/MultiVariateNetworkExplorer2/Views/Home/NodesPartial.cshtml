@@ -99,7 +99,6 @@
                             <h4 class="panel-title">
                                 @("Selection " + selection)
                             </h4>
-                            <input type="color" id="@("selection_color_" + selection)" onchange="changeGroupColour(this, '@selection', currentGraph)" />
                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, '@selection.ToString()')"><i class="fa fa-plus-square"></i></button>
                             <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, '@selection.ToString()')"><i class="fa fa-trash"></i></button>
                         </div>

@@ -36,6 +36,10 @@ const cancelDefaultBehaviour = function (e) {
     return false;
 }
 
+const removeSpacesAndCommas = function (inputString) {
+    return inputString.replace(/[\s,]+/g, '-');
+}
+
 
 
 window.addEventListener("load", function () {
