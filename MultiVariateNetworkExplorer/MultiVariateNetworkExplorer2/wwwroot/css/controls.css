@@ -123,6 +123,14 @@
     
 }
 
+.gradient-colouring-legend-title{
+    text-anchor: start;
+}
+
+.gradient-colouring-legend {
+    fill: url(#attribute-node-colouring-preview-gradient);
+}
+
 
 .attribute-selection-label {
     width: 100%;

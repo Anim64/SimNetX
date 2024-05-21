@@ -291,6 +291,56 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
     setAttributeGradientColouring(attributeName, optgroup, lowColour, highColour);
 }
 
+const updateGradientLegend = function (attributeSelectId, legendDivId, colourListId) {
+    const legendDiv = d3.select(`#${legendDivId}`);
+    const legendSvg = legendDiv.select("svg");
+    const linearGradient = legendSvg.select("linearGradient");
+
+    const jColourListInputs = (`#${colourListId} input`);
+    const colourCount = jColourListInputs.length;
+
+
+    const colourData = [];
+    let offset = 0;
+    const offsetIncrement = Math.floor(100 / (colourCount - 1));
+    jColourListInputs.each(() => {
+        colourData.push({
+            offset: `${offset}%`,
+            colour = $(this).val()
+        })
+        offset += offsetIncrement;
+    });
+
+    colourData[colourData.length - 1].offset = "100%";
+    linearGradient.data([]).exit().remove();
+    linearGradient
+        .data(colourData)
+        .enter()
+        .append("stop")
+        .attr("offset", function (d) {
+            return d.offset;
+        })
+        .attr("stop-color", function (d) {
+            return d.colour;
+        });
+
+
+    const attribute = document.getElementById(attributeSelectId).value;
+
+    const attributeValues = currentGraph.getAllAttributeValues(attribute);
+    const xMin = d3.min(attributeValues);
+    const xMax = d3.max(attributeValues);
+
+    const axis = createLinearAxis(xMin, xMax, 10, 400);
+
+    legendSvg.select("g").remove();
+    legendSvg
+        .attr("class", "gradient-legend")
+        .append("g")
+        .attr("transform", "translate(0, 40)")
+        .call(axis);
+}
+
 const addListColour = function (value, idPrefix, colourList) {
     const valueWithoutWhitespaces = removeSpacesAndCommas(value);
     const id = `${idPrefix}-colour-${valueWithoutWhitespaces}`;

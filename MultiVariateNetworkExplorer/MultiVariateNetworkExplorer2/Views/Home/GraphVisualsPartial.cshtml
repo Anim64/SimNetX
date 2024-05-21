@@ -27,7 +27,8 @@
             <p><label>Attribute Node Colouring</label>Modify colour of node based on its attribute value</p>
             <label class="attribute-selection-label" for="attribute-node-colouring">
                 Choose Attribute:
-                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" name="attribute-node-colouring">
+                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" 
+                name="attribute-node-colouring" onchange="updateGradientLegend(this.id, 'attribute-node-colouring-preview', 'numerical-colour-list')">
                     <optgroup label="Numeric Attributes">
                         @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                         {
@@ -40,6 +41,17 @@
                     </optgroup>
                 </select>
             </label>
+            <div id="attribute-node-colouring-preview">
+                <svg>
+                    <defs>
+                        <linearGradient id="attribute-node-colouring-preview-gradient" x1="0%" x2="100%" y1="0%" y2="0%"></linearGradient>
+                    </defs>
+                    <text class="gradient-colouring-legend-title" x="0" y="20">
+                        Gradient coloring legend
+                    </text>
+                    <rect class="gradient-colouring-legend" x="10" y="30" height="15" width="400"></rect>
+                </svg>
+            </div>
             <ol type="1" class="colour-list scrollbar-thin" id="numerical-colour-list">
                 <li>
                     <div class="colour-row-list">

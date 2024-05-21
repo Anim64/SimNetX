@@ -65,14 +65,15 @@ window.addEventListener("load", function () {
 
     const { num: numAttributes = [] } = currentGraph.attributes;
     for (const attribute of numAttributes) {
-        const containerDivId = attribute + "-histogram-container";
+        const containerDivId = `${attribute}-histogram-container`;
 
         hist(containerDivId, currentGraph, attribute);
         
     }
 
-
+    updateGradientLegend('attribute-node-colouring', 'attribute-node-colouring-preview', 'numerical-colour-list')
     changeAttributeCategoryColouringList('categorical-attribute-node-colouring', 'categorical-colour-list');
+
 
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select", "-parameters-remodel");
