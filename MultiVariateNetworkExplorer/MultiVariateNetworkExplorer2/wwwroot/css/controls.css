@@ -123,8 +123,14 @@
     
 }
 
+#attribute-node-colouring-preview{
+    padding:0.5rem;
+}
+
+
 .gradient-colouring-legend-title{
     text-anchor: start;
+    font-size: 2.5rem;
 }
 
 .gradient-colouring-legend {

@@ -21,7 +21,7 @@ class Graph {
         this._linkedByIndex =[];
         for (const l of this.links) {
             const { source, target } = l;
-            const index = source + "," + target
+            const index = source + "," + target;
             this._linkedByIndex[index] = 1;
         }
         this._partitions = input_graph.partitions;
@@ -36,7 +36,7 @@ class Graph {
             .force(center, d3.forceCenter())
             .force(forceX, d3.forceX())
             .force(forceY, d3.forceY())
-            .nodes(this.nodes)
+            .nodes(this.nodes);
 
         this._forces = {
             center: {
@@ -149,12 +149,12 @@ class Graph {
     }
 
     getPropertyValue(id, attribute) {
-        const propertyValues = this._properties[attribute]
+        const propertyValues = this._properties[attribute];
         return propertyValues !== undefined ? propertyValues.values[id] : undefined;
     }
 
     getAllAttributeValues(attribute) {
-        const valueList = []
+        const valueList = [];
         for (const node of this._nodes) {
             valueList.push(this.getNodeDataValue(node.id, attribute));
         }
@@ -252,7 +252,7 @@ class Graph {
         this._linkedByIndex = [];
         for (const l of this.links) {
             const { source, target } = l;
-            const index = source + "," + target
+            const index = source + "," + target;
             this._linkedByIndex[index] = 1;
         }
     }
@@ -416,7 +416,4 @@ class Graph {
     stopSimulation() {
         this._simulation.stop();
     }
-    
-
-
 }

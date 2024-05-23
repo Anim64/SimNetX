@@ -32,7 +32,13 @@
       "wwwroot/js/queue.js",
       "wwwroot/js/selections.js",
       "wwwroot/js/remodel_network.js",
-      "wwwroot/js/plots.js"
+      "wwwroot/js/plots.js",
+      "wwwroot/js/statistics.js",
+      "wwwroot/js/toolbar.js",
+      "wwwroot/js/element-generator.js",
+      "wwwroot/js/DataStore.js"
+      //"wwwroot/js/graph.js"
+
     ],
     "minify": {
       "enabled": true,
