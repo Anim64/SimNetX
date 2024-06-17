@@ -111,11 +111,25 @@
             </div>
             <button onclick="changeNetworkBackgroundColour('background-colour-input')">Run</button>
         </div>
-        <div class="force" id="categorical-colour-setting">
-            <p><label>Class Colouring</label>Modify colour of nodes based on its chosen class attribute</p>
-            <ol type="1" class="colour-list scrollbar-thin" id="class-colour-list"></ol>
-            <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button>
-            <button onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
+
+        <div class="force">
+            <p><label>Attribute Node Sizing</label> Modify size of node based on its attribute value</p>
+            <label class="attribute-selection-label" for="attribute-node-sizing">
+                Choose Attribute:
+                <select id="attribute-node-sizing" class="attribute-select attribute-select-border" name="attribute-node-sizing" onchange="setAttributeNodeSizing(this)">
+                    <option value="">--None--</option>
+                    <optgroup label="Attributes">
+                        @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
+                        {
+                            <option value="@key">@key</option>
+                        }
+                    </optgroup>
+                    <optgroup label="Centralities">
+                        <option value="degree">Degree</option>
+                        <option value="closeness">Closeness</option>
+                    </optgroup>
+                </select>
+            </label>
         </div>
     <div class="column-content" id="visuals-profiles">
 
