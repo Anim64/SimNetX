@@ -35,7 +35,7 @@
 }
 
 
-.navigation div:last-child {
+.navigation>div:last-child {
     border-bottom: 2px solid var(--border-color);
 }
 
@@ -80,7 +80,7 @@
     box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
 }
 
-.navigation .tab-nav:first-child .tab-active {
+.navigation > .tab-nav:first-child > .tab-active {
     -moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
     -webkit-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
     box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
@@ -135,7 +135,7 @@
     scrollbar-color: var(--scrollbar-track-color) var(--base-background-color);
 }
 
-.column-content a {
+.column-content a, .graph-content a {
     color: black;
 }
 
@@ -144,10 +144,7 @@
     height: 100%;
     border-left: 2px solid var(--border-color);
     position: relative;
-}
-
-.graph-content a{
-    color: black;
+    overflow:hidden;
 }
 
 #networkGraph {

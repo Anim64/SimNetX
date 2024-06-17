@@ -1,0 +1,9 @@
+﻿.cluster-metrics-container{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding-top: 1rem;
+    padding-left: 1rem;
+    overflow-y: scroll;
+    height: 100%;
+    
+}

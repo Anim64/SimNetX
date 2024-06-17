@@ -77,7 +77,7 @@ const addNewSelection = function (newId = null, mccObject) {
 }
 
 //Add new custom's group div
-const addSelectionDiv = function (selectionId, mccObject) {
+const addSelectionDiv = function (selectionId) {
     const mainDiv = d3.select('#list-selections');
 
     const panel = mainDiv
@@ -92,7 +92,7 @@ const addSelectionDiv = function (selectionId, mccObject) {
         .attr('onclick', 'stopClickPropagation(event)')
         .html(`Selection ${selectionId}`);
 
-    panel.style('background-color', groupColours(selectionId));
+    /*panel.style('background-color', groupColours(selectionId));*/
 
     const panel_list_add_btn = panel.append('button')
         .attr('class', 'btn btn-danger btn-sm rounded-0')
@@ -115,23 +115,97 @@ const addSelectionDiv = function (selectionId, mccObject) {
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
+}
 
-    const mccDiv = mainDiv.append("div")
+const addSelectionDivs = function (selectionGraph) {
+    const mainDiv = d3.select('#list-selections');
+
+    const panels = mainDiv
+        .selectAll("div")
+        .data(selectionGraph.nodes)
+        .enter()
+        .append('div')
+        .attr('class', 'selection-panel')
+        .attr('id', (d) => { return `selection_panel_${d.id}`; })
+        .on('click', function (d) { selectNodesBySelection(d.id, currentGraph); });
+
+    panels.append('h4')
+        .attr('class', 'panel-title')
+        .attr('contenteditable', 'true')
+        .on('click', function (e) { stopClickPropagation(e); })
+        .html((d) => { return `Selection ${d.id}`; });
+
+    /*panel.style('background-color', groupColours(selectionId));*/
+
+    const panel_list_add_btn = panels.append('button')
+        .attr('class', 'btn btn-danger btn-sm rounded-0')
+        .attr('type', 'button')
+        .attr('data-toggle', 'tooltip')
+        .attr('data-placement', 'top')
+        .attr('title', 'Add Selected Nodes To This Group')
+        .on('click', function (e, d) { addNodesToSelection(e, d.id); });
+
+    panel_list_add_btn.append('i')
+        .attr('class', 'fa fa-plus-square');
+
+    const panel_list_delete_btn = panels.append('button')
+        .attr('class', 'btn btn-danger btn-sm rounded-0')
+        .attr('type', 'button')
+        .attr('data-toggle', 'tooltip')
+        .attr('data-placement', 'top')
+        .attr('title', 'Delete')
+        .on('click', function (e, d) { deleteSelection(e, d.id); });
+
+    panel_list_delete_btn.append('i')
+        .attr('class', 'fa fa-trash');
+
+    const partitionColourList = d3.select("#partition-colour-list").html("");
+
+    panels.style("background-color", function (d) {
+        return addListColour(d.id, "partition", partitionColourList)
+            .property("value");
+    })
+}
+
+const addPartitionMetricElements = function () {
+    const classAttribute = document.getElementById("partition-real-class-select").value;
+    const mccObject = matthewsCorrelationCoeficient(classAttribute);
+    const clusterMetricContainer = d3.select("#cluster-metrics-container").html("");
+    d3.selectAll("#list-selections div")
+        .each(function (d) {
+            clusterMetricDiv = clusterMetricContainer.append("div");
+            //addMccTable(clusterMetricDiv, d.id, mccObject);
+            addMccPlot(clusterMetricDiv, d.id, mccObject);
+        });
+
+    const distinctClasses = currentGraph.getDistinctValues(classAttribute);
+    const classColourList = d3.select("#class-colour-list").html("");
+    for (const realClass of distinctClasses) {
+        addListColour(realClass, "class", classColourList);
+    }
+    changeClassColouringFromSettings('partition-real-class-select', 'class-colour-list');
+    
+}
+
+const addMccTable = function (clusterMetricDiv, selectionId, mccObject) {
+    const mccTableDiv = clusterMetricDiv
+        .append("div")
         .attr("class", "col-2-table");
 
     for (const mccPair of mccObject[selectionId]) {
         const { className, value } = mccPair;
-        mccDiv.append("span")
+        mccTableDiv.append("span")
             .text(className + ": " + value.toFixed(2))
             .style("border", "0.1rem solid white")
     }
+}
 
-
+const addMccPlot = function (clusterMetricDiv, selectionId, mccObject) {
     const barplotID = `barplot-mcc-${selectionId}`;
-    mainDiv.append("div")
+    clusterMetricDiv.append("div")
         .attr("id", barplotID)
         .style("position", "relative");
-    barplot(barplotID, mccObject[selectionId], -1, 1, selectionId)
+    barplot(barplotID, mccObject[selectionId], -1, 1, selectionId);
 }
 
 
@@ -368,9 +442,9 @@ const assignAttributePartitions = function (attributeSelect, currentGraphRef) {
 }
 
 
-const matthewsCorrelationCoeficient = function () {
+const matthewsCorrelationCoeficient = function (classAttributeName) {
     const distinctPartitions = currentGraph.getDistinctPartitions();
-    const distinctClasses = currentGraph.getDistinctClasses();
+    const distinctClasses = currentGraph.getDistinctValues(classAttributeName);
 
     if (!distinctClasses || !distinctPartitions) {
         return null;
@@ -392,7 +466,7 @@ const matthewsCorrelationCoeficient = function () {
     }
 
     for (const [node, nodePartition] of Object.entries(currentGraph.partitions)) {
-        const nodeRealClass = currentGraph.getClass(node);
+        const nodeRealClass = currentGraph.getNodeDataValue(node, classAttributeName);
 
         for (const partition in confusionMatrices) {
             if (partition === nodePartition) {
@@ -459,16 +533,7 @@ const requestCommunityDetection = function () {
             currentGraph.partitions = JSON.parse(result.newPartitions);
             //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
-
-            const mccObject = matthewsCorrelationCoeficient();
-
-            const partitionColourList = d3.select("#partition-colour-list");
-            selectionGraph.nodes.forEach(function (d) {
-                const selectionId = d.id.toString();
-                const idWithoutWhitespaces = removeSpacesAndCommas(selectionId);
-                addSelectionDiv(idWithoutWhitespaces, mccObject);
-                addListColour(idWithoutWhitespaces, "partition", partitionColourList);
-            });
+            addSelectionDivs(selectionGraph);
 
             updateSelectionNodesAndLinks();
 

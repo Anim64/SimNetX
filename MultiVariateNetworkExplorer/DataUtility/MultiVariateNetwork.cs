@@ -93,6 +93,11 @@ namespace MultiVariateNetworkLibrary
         {
             Dictionary<string, string> partition = Community.BestPartition(network);
             this.Partition = partition;
+            foreach (var key in this.Partition.Keys)
+            {
+                this.Partition[key] = Utils.RemoveSpecialCharacters(this.Partition[key]);
+            }
+
         }
 
         public static MultiVariateNetwork FromD3Json(JObject d3JsonRoot, bool loadNetwork = true)
