@@ -1017,9 +1017,6 @@ const updateNodesAndLinks = function() {
     const sizingSelect = document.getElementById('attribute-node-sizing');
     setAttributeNodeSizing(sizingSelect);
 
-    const colouringSelect = document.getElementById('attribute-node-colouring');
-    setAttributeNodeColouring(colouringSelect);
-
     const labelSelect = document.getElementById('node-label-select');
     setNodeLabel(labelSelect);
 }

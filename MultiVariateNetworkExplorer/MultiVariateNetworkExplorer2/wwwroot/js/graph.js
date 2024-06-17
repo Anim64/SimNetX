@@ -190,6 +190,10 @@ class Graph {
         const distinctList = [];
 
         for (const [node, partition] of Object.entries(this.partitions)) {
+            if (partition === "") {
+                continue;
+            }
+
             if (!distinctList.includes(partition)) {
                 distinctList.push(partition);
             }
