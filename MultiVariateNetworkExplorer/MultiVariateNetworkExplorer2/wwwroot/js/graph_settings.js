@@ -282,8 +282,9 @@ const pickHex = function(color1, color2, weight) {
 }
 
 const changeAttributeGradientColouringFromSettings = function (attributeSelectId, colourListId) {
-    const attributeName = document.getElementById(attributeSelectId).value;
+    const attributeSelect = document.getElementById(attributeSelectId);
     const optgroup = attributeSelect.options[attributeSelect.selectedIndex].closest('optgroup').getAttribute('label');
+    const attributeName = attributeSelect.value;
 
     let attributeMax = null;
     let attributeMin = null;
@@ -301,21 +302,22 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
         getValueFunction = getNodeProperty;
     }
 
-    const colourList = document.getElementById(colourListId);
+    const gradientStopColours = d3.selectAll(`#attribute-node-colouring-preview-gradient stop`);
+
     const colourObject = [];
-    let valueThreshold = attributeMin;
-    const numberOfColours = colourList.childElementCount;
-    const thresholdIncrement = (Math.abs(attributeMax - valueThreshold)) / numberOfColours;
-    for (const colourLI of colourList.children) {
-        const colour = colourLI.querySelector("input").value;
+    gradientStopColours.each(function () {
+        const colour = d3.select(this).attr("stop-color");
+        const offset = d3.select(this).attr("offset");
+
+        const attributeRange = attributeMax - attributeMin;
+        const valueThreshold = attributeMin + (attributeRange * offset);
+
         colourObject.push({
             value: valueThreshold,
             colour: hexToRgb(colour)
         });
-        valueThreshold += thresholdIncrement;
-    }
-    colourObject[colourObject.length - 1].value = attributeMax;
-    hex
+
+    })
     setAttributeGradientColouring(attributeName, optgroup, getValueFunction, colourObject, attributeMin, attributeMax);
 }
 
@@ -328,39 +330,50 @@ const saveAttributeGradientColouring = function (attributeSelectId, lowColourId,
     const highColour = document.getElementById(highColourId);
 }
 
-const setAttributeGradientColouring = function (attributeName, optgroup, valueFunction, colourObject, attributeMin, attributeMax) {
+const getGradientColour = function (colourObject, attributeValue, attributeMin, attributeMax) {
 
+    const firstColour = colourObject[0];
+    if (attributeValue <= firstColour.value) {
+        return firstColour.colour;
+    }
+
+    let lowValueColourRGB = null;
+    let highValueColourRGB = null;
+    for (let i = 1; i < colourObject.length; i++) {
+        if (attributeValue <= colourObject[i].value) {
+            lowValueColourRGB = colourObject[i - 1].colour;
+            highValueColourRGB = colourObject[i].colour;
+            const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
+            const resultColour = pickHex(lowValueColourRGB, highValueColourRGB, resultValue);
+            return resultColour;
+        }
+    }
+
+    const lastColour = colourObject[colourObject.length - 1];
+    return lastColour.colour;
+    
+}
+
+const setAttributeGradientColouring = function (attributeName, optgroup, valueFunction, colourObject, attributeMin, attributeMax) {
     node.style("fill", function (d) {
         const attributeValue = valueFunction(d, attributeName);
         if (attributeValue === "") {
             return nodeVisualProperties.colouring.network;
         }
 
-
-        let lowValueColourRGB = null;
-        let highValueColourRGB = null;
-        for (let i = 0; i < colourObject.length; i++) {
-            if (colourObject[i].value >= attributeValue) {
-                lowValueColourRGB = colourObject[i - 1].colour;
-                highValueColourRGB = colourObject[i].colour;
-            }
-        }
-        
-
-        const resultValue = ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin));
-        const resultColour = pickHex(lowValueColourRGB, highValueColourRGB, resultValue);
-        const lightness = fontLightness(resultColour);
+        const finalColour = getGradientColour(colourObject, attributeValue, attributeMin, attributeMax);
+        const lightness = fontLightness(finalColour);
         const node_text = $('#' + d.id + '_node_text');
         node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
-        return rgbObjectToString(resultColour);
+        return rgbObjectToString(finalColour);
     });
     link.style("stroke", nodeVisualProperties.colouring.network);
 }
 
 
-const updateGradientLegend = function (attributeSelectId, legendDivId, colourListId) {
-    const legendDiv = d3.select(`#${legendDivId}`);
-    const legendSvg = legendDiv.select("svg");
+const updateGradientLegend = function (legendDivId, colourListId) {
+    const legendSvg = d3.select(`#${legendDivId}`)
+        .select("svg");
     const linearGradient = legendSvg.select("linearGradient");
 
     const jColourListInputs = $( `#${colourListId} input` );
@@ -369,24 +382,20 @@ const updateGradientLegend = function (attributeSelectId, legendDivId, colourLis
 
     const colourData = [];
     let offset = 0;
-    const offsetIncrement = Math.floor(100 / (colourCount - 1));
+    const offsetIncrement = 1.0 / (colourCount - 1);
     jColourListInputs.each(function() {
         const colour = $( this ).val();
         colourData.push({
-            "offset": `${offset}%`,
+            "offset": offset,
             "colour": colour
         });
         offset += offsetIncrement;
     });
 
-    colourData[colourData.length - 1].offset = "100%";
-    linearGradient
-        //.selectAll("stop")
-        //.data([])
-        //.exit()
-        //.remove();
-        .html("");
-    linearGradient
+    colourData[colourData.length - 1].offset = 1;
+    
+    const stopColours = linearGradient
+        .html("")
         .selectAll("stop")
         .data(colourData)
         .enter()
@@ -398,32 +407,182 @@ const updateGradientLegend = function (attributeSelectId, legendDivId, colourLis
             return d.colour;
         });
 
-    const legendRect = legendSvg.select("rect")
-        .style("fill", "url(#attribute-node-colouring-preview-gradient)");
+    updateGradientLegendPointers(legendSvg, stopColours);
+}
+
+const stopColourPolygonDragged = function (d, i) {
+    const { dx } = d3.event;
+    d.x += dx;
+    d.x = Math.max(10, Math.min(d.x, 410));
+    const { stopIndex, previousPointerData: prev, nextPointerData: next } = d;
+    
+    const colourInputs = document.querySelectorAll("#numerical-colour-list input");
+    if (dx < 0 && prev !== null) {
+        if (d.x < prev.x) {
+            const { previousPointerData: prevPrev } = prev;
+            const leftColour = colourInputs[prev.stopIndex].value;
+            const rightColour = colourInputs[stopIndex].value;
+            colourInputs[stopIndex].value = leftColour;
+            colourInputs[prev.stopIndex].value = rightColour;
+
+            [d.stopIndex, d.previousPointerData.stopIndex] = [d.previousPointerData.stopIndex, d.stopIndex];
+
+            if (prevPrev !== null) {
+                prevPrev.nextPointerData = d;
+            }
+            d.previousPointerData = prevPrev;
+            d.nextPointerData = prev;
+
+            prev.previousPointerData = d;
+            prev.nextPointerData = next;
+
+            if (next !== null) {
+                next.previousPointerData = prev;
+            }
+
+            const stopColour = document.querySelector(`#attribute-node-colouring-preview stop:nth-child(${prev.stopIndex + 1})`);
+            stopColour.setAttribute("offset", (prev.x - 10) / 400.0);
+        }
+    }
+
+    if (dx > 0 && next !== null) {
+        if (d.x > next.x) {
+            const { nextPointerData: nextNext } = next;
+
+            const leftColour = colourInputs[stopIndex].value;
+            const rightColour = colourInputs[next.stopIndex].value;
+            colourInputs[stopIndex].value = rightColour;
+            colourInputs[next.stopIndex].value = leftColour;
+
+            [d.stopIndex, d.nextPointerData.stopIndex] = [d.nextPointerData.stopIndex, d.stopIndex];
+
+            if (nextNext !== null) {
+                nextNext.previousPointerData = d;
+            }
+
+            d.nextPointerData = nextNext;
+            d.previousPointerData = next;
+
+            next.nextPointerData = d;
+            next.previousPointerData = prev;
+            
+
+            if (prev !== null) {
+                prev.nextPointerData = next;
+            }
+
+            const stopColour = document.querySelector(`#attribute-node-colouring-preview stop:nth-child(${next.stopIndex + 1})`);
+            stopColour.setAttribute("offset", (next.x - 10) / 400.0);
+        }
+    }
+    
+    
+    d3.select(this).attr("transform", `translate(${d.x}, 0)`);
+}
+
+const stopColourPolygonDragEnded = function (d) {
+    const { dx } = d3.event;
+    const legendDivId = "attribute-node-colouring-preview";
+    const stops = document.querySelectorAll(`#${legendDivId} linearGradient stop`);
+
+    
+    const newStopOffset = (d.x - 10) / 400.0;
+    stops[d.stopIndex].setAttribute("offset", newStopOffset);
+
+    const { previousPointerData: prev, nextPointerData: next } = d;
+    if (prev !== null) {
+        const newPrevStopOffset = (prev.x - 10) / 400.0;
+        stops[prev.stopIndex].setAttribute("offset", newPrevStopOffset);
+    }
+
+    if (next !== null) {
+        const newNextStopOffset = (next.x - 10) / 400.0;
+        stops[next.stopIndex].setAttribute("offset", newNextStopOffset);
+    }
+    
+    updateGradientColour(legendDivId, "numerical-colour-list")
+}
+
+const updateGradientColour = function () {
+    const linearGradient = d3.select(`#attribute-node-colouring-preview`)
+        .select("svg").select("linearGradient");
+
+    const jColourListInputs = document.querySelectorAll(`#numerical-colour-list input`);
+
+    linearGradient.selectAll("stop")
+        .attr("stop-color", function (d, i) {
+            return jColourListInputs[i].value;
+        })
+}
 
 
+const updateGradientLegendPointers = function (legendSvg, stopColours) {
+    legendSvg.select("#stop-colour-pointers").remove();
+    const gPointers = legendSvg
+        .append("g")
+        .attr("transform", "translate(0,30)")
+        .attr("id", "stop-colour-pointers");
+
+    const pointerData = [];
+    stopColours.each(function (d, i) {
+        const x = Math.floor(d.offset * 400) + 10;
+        pointerData.push(
+            {
+                'x': x,
+                "stopIndex": i,
+            });
+    });
+
+    pointerData[pointerData.length - 1].x = 410;
+
+    for (let i = 0; i < pointerData.length; i++) {
+        const previousPointerData = i > 0 ? pointerData[i - 1] : null;
+        const nextPointerData = i < (pointerData.length - 1) ? pointerData[i + 1] : null;
+        pointerData[i].previousPointerData = previousPointerData;
+        pointerData[i].nextPointerData = nextPointerData;
+    }
+
+
+    gPointers.selectAll("polygon")
+        .data(pointerData)
+        .enter()
+        .append("polygon")
+        .attr("points", function (d) { return `0,15 -7,0 7,0`; })
+        .attr("transform", function (d) { return `translate(${d.x}, 0)` })
+        .call(d3.drag()
+            .on("drag", stopColourPolygonDragged)
+            .on("end", stopColourPolygonDragEnded));
+
+    //stopColours.each(function () {
+    //    gPointers.
+    //})
+}
+
+const updateGradientLegendAxis = function (attributeSelectId) {
+    const legendSvg = d3.select(`#attribute-node-colouring-preview svg`)
     const attribute = document.getElementById(attributeSelectId).value;
 
     const attributeValues = currentGraph.getAllAttributeValues(attribute);
     const xMin = d3.min(attributeValues);
     const xMax = d3.max(attributeValues);
 
-    const axis = createLinearAxis(xMin, xMax, 0, 400);
+    const axis = createLinearAxis(xMin, xMax, 10, 410);
     const axisLeg = d3.axisBottom(axis);
 
-    legendSvg.select("g").remove();
+    legendSvg.select("#gradient-legend-axis").remove();
     legendSvg
-        .attr("class", "gradient-legend")
         .append("g")
-        .attr("transform", "translate(0, 45)")
+        .attr("transform", "translate(0, 60)")
+        .attr("id", "gradient-legend-axis")
         .call(axisLeg);
 }
 
-const addGradientListColour = function (attributeSelectId, legendDivId, value, idPrefix, colourListId) {
+const addGradientListColour = function (legendDivId, value, idPrefix, colourListId) {
     const colourList = d3.select(`#${colourListId}`);
     const inputColour = addListColour(value, idPrefix, colourList);
     inputColour
-        .on("change", updateGradientLegend(attributeSelectId, legendDivId, colourList));
+        .on("change", function () { updateGradientColour(legendDivId, colourListId); });
+    updateGradientLegend(legendDivId, colourListId);
 }
 
 const addListColour = function (value, idPrefix, colourList) {
@@ -442,7 +601,20 @@ const addListColour = function (value, idPrefix, colourList) {
 
 }
 
+const randomColour = function (brightness) {
+    function randomChannel(brightness) {
+        var r = 255 - brightness;
+        var n = 0 | ((Math.random() * r) + brightness);
+        var s = n.toString(16);
+        return (s.length == 1) ? '0' + s : s;
+    }
+    return '#' + randomChannel(brightness) + randomChannel(brightness) + randomChannel(brightness);
+}
 
+const randomizeListColours = function (colourListId) {
+    d3.selectAll(`#${colourListId} input`)
+        .prop(value, randomColour(0));
+}
 
 
 
@@ -532,39 +704,47 @@ const setPartitionColouring = function (colourListId) {
     });
 }
 
-const setClassColouring = function (colourListId) {
-    const colourList = document.getElementById(`${colourListId}`);
+const changeClassColouringFromSettings = function (attributeSelectId, colourListId) {
+    const attributeName = document.getElementById(attributeSelectId).value;
+    const colourList = document.getElementById(colourListId);
 
     const colourObject = {};
     for (const colourLI of colourList.children) {
-        const distinctPartition = colourLI.querySelector("label").innerHTML;
+        const distinctValue = colourLI.querySelector("label").innerHTML;
         const colour = colourLI.querySelector("input").value;
-        colourObject[distinctPartition] = colour;
+        colourObject[distinctValue] = colour;
     }
 
-    node.style("fill", function (d) {
-        const { id } = d;
-        const partition = currentGraph.getClass(id);
-        if (partition === "") {
-            return nodeVisualProperties.colouring.network;
-        }
+    setClassColouring(attributeName, colourObject);
+}
 
-        const resultColour = hexToRgb(colourObject[partition]);
-        const lightness = fontLightness(resultColour);
-        const node_text = $('#' + id + '_node_text');
-        node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
-        return rgbObjectToString(resultColour);
-    });
-    link.style("stroke", function (l) {
-        const { id } = l.source;
-        const partition = currentGraph.getPartition(id);
-        if (partition === "") {
-            return nodeVisualProperties.colouring.network;
-        }
+const setClassColouring = function (attributeName, colourObject) {
+    const rects = d3.selectAll("#cluster-metrics-container rect");
 
-        return colourObject[partition];
+    rects.style("fill", (d) => { return colourObject[d.className]; });
+    //node.style("fill", function (d) {
+    //    const { id } = d;
+    //    const partition = currentGraph.getClass(id);
+    //    if (partition === "") {
+    //        return nodeVisualProperties.colouring.network;
+    //    }
 
-    });
+    //    const resultColour = hexToRgb(colourObject[partition]);
+    //    const lightness = fontLightness(resultColour);
+    //    const node_text = $('#' + id + '_node_text');
+    //    node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
+    //    return rgbObjectToString(resultColour);
+    //});
+    //link.style("stroke", function (l) {
+    //    const { id } = l.source;
+    //    const partition = currentGraph.getPartition(id);
+    //    if (partition === "") {
+    //        return nodeVisualProperties.colouring.network;
+    //    }
+
+    //    return colourObject[partition];
+
+    //});
 }
 
 const projectAttributeXAxis = function(selectElement) {

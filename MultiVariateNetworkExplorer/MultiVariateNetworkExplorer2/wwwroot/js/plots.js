@@ -94,34 +94,52 @@ const barplot = function (containerDivId, data, yMin, yMax, cluster) {
 
     const plotContainer = getPlotContainer(containerDivId);
     const barplotSvg = createGraphSvg(plotContainer, barplotWidth, barplotHeight, barplotMargin, cluster)
-    const axisGElement = appendGraphXAxis(barplotSvg, xAxis, 0, barplotHeight);
-    tiltAxisText(axisGElement);
-    appendGraphYAxis(barplotSvg, yAxis, 0, 0);
-    appendLine(barplotSvg, 0, barplotWidth, yAxis(0), yAxis(0));
+
+    const axisColour = "white";
+    appendGraphXAxis(barplotSvg, xAxis, 0, barplotHeight, axisColour, true);
+    appendGraphYAxis(barplotSvg, yAxis, 0, 0, axisColour);
+    appendLine(barplotSvg, 0, barplotWidth, yAxis(0), yAxis(0), axisColour);
     const tooltip = createTooltip(plotContainer, cluster);
-    const mouseover = createTooltipMouseover(tooltip);
+    const mouseenter = createTooltipMouseEnter(tooltip);
     const mousemove = createTooltipMousemove(tooltip);
     const mouseleave = createTooltipMouseleave(tooltip);
-    createBars(barplotSvg, data, xAxis, yAxis, barplotHeight, "#ffeead", mouseover, mousemove, mouseleave);
+    createBars(barplotSvg, data, xAxis, yAxis, barplotHeight, "#ffeead", mouseenter, mousemove, mouseleave);
 
 }
 
 const createBars = function (svg, data, xAxis, yAxis, height, fillColor,
-    mouseover = null, mousemove = null, mouseleave = null) {
-    svg
+    mouseenter = null, mousemove = null, mouseleave = null) {
+
+    gBars = svg
         .selectAll("mybar")
         .data(data)
         .enter()
+        .append("g");
+
+    gBars
+        .append("rect")
+        .attr("x", (d) => { return xAxis(d.className); })
+        .attr("y", (d) => { return yAxis(1); })
+        .attr("width", xAxis.bandwidth())
+        .attr("height", (d) => { return Math.abs(yAxis(1) - yAxis(-1)); })
+        .attr("fill-opacity", 0)
+        .attr("stroke-opacity", 0)
+        .attr("stroke", "black")
+        .on("mouseenter", mouseenter)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave);
+
+    gBars
         .append("rect")
         .attr("x", (d) => { return xAxis(d.className); })
         .attr("y", (d) => { return yAxis(Math.max(0, d.value)); })
         .attr("width", xAxis.bandwidth())
         .attr("height", (d) => { return Math.abs(yAxis(d.value) - yAxis(0)); })
-        //.attr("transform", `translate()`)
         .attr("fill", fillColor)
-        .on("mouseover", mouseover)
-        .on("mousemove", mousemove)
-        .on("mouseleave", mouseleave);
+        .attr("pointer-events", "none");
+        
+
+    
 
     return svg;
 }
@@ -133,27 +151,29 @@ const createTooltip = function (plotContainer, cluster) {
         .attr("id", `${cluster}-tooltip`);
 }
 
-const createTooltipMouseover = function (tooltip) {
-    const mouseover = function (d) {
+const createTooltipMouseEnter = function (tooltip) {
+    const mouseenter = function (d) {
         const { className, value } = d;
+        d3.select(this).style("stroke-opacity", 1);
         tooltip
-            .html("Class: " + className + "<br>" + "Value: " + value)
+            .html("Class: " + className + "<br>" + "Value: " + value.toFixed(2))
             .style("opacity", 1);
     }
-    return mouseover;
+    return mouseenter;
 }
 
 const createTooltipMousemove = function (tooltip) {
     const mousemove = function (d) {
         tooltip
-            .style("left", (d3.mouse(this)[0]-90) + "px")
-            .style("top", (d3.mouse(this)[1] + "px"));
+            .style("left", (d3.mouse(this)[0]+ 20) + "px")
+            .style("top", (d3.mouse(this)[1] + 11) + "px");
     }
     return mousemove;
 }
 
 const createTooltipMouseleave = function (tooltip) {
     const mouseleave = function (d) {
+        d3.select(this).style("stroke-opacity", 0);
         tooltip
             .style("opacity", 0);
     }
@@ -178,11 +198,27 @@ const createGraphSvg = function (plotContainer, width, height, margin, attribute
 
 
 
-const appendGraphXAxis = function (svg, axis, translateX, translateY) {
+const appendGraphXAxis = function (svg, axis, translateX, translateY, colour = "black", hideLabels = false) {
+
+    const axisBot = d3.axisBottom(axis);
+    if (hideLabels) {
+        axisBot.tickFormat("");
+    }
+
     const resultAxis = svg
         .append("g")
         .attr("transform", "translate(" + translateX + "," + translateY + ")")
-        .call(d3.axisBottom(axis));
+        .call(axisBot);
+
+    
+
+    resultAxis.selectAll(".domain,.tick line")
+        .attr("stroke", colour);
+
+    resultAxis.selectAll(".tick text")
+        .attr("fill", colour);
+
+    
 
     return resultAxis;
 }
@@ -195,18 +231,24 @@ const tiltAxisText = function (axisGElement) {
     return axisGElement;
 }
 
-const appendGraphYAxis = function (svg, axis, translateX, translateY) {
+const appendGraphYAxis = function (svg, axis, translateX, translateY, colour = "black") {
     const resultAxis = svg
         .append("g")
         .attr("transform", "translate(" + translateX + "," + translateY + ")")
         .call(d3.axisLeft(axis));
 
+    resultAxis.selectAll(".domain,.tick line")
+        .attr("stroke", colour);
+
+    resultAxis.selectAll(".tick text")
+        .attr("fill", colour);
+
     return resultAxis;
 }
 
-const appendLine = function(svg, x1, x2, y1, y2){
+const appendLine = function(svg, x1, x2, y1, y2, colour = "black"){
     svg.append("g")
-        .style("stroke", "#000")
+        .style("stroke", colour)
         .append("line")
         .attr("x1", x1)
         .attr("x2", x2)

@@ -71,7 +71,8 @@ window.addEventListener("load", function () {
         
     }
 
-    updateGradientLegend('attribute-node-colouring', 'attribute-node-colouring-preview', 'numerical-colour-list')
+    updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
+    updateGradientLegendAxis('attribute-node-colouring');
     changeAttributeCategoryColouringList('categorical-attribute-node-colouring', 'categorical-colour-list');
 
 
