@@ -19,7 +19,7 @@ const generateNodeDetails = function (graph) {
         nodeAttributesDiv.append("div")
             .attr("id", containerDivId);
 
-        hist(containerDivId, graph.nodes, attribute);
+        hist(containerDivId, graph.nodes, attribute, 300, 250);
     }
 
     for (const attribute of catAttributes) {
@@ -268,33 +268,44 @@ const deleteGraphElementsAndControls = function () {
     deleteAllSelections();
     deleteNodeDetailsAttributes();
     deleteNodeHeadings();
-    deleteForceAttributeList("project-x-attributes");
-    deleteForceAttributeList("project-y-attributes");
-    deleteForceAttributeList("node-label-select");
-    deleteForceAttributeList("attribute-node-sizing");
-    deleteForceAttributeList("attribute-node-colouring");
 
-    deleteAttributeFilters();
+    const clearedSelects = ["project-x-attributes", "project-y-attributes", "node-label-select",
+        , "attribute-node-colouring"];
+
+    for (const select of clearedSelects) {
+        deleteForceAttributeList(select);
+    }
+
+    deleteColourListsAndAttributes();
+    clearElement("attributes");
     deleteRemodelAttributes();
 }
 
 const deleteNodeDetailsAttributes = function () {
-    const nodeAttributesDiv = document.getElementById("node-attributes");
-    nodeAttributesDiv.innerHTML = "";
+    clearElement("node-attributes");
+    clearElement("neighbors-nav");
 }
 
 const deleteNodeHeadings = function () {
     document.getElementById("node-list-input").value = "";
-    document.getElementById("node-list").innerHTML = "";
+    clearElement("node-list");
+}
+
+const deleteVisualsListsAndAttributes = function () {
+
+    const colourListIDs = ["categorical-colour-list", "class-colour-list"];
+    for (const listID of colourListIDs) {
+        clearElement(listID);
+    }
+
+    clearElement("categorical-attribute-node-colouring");
+   
+    deleteForceAttributeList("attribute-node-colouring");
+    deleteForceAttributeList("attribute-node-sizing");
 }
 
 const deleteForceAttributeList = function (forceSelectId) {
     d3.select("#" + forceSelectId).selectAll('optgroup[label]:not([label="Centralities"])').html("");
-}
-
-const deleteAttributeFilters = function () {
-    const filtersDiv = document.getElementById("attributes");
-    filtersDiv.innerHTML = "";
 }
 
 const deleteRemodelAttributes = function () {
@@ -302,9 +313,8 @@ const deleteRemodelAttributes = function () {
         delete attributeTransform[attribute];
     }
     excludedAttributes.length = 0;
-    const remodelAttributesSelect = document.getElementById("remodel-network-select");
-    remodelAttributesSelect.innerHTML = "";
+    clearElement("remodel-network-select");
 
-    const attributeTransformationList = document.getElementById("attribute-transformation-list");
-    attributeTransformationList.innerHTML = "";
+    clearElement("attribute-transformation-list");
+    clearElement("remodel-attribute-checkboxes");
 }

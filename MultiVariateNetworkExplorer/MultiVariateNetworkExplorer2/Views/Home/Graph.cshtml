@@ -27,31 +27,16 @@
                     <a class="tab-link" href="#" onclick="openTab(event, 'networkMetrics', 'graph', '.graph-content') ">Graph Metrics</a>
                 </div>
                 <div class="tab-nav">
-                    <a class="tab-link" href="#" onclick="openTab(event, 'cluster-metrics', 'graph', '.graph-content') ">Cluster Metrics</a>
+                    <a class="tab-link" href="#" onclick="openTab(event, 'partition-metrics', 'graph', '.graph-content') ">Partition Metrics</a>
                 </div>
             </div>
             <div id="networkGraph" class="graph-content">
-                <svg width="100%" height="100%" @*viewBox="0 0 100 80" preserveAspectRatio="none"*@></svg>
-                @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
-                <environment include="Development">
-                    <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-                    <script src="~/js/Graph.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
-                    <script src="~/js/graph-drawing.js" type="text/javascript" asp-append-version="true"></script>
-                </environment>
-                <environment exclude="Development">
-                    <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-                    <script src="~/js/graph-drawing.min.js" type="text/javascript" asp-append-version="true"></script>
-                </environment>
-                <script>
-                    initGraph(@Html.Raw(Model.GraphModel.Graph));
-                </script>
+                <svg @* width="100%" height="100%" *@></svg>
+                    
                 
             </div>
             <div id="selectionGraph" class="graph-content">
                 <svg></svg>
-                <script>
-                    drawSelectionNetwork(@Html.Raw(Model.GraphModel.Selection));
-                </script>
             </div>
             <div id="networkMetrics" class="graph-content">
                 <div class="network-metrics-container">
@@ -73,18 +58,40 @@
                     </div>
                 </div>
             </div>
-            <div id="cluster-metrics" class="graph-content">
-                <div class="flex-row justify-content-start">
-                    <label for="partition-real-class-select">Select real class attribute:</label>
-                    <select id="partition-real-class-select">
-                        @foreach (var key in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
-                        {
-                            <option value="@key">@key</option>
-                        }
+            <div id="partition-metrics" class="graph-content scrollbar-thin">
+                <div id="partition-metric-select-container">
+                    <label for="partition-metric-select">Select metric:</label>
+                    <select id="partition-metric-select" onchange="displayPartitionMetric()">
+                            <option selected value="mcc" title="Mathews\'s correlation coefficient">Mathews's correlation coefficient</option>
+                            <option value="boxplot" title="Boxplot">Boxplot</option>
                     </select>
-                    <button onclick="addPartitionMetricElements()">Run</button>
                 </div>
-                <div class="cluster-metrics-container scrollbar-thin" id="cluster-metrics-container"></div>
+                <div class="active-block partition-metric-wrapper" id="partition-metric-mcc-container">
+                    <div class="flex-row justify-content-start">
+                        <label for="partition-metric-mcc-attribute-select">Select real class attribute:</label>
+                        <select id="partition-metric-mcc-attribute-select">
+                            @foreach (var key in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </select>
+                        <button onclick="createPartitionMccGraphs()">Run</button>
+                    </div>
+                    <div class="partition-metric-graph-container" id="partition-metric-mcc-graph-container"></div>
+                </div>
+                    <div class="partition-metric-wrapper " id="partition-metric-boxplot-container">
+                    <div class="flex-row justify-content-start">
+                        <label for="partition-metric-boxplot-attribute-select">Select attribute:</label>
+                        <select id="partition-metric-boxplot-attribute-select">
+                            @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
+                            {
+                                <option value="@key">@key</option>
+                            }
+                        </select>
+                        <button onclick="generatePartitionBoxplots()">Run</button>
+                    </div>
+                    <div class="partition-metric-graph-container" id="partition-metric-boxplot-graph-container"></div>
+                </div>
             </div>
         
         </section>
@@ -102,5 +109,21 @@
             });
         </script>  
     } 
+    
+    @*<script src="~/js/d3v4-brush-lite.js" asp-append-version="true"></script>*@
+    <environment include="Development">
+        <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+        <script src="~/js/Graph.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/graph-drawing.js" type="text/javascript" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+        <script src="~/js/graph-drawing.min.js" type="text/javascript" asp-append-version="true"></script>
+    </environment>
+    <script>
+        initGraph(@Html.Raw(Model.GraphModel.Graph));
+        drawSelectionNetwork(@Html.Raw(Model.GraphModel.Selection));
+    </script>
+    
 }
 

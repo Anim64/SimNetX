@@ -192,13 +192,13 @@ const validateNewNetworkForm = function (form) {
         isValid = false;
     }
 
-    const separators = form.querySelector("#Separators").value;
+    const separators = form.querySelector("#InputModel_Separators").value;
     if (isNullOrEmpty(separators)) {
         errorMessage += "Please enter the data separating character.<br>";
         isValid = false;
     }
 
-    const missingValues = form.querySelector("#missingvalues").value;
+    const missingValues = form.querySelector("#InputModel_MissingValues").value;
     if (isNullOrEmpty(missingValues)) {
         errorMessage += "Please enter the string which will represents missing values.<br>";
         isValid = false;

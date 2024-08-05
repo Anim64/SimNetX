@@ -7,8 +7,6 @@
 
 
 const openTab = function (event, contentId, divId, contentClass) {
-
-    const hello = document.getElementById(divId);
     const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
     for (const tabcontent of tabcontents) {
         tabcontent.style.display = "none";
@@ -40,7 +38,9 @@ const removeSpacesAndCommas = function (inputString) {
     return inputString.replace(/[\s,]+/g, '-');
 }
 
-
+const clearElement = function (id) {
+    document.getElementById(id).innerHTML = "";
+}
 
 window.addEventListener("load", function () {
     $('.collapse.in').prev('.panel-heading').addClass('active');
@@ -67,7 +67,7 @@ window.addEventListener("load", function () {
     for (const attribute of numAttributes) {
         const containerDivId = `${attribute}-histogram-container`;
 
-        hist(containerDivId, currentGraph, attribute);
+        hist(containerDivId, currentGraph, attribute, 300, 250);
         
     }
 

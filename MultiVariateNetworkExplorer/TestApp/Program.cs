@@ -1,6 +1,12 @@
 ﻿using Metrics.Metrics;
 using MultiVariateNetworkLibrary;
+using NetworkLibrary;
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using VectorConversion.VectorDataConversion;
 
 namespace TestApp
@@ -11,19 +17,57 @@ namespace TestApp
         //{
 
         //}
+        static int keySize = 64;
+        static int hashIterations = 250000;
+        static HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
+
+
+        private static string HashPassword(string password, out byte[] salt)
+        {
+            salt = RandomNumberGenerator.GetBytes(keySize);
+
+            var hash = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password),
+                salt,
+                hashIterations,
+                hashAlgorithm,
+                keySize);
+
+            return Convert.ToHexString(hash);
+
+        }
+
         static void Main(string[] args)
         {
+            byte[] salt;
+            string hash = HashPassword("mvnevsb2024", out salt);
+            string saltString = Convert.ToHexString(salt);
+
+            XDocument doc = XDocument.Load("C:\\Users\\tomas\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\TestApp\\users_db.xml");
+            XElement newUser = new XElement("user");
+            newUser.Add(new XAttribute("name", "kkubikova"));
+            newUser.Add(new XAttribute("hash", hash));
+            newUser.Add(new XAttribute("salt", saltString));
+
+            doc.Root.Add(newUser);
+            doc.Save("C:\\Users\\tomas\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\TestApp\\users_db.xml");
+
+            
             //DataFrame v = new DataFrame();
             //v.ReadFromFile("iris.data", ',');
 
-            object value = 0;
-            Type t = Nullable.GetUnderlyingType(typeof(double?));
-            double? doubleValue = (double?)Convert.ChangeType(value, t);
+            //object value = 0;
+            //Type t = Nullable.GetUnderlyingType(typeof(double?));
+            //double? doubleValue = (double?)Convert.ChangeType(value, t);
             
-            MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "./dataset.csv" }, "na", "ID fixed", null, new LRNet(), new GaussKernel(), false, false, true, ';');
-            //mvn.FindCommunities();
+            //MultiVariateNetwork mvn = new MultiVariateNetwork(new string[] { "C:\\Projects\\Networks_in_biomedicine_article\\python-analysis\\data_morpho_IGS_2023_FINAL_combined.csv" }, "na", "ID", null, new LRNet(1, 1), new GaussKernel(), false, false, true, ',');
+            ////mvn.FindCommunities();
 
-            mvn.Network.ToFile("dataset-network.csv");
+            //LRNet lRNet = new LRNet(1, 1);
+            //GaussKernel gaussKernel = new GaussKernel();
+            //Network resultNet = lRNet.ConvertToNetwork(mvn.VectorData, gaussKernel, new List<string>() { "Consistency", "Relevant-consistency" });
+
+            //resultNet.ToFile("havirov-network.csv");
             /*Network g = new Network();
             //test network
             int edgecounter = 0;

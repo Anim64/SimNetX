@@ -11,7 +11,8 @@
       "wwwroot/css/node_properties.css",
       "wwwroot/css/selections.css",
       "wwwroot/css/toolbar.css",
-      "wwwroot/css/plots.css"
+      "wwwroot/css/plots.css",
+      "wwwroot/css/cluster-metrics.css"
     ],
     "minify": {
       "enabled": true,
@@ -36,7 +37,8 @@
       "wwwroot/js/statistics.js",
       "wwwroot/js/toolbar.js",
       "wwwroot/js/element-generator.js",
-      "wwwroot/js/DataStore.js"
+      "wwwroot/js/DataStore.js",
+      "wwwroot/js/partition-metrics.js"
       //"wwwroot/js/graph.js"
 
     ],
@@ -50,7 +52,8 @@
   {
     "outputFileName": "wwwroot/js/graph.min.js",
     "inputFiles": [
-      "wwwroot/js/graph-drawing.js"
+      "wwwroot/js/graph-drawing.js",
+      "wwwroot/js/graph.js"
     ],
     "minify": {
       "enabled": true,

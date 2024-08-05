@@ -28,10 +28,9 @@
         while (!q.isEmpty) {
             const u = q.dequeue();
 
-            for (let j = i; j < length; j++) {
+            for (let j = 0; j < length; j++) {
                 const v = nodes[j].id;
-                if (visited[src][v] === false &&
-                    linkedByIndex[u + "," + v] || linkedByIndex[v + "," + u] || u === v) {
+                if (visited[src][v] === false && (linkedByIndex[u + "," + v] || linkedByIndex[v + "," + u])) {
                     visited[src][v] = true;
                     paths[src][v] = paths[v][src] = paths[src][u] + 1;
                     q.enqueue(v);

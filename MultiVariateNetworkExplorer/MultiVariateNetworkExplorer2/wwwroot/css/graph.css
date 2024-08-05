@@ -1,16 +1,4 @@
-﻿.main-div {
-    display: flex;
-    -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    min-height: 90vh;
-    max-height: 90vh;
-    border: none;
-    outline: none;
-    width: 100%;
-}
-
-.graph-section {
+﻿.graph-section {
     display: flex;
     position: relative;
     -ms-flex-direction: row;
@@ -24,67 +12,7 @@
     width: 100%;*/
 }
 
-.navigation {
-    display: flex;
-    -ms-flex-direction: row;
-    -webkit-flex-direction: row;
-    flex-direction: row;
-    -webkit-justify-content: flex-start;
-    justify-content: flex-start;
-    
-}
 
-
-.navigation>div:last-child {
-    border-bottom: 2px solid var(--border-color);
-}
-
-
-.tab-link {
-    padding: 1rem 1.5rem;
-    display: flex;
-    -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    -webkit-justify-content: center;
-    justify-content: center;
-    -webkit-border-top-left-radius: 7px;
-    border-top-left-radius: 7px;
-    -webkit-border-top-right-radius: 7px;
-    border-top-right-radius: 7px;
-    -webkit-text-decoration: none;
-    text-decoration: none;
-    border-bottom: 2px solid var(--border-color);
-    font-size: 1.7rem;
-    color: lavender;
-    height: 100%;
-    line-height: 100%;
-}
-
-.tab-link.tab-active {
-    color: rgb(52, 59, 74);
-}
-
-.tab-link:hover {
-    -webkit-text-decoration: none;
-    text-decoration: none;
-}
-
-.tab-active {
-    background-color: var(--active-content);
-    border: 2px solid var(--border-color);
-    border-bottom: none;
-    z-index: 10;
-    -moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
-    -webkit-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
-    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
-}
-
-.navigation > .tab-nav:first-child > .tab-active {
-    -moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
-    -webkit-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
-    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
-}
 
 
 .column {

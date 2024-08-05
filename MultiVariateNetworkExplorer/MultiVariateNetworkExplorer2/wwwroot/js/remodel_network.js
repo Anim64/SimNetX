@@ -229,7 +229,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             
     //}
 
-    const nodes_string = JSON.stringify(dataStore.getNodeData);
+    const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
     const attribute_transform_string = JSON.stringify(attributeTransform);
     const network_remodel_params_string = JSON.stringify(networkRemodelParams);
@@ -267,7 +267,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             updateNodesAndLinks();
             requestCommunityDetection(currentGraph);
             calculateAllMetrics();
-            currentGraph.resetSimulation();
+            startSimulation();
 
         },
         error: function (xhr, ajaxOptions, thrownError) {

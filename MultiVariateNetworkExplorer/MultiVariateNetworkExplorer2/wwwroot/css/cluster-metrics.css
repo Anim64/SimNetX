@@ -1,9 +1,31 @@
-﻿.cluster-metrics-container{
+﻿#partition-metrics{
+    overflow-y: scroll;
+}
+
+.partition-metric-wrapper{
+    display: none;
+}
+
+
+.partition-metric-graph-container{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     padding-top: 1rem;
     padding-left: 1rem;
-    overflow-y: scroll;
     height: 100%;
     
+}
+
+#partition-metric-boxplot-graph-container {
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    
+}
+
+#partition-metric-boxplot-graph-container svg {
+    -ms-flex: 1 1 100%;
+    -webkit-flex: 1 1 100%;
+    flex: 1 1 100%;
 }

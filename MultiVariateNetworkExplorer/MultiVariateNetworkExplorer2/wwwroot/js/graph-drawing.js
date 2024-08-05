@@ -40,24 +40,21 @@ const jsPath = '../js/PropertyWorkers/';
 
    
 
-let width = d3.select("#networkGraph svg").node().parentNode.clientWidth;
-let height = d3.select("#networkGraph svg").node().parentNode.clientHeight;
+//let width = d3.select("#networkGraph svg").node().parentNode.clientWidth;
+//let height = d3.select("#networkGraph svg").node().parentNode.clientHeight;
+
+let { width, height } = d3.select("#networkGraph svg").node().parentNode.getBoundingClientRect();
 
 
 const svg = d3.select("#networkGraph svg")
-//    .attr('width', width)
-//    .attr('height', height)
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", "100%")
+    //.attr("height", height + "px")
+    .attr("preserveAspectRatio", "none");
+    
 let selectionSvg = null;
 
-//TBR
-//let simulation = d3.forceSimulation()
-//    .force("link", d3.forceLink())
-//    .force("charge", d3.forceManyBody())
-//    .force("collide", d3.forceCollide())
-//    .force("center", d3.forceCenter())
-//    .force("forceX", d3.forceX())
-//    .force("forceY", d3.forceY())
-    //.force("radial", d3.forceRadial());
+
 
 let selectionSimulation = d3.forceSimulation()
     .force("link", d3.forceLink())
@@ -91,15 +88,7 @@ const nodeVisualProperties = {
         attribute: ""
     },
     colouring: {
-        network: "#FFFFFF",
-        background: "#000000"
-    },
-
-    attributeColouring: {
-        enabled: false,
-        attribute: "",
-        lowValue: "#0000FF",
-        highValue: "#FF0000"
+        lastColouringType: "mono"
     },
     labels: {
         enabled: true,
@@ -267,7 +256,7 @@ const prepareBrush = function() {
     brushing = false;
 
     brush = d3.brush()
-        .extent([[0, 0], [width, height]])
+        //.extent([[0, 0], [width, height]])
         .on("start", brushstarted)
         .on("brush", brushed)
         .on("end", brushended);
@@ -286,8 +275,8 @@ const prepareNetworkBackground = function() {
     rect = gMain.append('rect')
         .attr("class", "background")
         .attr("id", "network-background-rect")
-        .attr('width', "100%")
-        .attr('height', "100%")
+        .attr('width', width + "px")
+        .attr('height', height + "px")
         .on('click', deselectAllNodes);
 }
 
@@ -342,7 +331,7 @@ const initGraph = function (data) {
     createDataGraphObjects(data);
     drawNetwork(data);
     updateForces();
-    updateNodeAndLinkColour(node, link);
+    setDefaultNodeAndLinkColour(node, link);
 }
 
 
@@ -517,12 +506,6 @@ const dragstarted = function (d) {
     d3.select(this).classed("selected", true);
     d.previouslySelected = d.selected;
     d.selected = true;
-
-    node.each(function (d) {
-            //d.fixed |= 2;
-            d.fx = d.x;
-            d.fy = d.y;
-        });
 }
 
 //Function for node dragging
@@ -537,13 +520,6 @@ const dragged = function(d) {
             d.fx += dx;
             d.fy += dy;
         });
-    //node.filter(function (d) { return d.selected; })
-    //    .each(function (d) {
-    //        d.x += dx;
-    //        d.y += dy;
-    //        d.fx += dx;
-    //        d.fy += dy;
-    //    })
     ticked();
     
 }
@@ -558,12 +534,6 @@ const dragended = function(d) {
     const { id: nodeId, index: nodeIndex } = d;
     toggleNodeDetails(nodeId, nodeIndex);
     showNodeNeighbors(nodeId);
-    //node.filter(function (d) { return d.selected; })
-    //    .each(function (d) {
-    //        d.fx = null;
-    //        d.fy = null;
-    //    })
-    
 }
 
 /******************************************DRAGGING END**************************************************/
@@ -675,6 +645,7 @@ const zoomed = function() {
     transformY = y;
     scaleK = k;
     gDraw.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
+    gBrushHolder.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
 }
 
 
@@ -705,7 +676,7 @@ const updateForces = function(reset = true) {
     updateLinkForce();
 
     if (reset) {
-        currentGraph.resetSimulation();
+        startSimulation();
     }
 }
 
@@ -823,14 +794,26 @@ const simulationEnd = function () {
     link.style("display", "block");
     nodeGroups.style("display", "block");
 
-    const rootSvgSize = svg.node().getBoundingClientRect();
-    const gDrawSize = gDraw.node().getBoundingClientRect();
-    const x = (rootSvgSize.x - gDrawSize.x) + (rootSvgSize.width - gDrawSize.width) / 2;
-    const y = (rootSvgSize.y - gDrawSize.y) +(rootSvgSize.height - gDrawSize.height) / 2;
+    //const rootSvgSize = svg.node().getBoundingClientRect();
+    //const gDrawSize = gDraw.node().getBoundingClientRect();
+    //const x = (rootSvgSize.x - gDrawSize.x) + (rootSvgSize.width - gDrawSize.width) / 2;
+    //const y = (rootSvgSize.y - gDrawSize.y) +(rootSvgSize.height - gDrawSize.height) / 2;
 
-    gDraw.attr("transform", "translate(" + x + "," + y + ")");
+    //gDraw.attr("transform", "translate(" + x + "," + y + ")");
+    node.each(function (d) {
+        d.fx = d.x;
+        d.fy = d.y;
+    });
 
     currentGraph.stopSimulation();
+}
+
+const startSimulation = function () {
+    node.each(function (d) {
+        d.fx = d.fy = null;
+    });
+
+    currentGraph.resetSimulation();
 }
 
 const positionLink = function(d) {
@@ -911,50 +894,6 @@ const selectionTicked = function() {
 
 
 /////////////////////////////////////////////// NODE UPDATES////////////////////////////////////////////////
-const updateNodeColour = function (nodes) {
-    nodes.style("fill", function (d) {
-        const { id } = d;
-        const colour = getNodeColour(id);
-        const lightness = fontLightness(colour);
-        const nodeHeading = $('#heading-' + id);
-        const text = $('#' + id + '_node_text');
-        nodeHeading.css("backgroundColor", colour);
-        nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
-        text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
-        return colour;
-    });
-}
-
-const updateLinkColour = function(links) {
-    links.style("stroke", function (l) {
-        const { id } = l.source;
-        return getNodeColour(id);
-    })
-}
-
-const updateHeadingColour = function (nodes) {
-    for (const d of nodes) {
-        const { id } = d;
-        const colour = getNodeColour(id);
-        const lightness = fontLightness(colour);
-        const nodeHeading = $('#heading-' + id);
-        nodeHeading.css("backgroundColor", colour);
-        nodeHeading.css("color", 'hsl(0, 0%, ' + String(lightness) + '%)');
-    };
-}
-
-const getNodeColour = function (nodeId) {
-    const partition = currentGraph.getPartition(nodeId)
-    if (partition !== "") {
-        const partitionWithoutWhitespaces = partition.replace(/[\s,]+/g, '-');
-        const colour_input_name = "selection_color_" + partitionWithoutWhitespaces;
-        const colour_input = document.getElementById(colour_input_name)
-        return colour_input.value;
-    }
-    return nodeVisualProperties.colouring.network;
-    
-}
-
 
 
 const updateNodes = function () {
@@ -976,6 +915,7 @@ const updateNodes = function () {
 
     const newNode = newNodeGroups.append("circle")
         .attr("r", currentGraph.getForcePropertyValue(Graph.forceNames.collide, "radius"))
+        .style("fill", "white")
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
 
@@ -994,6 +934,8 @@ const updateNodes = function () {
     nodeGroups = nodeGroups.merge(newNodeGroups);
     node = nodeGroups.select("circle");
     nodeText = nodeGroups.select("text");
+
+    currentGraph.updateSimulationNodes();
 }
 
 const updateLinks = function () {
@@ -1012,7 +954,6 @@ const updateLinks = function () {
 const updateNodesAndLinks = function() {
     updateNodes();
     updateLinks();
-    //resetSimulation();
 
     const sizingSelect = document.getElementById('attribute-node-sizing');
     setAttributeNodeSizing(sizingSelect);
@@ -1021,13 +962,7 @@ const updateNodesAndLinks = function() {
     setNodeLabel(labelSelect);
 }
 
-const updateNodeAndLinkColour = function (nodes, links) {
-    if (!nodeVisualProperties.attributeColouring.enabled) {
-        updateNodeColour(nodes);
-        updateLinkColour(links);
-    }
-    
-}
+
 
 /****************************************END NODE UPDATES******************************************/
 
@@ -1151,10 +1086,8 @@ const calculateAllMetrics = function () {
 /****************************************END METRICS******************************************/
 
 d3.select(window).on("resize", function () {
-    width = +svg.node().getBoundingClientRect().width;
-    height = +svg.node().getBoundingClientRect().height;
-    currentGraph.updateForces();
-    updateSelectionForces();
+    width = svg.node().parentNode.getBoundingClientRect().width;
+    height = svg.node().parentNode.getBoundingClientRect().height;
 });
 
 

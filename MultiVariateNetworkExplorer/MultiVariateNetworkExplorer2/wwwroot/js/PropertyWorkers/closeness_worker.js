@@ -14,15 +14,17 @@ const calculateClosenessCentrality = function (graph) {
     for (const node1 of nodes) {
         const node1ID = node1.id;
         let nodeCloseness = 0;
+        let nodesReached = -1;
         for (const node2 of nodes) {
             const node2ID = node2.id;
-            if (node1ID !== node2ID) {
-                nodeCloseness += 1 / paths[node1ID][node2ID];
+            const distance = paths[node1ID][node2ID];
+            if (distance !== Infinity) {
+                nodesReached += 1;
+                nodeCloseness += paths[node1ID][node2ID];
             }
-            
         }
 
-        nodeCloseness /= length - 1;
+        nodeCloseness = nodeCloseness > 0 ? (nodesReached * nodesReached) / ((length - 1) * nodeCloseness) : 0;
         averageCloseness += nodeCloseness;
         closeness.values[node1ID] = nodeCloseness.toFixed(3);
         if (nodeCloseness < closeness.min) {

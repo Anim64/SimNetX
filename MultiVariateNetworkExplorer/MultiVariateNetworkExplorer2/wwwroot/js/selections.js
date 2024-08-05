@@ -42,7 +42,7 @@ const getGroupColour = function (d) {
     return document.getElementById("selection_color_" + d.id).value;
 }
 
-const addNewSelection = function (newId = null, mccObject) {
+const addNewSelection = function (newId = null) {
     const { length, [length - 1]: lastNode } = selectionGraph.nodes;
     if (newId === null) {
         newId = length === 0 ? 0 : lastNode.id + 1;
@@ -72,19 +72,22 @@ const addNewSelection = function (newId = null, mccObject) {
         }
     }
 
-    addSelectionDiv(newSelection, mccObject);
+    addSelectionDiv(newSelection);
 
 }
 
 //Add new custom's group div
-const addSelectionDiv = function (selectionId) {
+const addSelectionDiv = function (selectionData) {
     const mainDiv = d3.select('#list-selections');
+    const { id: selectionId } = selectionData;
 
     const panel = mainDiv
         .append('div')
+        .datum(selectionData)
         .classed('selection-panel', true)
         .attr('id', `selection_panel_${selectionId}`)
-        .attr('onclick', `selectNodesBySelection(${selectionId}, ${currentGraph})`);
+        
+        .on('click', `selectNodesBySelection(${selectionId}, ${currentGraph})`);
 
     panel.append('h4')
         .attr('class', 'panel-title')
@@ -115,6 +118,11 @@ const addSelectionDiv = function (selectionId) {
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
+
+    const partitionColourList = d3.select("#partition-colour-list");
+    const color = addListColour(selectionId, "partition", partitionColourList)
+        .property("value");
+    panel.style("background-color", color);
 }
 
 const addSelectionDivs = function (selectionGraph) {
@@ -132,7 +140,7 @@ const addSelectionDivs = function (selectionGraph) {
     panels.append('h4')
         .attr('class', 'panel-title')
         .attr('contenteditable', 'true')
-        .on('click', function (e) { stopClickPropagation(e); })
+        .on('click', () => { stopClickPropagation(d3.event); })
         .html((d) => { return `Selection ${d.id}`; });
 
     /*panel.style('background-color', groupColours(selectionId));*/
@@ -167,23 +175,27 @@ const addSelectionDivs = function (selectionGraph) {
     })
 }
 
-const addPartitionMetricElements = function () {
-    const classAttribute = document.getElementById("partition-real-class-select").value;
+const createPartitionMccGraphs = function () {
+    const classAttribute = document.getElementById("partition-metric-mcc-attribute-select").value;
     const mccObject = matthewsCorrelationCoeficient(classAttribute);
-    const clusterMetricContainer = d3.select("#cluster-metrics-container").html("");
-    d3.selectAll("#list-selections div")
-        .each(function (d) {
-            clusterMetricDiv = clusterMetricContainer.append("div");
-            //addMccTable(clusterMetricDiv, d.id, mccObject);
-            addMccPlot(clusterMetricDiv, d.id, mccObject);
-        });
+    const clusterMetricContainer = d3.select("#partition-metric-mcc-graph-container").html("");
+    const clusterDivs = d3.selectAll("#list-selections div");
+    if (clusterDivs.size() > 0) {
+        clusterDivs
+            .each(function (d) {
+                clusterMetricDiv = clusterMetricContainer.append("div");
+                //addMccTable(clusterMetricDiv, d.id, mccObject);
+                addMccPlot(clusterMetricDiv, d.id, mccObject);
+            });
 
-    const distinctClasses = currentGraph.getDistinctValues(classAttribute);
-    const classColourList = d3.select("#class-colour-list").html("");
-    for (const realClass of distinctClasses) {
-        addListColour(realClass, "class", classColourList);
+        const distinctClasses = currentGraph.getDistinctValues(classAttribute);
+        const classColourList = d3.select("#class-colour-list").html("");
+        for (const realClass of distinctClasses) {
+            addListColour(realClass, "class", classColourList);
+        }
+        changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
     }
-    changeClassColouringFromSettings('partition-real-class-select', 'class-colour-list');
+    
     
 }
 
@@ -205,7 +217,7 @@ const addMccPlot = function (clusterMetricDiv, selectionId, mccObject) {
     clusterMetricDiv.append("div")
         .attr("id", barplotID)
         .style("position", "relative");
-    barplot(barplotID, mccObject[selectionId], -1, 1, selectionId);
+    barplot(barplotID, mccObject[selectionId], -1, 1, 300, 250, selectionId);
 }
 
 
@@ -343,8 +355,8 @@ const addNodesToSelection = function (event, selectionId) {
 }
 
 //Deletes all selections
-const deleteAllSelections = function (graphRef) {
-    graphRef.clearPartitions();
+const deleteAllSelections = function () {
+    currentGraph.clearPartitions();
 
     selectionGraph.nodes = [];
     selectionGraph.links = [];
@@ -353,8 +365,9 @@ const deleteAllSelections = function (graphRef) {
 
     document.getElementById('list-selections').innerHTML = "";
     document.getElementById("partition-colour-list").innerHTML = "";
+    //document.getElementById("partition-metric-mcc-attribute-select").innerHTML = "";
 
-    updateNodeAndLinkColour(node, link);
+    setDefaultNodeAndLinkColour(node, link);
 }
 
 
@@ -422,7 +435,7 @@ const fillPartitionsWithAttribute = function (attributeName, currentGraphRef) {
 
 
 const assignAttributePartitions = function (attributeSelect, currentGraphRef) {
-    deleteAllSelections(currentGraphRef);
+    deleteAllSelections();
     const attributeName = document.getElementById(attributeSelect).value;
     if (attributeName === "modularity") {
         requestCommunityDetection();
@@ -432,13 +445,12 @@ const assignAttributePartitions = function (attributeSelect, currentGraphRef) {
     const attributesDistinctValues = currentGraphRef.getDistinctValues(attributeName);
     fillPartitionsWithAttribute(attributeName, currentGraphRef);
 
-    const mccObject = matthewsCorrelationCoeficient();
     for (const value of attributesDistinctValues) {
-        addNewSelection(value, mccObject);
+        addNewSelection(value);
     }
 
     updateSelectionNodesAndLinks();
-    updateNodeAndLinkColour(node, link);
+    //setDefaultNodeAndLinkColour(node, link);
 }
 
 
@@ -529,7 +541,7 @@ const requestCommunityDetection = function () {
         },
         //cache: false,
         success: function (result) {
-            deleteAllSelections(currentGraph);
+            deleteAllSelections();
             currentGraph.partitions = JSON.parse(result.newPartitions);
             //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);

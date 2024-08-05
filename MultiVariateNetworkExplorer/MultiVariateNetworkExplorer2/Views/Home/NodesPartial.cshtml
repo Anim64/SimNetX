@@ -11,20 +11,20 @@
         <div class="column-content nodes" id="accordion">
             <div class="node-block" id="node-section">
                 <div id="node-nav">
-                <input class="node-select-input attribute-select attribute-select-border" list="node-list" id="node-list-input" placeholder="Search node..." />
-                <ul class="node-select-list attribute-select attribute-select-border" id="node-list">
+                    <input class="node-select-input attribute-select attribute-select-border" list="node-list" id="node-list-input" placeholder="Search node..." />
+                    <ul class="node-select-list attribute-select attribute-select-border" id="node-list">
                     @for (int node = 0; node < Model.GraphModel.Mvn.VectorData.DataCount; node++)
                     {
                         string nodeId = Model.GraphModel.Mvn.VectorData.IdColumn[node];
-                        <li class="node-li" id="@("node-li-" + nodeId)" onmousedown="nodeHeadingClick(event, '@(nodeId)' , @(node))">@(nodeId)</li>
+                        <li class="node-li" id="@("node-li-" + nodeId)" onmousedown="nodeHeadingClick('@(nodeId)' , @(node))">@(nodeId)</li>
                     }
                     </ul>
                 </div>
                 <div class="node-detail-container" id="node-detail-container">
                     <div id="node-detail" class="node-detail">
-                        <div id="node-attributes">
-                            @if (!Model.GraphModel.Mvn.IsEmpty())
-                            {
+                        @if (!Model.GraphModel.Mvn.IsEmpty())
+                        {
+                            <div id="node-attributes">
                                 @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                                 {
                                     <div class="node-property-group">
@@ -53,18 +53,18 @@
                                         )" readonly />
                                     </div>
                                 }
-                                <div id="node-centralities">
-                                    <div class="node-property-group">
-                                        <label for="display-degree">Degree:</label>
-                                        <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
-                                    </div>
-                                    <div class="node-property-group">
-                                        <label for="display-closeness">Closeness:</label>
-                                        <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
-                                    </div>
+                            </div>
+                            <div id="node-centralities">
+                                <div class="node-property-group">
+                                    <label for="display-degree">Degree:</label>
+                                    <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
                                 </div>
-                            }
-                        </div>
+                                <div class="node-property-group">
+                                    <label for="display-closeness">Closeness:</label>
+                                    <input type="text" id="display-closeness" value="" data-attribute="closeness" readonly />
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

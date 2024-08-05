@@ -31,145 +31,190 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
         input.value = extremeValue;
     }
 
-    if (!attributefilter[filteredAttributeName]) {
-        attributefilter[filteredAttributeName] = {};
-    }
-    attributefilter[filteredAttributeName][attributeFilterType] = value;
+    const { nodeData: storeNodes, linkData: storeLinks } = dataStore;
+    const { nodes: graphNodes, links: graphLinks } = currentGraph;
+    const nodeFiltersAttributeName = "filters";
+    const linkFilteredName = "filtered";
 
+    for (let i = graphNodes.length - 1; i > -1; i--) {
+        const n = graphNodes[i];
+        const nodeId = n.id;
+        const attributeValue = currentGraph.getNodeDataValue(nodeId, filteredAttributeName);
+        if (attributeValue === "")
+            continue;
 
-    const { nodes: storeNodes, links: storeLinks } = store;
-    const { nodes: graphNodes, links: graphLinks } = graph;
-
-    //for (const n of graphNodes) {
-    storeNodes.forEach(function (n) {
-        const { [filteredAttributeName]: filAttrVal } = n;
-        const nodeHeading = $('#heading-' + n.id);
-        if (filAttrVal === "")
-            return;
-        if (filterCondition.booleanFunction(filAttrVal, value)) {
-            if (!n.filters) {
-                n.filters = [];
-                for (const [i, d] of graphNodes.entries()) {
-                    if (n.id === d.id) {
-                        graphNodes.splice(i, 1);
-                    }
-                };
-                filterNodeList.push(n.id);
-                nodeHeading.addClass('node-heading-disabled');
+        if (filterCondition.booleanFunction(attributeValue, value)) {
+            if (!currentGraph.getNodeDataValue(n.id, nodeFiltersAttributeName)) {
+                dataStore.addNewNodeAttribute(nodeId, nodeFiltersAttributeName, []);
+                graphNodes.splice(i, 1);
+                filterNodeList.push(nodeId);
             }
 
-            if (!n.filters.includes(filteredAttributeName + filterSuffix)) {
-                n.filters.push(filteredAttributeName + filterSuffix);
+            const filters = currentGraph.getNodeDataValue(n.id, nodeFiltersAttributeName);
+            if (!filters.includes(filteredAttributeName + filterSuffix)) {
+                filters.push(filteredAttributeName + filterSuffix);
             }
 
         }
+    }
 
-        else if (!filterCondition.booleanFunction(filAttrVal, value) && n.filters) {
-            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + filterSuffix)) {
-                n.filters.splice(n.filters.indexOf(filteredAttributeName + filterSuffix), 1);
-                if (n.filters.length === 0) {
-                    graphNodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1);
-                    delete n.filters;
-                    nodeHeading.removeClass('node-heading-disabled');
+    for (let i = graphLinks.length - 1; i > -1; i--) {
+        const l = graphLinks[i];
+        const source = currentGraph.getLinkDataValue(l.id, "source");
+        const target = currentGraph.getLinkDataValue(l.id, "target");
+
+        if (filterNodeList.includes(source) || filterNodeList.includes(target)) {
+            dataStore.addNewLinkAttribute(l.id, linkFilteredName, true);
+            graphLinks.splice(i, 1);          
+        }
+    }
+
+    for (const [n, nodeData] of Object.entries(storeNodes)) {
+        const { [filteredAttributeName]: filAttrVal } = nodeData;
+        if (filAttrVal === "")
+            continue;
+
+        const { filters } = nodeData;
+        if (!filterCondition.booleanFunction(filAttrVal, value) && filters) {
+            if (filters.length > 0) {
+                for (let i = filters.length - 1; i > -1; i--) {
+                    const filterName = filters[i];
+                    if (filterName === `${filteredAttributeName}${filterSuffix}`) {
+                        filters.splice(i, 1);
+                    }
+                }
+
+                if (filters.length === 0) {
+                    const returningNode = {
+                        "id": n
+                    };
+                    graphNodes.push(returningNode);
+                    filterNodeList.splice(filterNodeList.indexOf(n), 1);
+                    delete nodeData.filters;
                 }
             }
         }
-    });
+    }
+    
 
-    storeLinks.forEach(function (l) {
+    for (const [id, l] of Object.entries(storeLinks)) { 
         const { source, target } = l;
         if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
-            l.filtered = false;
-            graphLinks.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
-            l.filtered = true;
-            for (const [i, d] of graphLinks.entries()) {
-                if (l.id === d.id) {
-                    graphLinks.splice(i, 1);
-                }
+            const returningLink = {
+                "id": id,
+                "source": source,
+                "target": target
             };
-        }
-    });
+            graphLinks.push(returningLink);
+            dataStore.removeLinkAttribute(id, linkFilteredName)
+        } 
+    };
 
     updateNodesAndLinks();
-    resetSimulation();
+    startSimulation();
 
 }
 
 const filterByCategory = function (filteredAttributeName, category, checked) {
-    const { nodes: storeNodes, links: storeLinks } = store;
-    const { nodes: graphNodes, links: graphLinks } = graph;
+    const { nodeData: storeNodes, linkData: storeLinks } = dataStore;
+    const { nodes: graphNodes, links: graphLinks } = currentGraph;
+    const nodeFiltersAttributeName = "filters";
+    const linkFilteredName = "filtered";
 
-    storeNodes.forEach(function (n) {
-        const { [filteredAttributeName]: filAttrVal } = n;
+
+    if (!checked) {
+        for (let i = graphNodes.length - 1; i > -1; i--) {
+            const n = graphNodes[i];
+            const nodeId = n.id;
+            const attributeValue = currentGraph.getNodeDataValue(nodeId, filteredAttributeName);
+
+            if (attributeValue === category) {
+                if (!currentGraph.getNodeDataValue(n.id, nodeFiltersAttributeName)) {
+                    dataStore.addNewNodeAttribute(nodeId, nodeFiltersAttributeName, []);
+                    graphNodes.splice(i, 1);
+                    filterNodeList.push(nodeId);
+                }
+
+                const filters = currentGraph.getNodeDataValue(n.id, nodeFiltersAttributeName);
+                if (!filters.includes(`${filteredAttributeName}_${category}`)) {
+                    filters.push(`${filteredAttributeName}_${category}`);
+                }
+            }
+        }
+
+
+
+        for (let i = graphLinks.length - 1; i > -1; i--) {
+            const l = graphLinks[i];
+            const source = currentGraph.getLinkDataValue(l.id, "source");
+            const target = currentGraph.getLinkDataValue(l.id, "target");
+
+            if (filterNodeList.includes(source) || filterNodeList.includes(target)) {
+                dataStore.addNewLinkAttribute(l.id, linkFilteredName, true);
+                graphLinks.splice(i, 1);
+            }
+        }
+        updateNodesAndLinks();
+        startSimulation();
+        return;
+    }
+
+    for (const [n, nodeData] of Object.entries(storeNodes)) {
+        const { [filteredAttributeName]: filAttrVal } = nodeData;
         if (filAttrVal === "")
             return;
-        if (!checked && filAttrVal === category) {
-            if (!attributefilter[filteredAttributeName]) {
-                attributefilter[filteredAttributeName] = {};
-            }
-            attributefilter[filteredAttributeName].cat = category;
-            if (!n.filters) {
-                n.filters = [];
-                graphNodes.forEach(function (d, i) {
-                    if (n.id === d.id) {
-                        graphNodes.splice(i, 1);
+        
+        const { filters } = nodeData;
+        if (filAttrVal === category && filters) {
+            if (filters.length > 0) {
+                for (let i = filters.length - 1; i > -1; i--) {
+                    const filterName = filters[i];
+                    if (filterName === `${filteredAttributeName}_${category}`) {
+                        filters.splice(i, 1);
                     }
-                });
-                filterNodeList.push(n.id);
-            }
+                }
 
-            if (!n.filters.includes(filteredAttributeName + "_" + category)) {
-                n.filters.push(filteredAttributeName + "_" + category);
-            }
-
-        }
-
-        else if (checked && filAttrVal === category && n.filters) {
-            delete (attributefilter[filteredAttributeName]);
-            if (n.filters.length > 0 && n.filters.includes(filteredAttributeName + "_" + category)) {
-                n.filters.splice(n.filters.indexOf(filteredAttributeName + "_" + category), 1);
-                if (n.filters.length === 0) {
-                    graphNodes.push($.extend(true, {}, n));
-                    filterNodeList.splice(filterNodeList.indexOf(n.id), 1);
-                    delete n.filters;
+                if (filters.length === 0) {
+                    const returningNode = {
+                        "id": n
+                    };
+                    graphNodes.push(returningNode);
+                    filterNodeList.splice(filterNodeList.indexOf(n), 1);
+                    delete nodeData.filters;
                 }
             }
         }
-    });
+    };
 
-    storeLinks.forEach(function (l) {
+    for (const [id, l] of Object.entries(storeLinks)) { 
         const { source, target } = l;
         if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
-            l.filtered = false;
-            graphLinks.push($.extend(true, {}, l));
-        } else if ((filterNodeList.includes(source) || filterNodeList.includes(target)) && !l.filtered) {
-            l.filtered = true;
-            graphLinks.forEach(function (d, i) {
-                if (l.id === d.id) {
-                    graph.links.splice(i, 1);
-                }
-            });
-        }
-    });
+            const returningLink = {
+                "id": id,
+                "source": source,
+                "target": target
+            };
+            graphLinks.push(returningLink);
+            dataStore.removeLinkAttribute(id, linkFilteredName)
+        } 
+    };
 
     updateNodesAndLinks();
-    resetSimulation();
+    startSimulation();
    
 }
 
 const handleForceEnablement = function(value, force, forceUpdateDelegate){
     currentGraph.setForcePropertyValue(force, "enabled", value)
     forceUpdateDelegate();
-    currentGraph.resetSimulation();
+    startSimulation();
 }
 
 const handleForceChange = function (value, sliderOutputId, force, property, forceUpdateDelegate) {
     d3.select('#' + sliderOutputId).text(value);
     currentGraph.setForcePropertyValue(force, property, Number(value))
     forceUpdateDelegate();
-    currentGraph.resetSimulation();
+    startSimulation();
 }
 
 const getNodeAttribute = function (d, attributeName) {
@@ -318,6 +363,8 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
         });
 
     })
+
+    nodeVisualProperties.colouring.lastColouringType = "gradient";
     setAttributeGradientColouring(attributeName, optgroup, getValueFunction, colourObject, attributeMin, attributeMax);
 }
 
@@ -553,9 +600,7 @@ const updateGradientLegendPointers = function (legendSvg, stopColours) {
             .on("drag", stopColourPolygonDragged)
             .on("end", stopColourPolygonDragEnded));
 
-    //stopColours.each(function () {
-    //    gPointers.
-    //})
+    
 }
 
 const updateGradientLegendAxis = function (attributeSelectId) {
@@ -592,6 +637,7 @@ const addListColour = function (value, idPrefix, colourList) {
         .append("div")
         .classed("colour-row-list", true);
     newDistinctColourRow.append("label")
+        .attr("title", value)
         .attr("for", id)
         .html(value);
     return newDistinctColourRow.append("input")
@@ -620,6 +666,11 @@ const randomizeListColours = function (colourListId) {
 
 const changeAttributeCategoryColouringList = function (attributeSelectId, colourListId) {
     const attributeName = document.getElementById(attributeSelectId).value;
+
+    if (attributeName === "") {
+        return;
+    }
+
     const colourList = d3.select(`#${colourListId}`);
 
     const attributeDistinctValues = currentGraph.getDistinctValues(attributeName);
@@ -641,7 +692,7 @@ const changeAttributeCategoryColouringFromSettings = function (attributeSelectId
         const colour = colourLI.querySelector("input").value;
         colourObject[distinctValue] = colour;
     }
-
+    nodeVisualProperties.colouring.lastColouringType = "categorical";
     setAttributeCategoryColouring(attributeName, colourObject);
 }
 
@@ -658,26 +709,30 @@ const setAttributeCategoryColouring = function (attributeName, colourObject) {
         if (attributeValue === "") {
             return nodeVisualProperties.colouring.network;
         }
-
         const resultColour = hexToRgb(colourObject[attributeValue]);
         const lightness = fontLightness(resultColour);
         const node_text = $('#' + d.id + '_node_text');
         node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
         return rgbObjectToString(resultColour);
     });
-    link.style("stroke", nodeVisualProperties.colouring.network);
+    link.style("stroke", function (l) {
+        const { id } = l.source;
+        const attributeValue = currentGraph.getNodeDataValue(id, attributeName);
+        if (isNullOrEmpty(attributeValue)) {
+            return 
+        }
+
+        return isNullOrEmpty(attributeValue) ?
+            nodeVisualProperties.colouring.network :
+            colourObject[attributeValue];
+    });
 }
 
 
 const setPartitionColouring = function (colourListId) {
-    const colourList = document.getElementById(`${colourListId}`);
+    const colourObject = contructColourObjectFromList(colourListId);
 
-    const colourObject = {};
-    for (const colourLI of colourList.children) {
-        const distinctPartition = colourLI.querySelector("label").innerHTML;
-        const colour = colourLI.querySelector("input").value;
-        colourObject[distinctPartition] = colour;
-    }
+    nodeVisualProperties.colouring.lastColouringType = "partition";
 
     node.style("fill", function (d) {
         const { id } = d;
@@ -702,9 +757,25 @@ const setPartitionColouring = function (colourListId) {
         return colourObject[partition];
 
     });
+
+    const boxplots = d3.selectAll("#partition-metric-boxplot-graph-container svg");
+    updateBoxplotColour(boxplots, colourObject);
 }
 
-const changeClassColouringFromSettings = function (attributeSelectId, colourListId) {
+const contructColourObjectFromList = function (colourListId) {
+    const colourList = document.getElementById(`${colourListId}`);
+
+    const colourObject = {};
+    for (const colourLI of colourList.children) {
+        const distinctPartition = colourLI.querySelector("label").innerHTML;
+        const colour = colourLI.querySelector("input").value;
+        colourObject[distinctPartition] = colour;
+    }
+
+    return colourObject;
+}
+
+const changeClassColouringFromSettings = function (attributeSelectId, colourListId, colourNodes = false) {
     const attributeName = document.getElementById(attributeSelectId).value;
     const colourList = document.getElementById(colourListId);
 
@@ -715,36 +786,73 @@ const changeClassColouringFromSettings = function (attributeSelectId, colourList
         colourObject[distinctValue] = colour;
     }
 
-    setClassColouring(attributeName, colourObject);
+    setClassColouring(attributeName, colourObject, colourNodes);
+
 }
 
-const setClassColouring = function (attributeName, colourObject) {
-    const rects = d3.selectAll("#cluster-metrics-container rect");
+const setClassColouring = function (attributeName, colourObject, colourNodes) {
+    const rects = d3.selectAll("#partition-metric-mcc-graph-container rect");
 
     rects.style("fill", (d) => { return colourObject[d.className]; });
-    //node.style("fill", function (d) {
-    //    const { id } = d;
-    //    const partition = currentGraph.getClass(id);
-    //    if (partition === "") {
-    //        return nodeVisualProperties.colouring.network;
-    //    }
 
-    //    const resultColour = hexToRgb(colourObject[partition]);
-    //    const lightness = fontLightness(resultColour);
-    //    const node_text = $('#' + id + '_node_text');
-    //    node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
-    //    return rgbObjectToString(resultColour);
-    //});
-    //link.style("stroke", function (l) {
-    //    const { id } = l.source;
-    //    const partition = currentGraph.getPartition(id);
-    //    if (partition === "") {
-    //        return nodeVisualProperties.colouring.network;
-    //    }
+    if (colourNodes) {
+        node.style("fill", function (d) {
+            const { id } = d;
+            const partition = currentGraph.getNodeDataValue(id, attributeName);
+            if (partition === "") {
+                return nodeVisualProperties.colouring.network;
+            }
 
-    //    return colourObject[partition];
+            const resultColour = hexToRgb(colourObject[partition]);
+            //const lightness = fontLightness(resultColour);
+            //const node_text = $('#' + id + '_node_text');
+            //node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
+            return rgbObjectToString(resultColour);
+        });
+        link.style("stroke", function (l) {
+            const { id } = l.source;
+            const partition = currentGraph.getNodeDataValue(id, attributeName);
+            if (partition === "") {
+                return nodeVisualProperties.colouring.network;
+            }
 
-    //});
+            return colourObject[partition];
+
+        });
+    }
+    
+}
+
+const setDefaultNodeColour = function (nodes, colour) {
+    nodes.style("fill", function (d) {
+        const { id } = d;
+        //const lightness = fontLightness(colour);
+        //const text = $('#' + id + '_node_text');
+        //text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
+        return colour;
+    });
+}
+
+const setDefaultLinkColour = function (links, colour) {
+    links.style("stroke", colour);
+}
+
+const setDefaultNodeAndLinkColour = function (nodes, links) {
+    const defaultNodeColour = document.getElementById("network-colour-input").value;
+    setDefaultNodeColour(nodes, defaultNodeColour);
+    setDefaultLinkColour(links, defaultNodeColour);
+}
+
+const changeNetworkNodeColour = function (colourInputId) {
+    const colour = $(`#${colourInputId}`).val();
+    nodeVisualProperties.colouring.network = colour;
+    setDefaultNodeAndLinkColour(node, link);
+}
+
+const changeNetworkBackgroundColour = function (colourInputId) {
+    const colour = $(`#${colourInputId}`).val();
+    nodeVisualProperties.colouring.background = colour;
+    $('#network-background-rect.background').css("fill", colour);
 }
 
 const projectAttributeXAxis = function(selectElement) {
@@ -759,6 +867,17 @@ const projectAttributeXAxis = function(selectElement) {
         if (optgroup === "Attributes") {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            //node.each(function (d) {
+            //    const attributeValue = currentGraph.getNodeDataValue(d.id, attributeName);
+
+            //    if (attributeValue == "") {
+            //        d.fx =width / 2;
+            //        return;
+            //    }
+            //    const resultXCoord = width * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)) + 1;
+            //    d.fx = resultXCoord;
+            //})
+           
             currentGraph.updateXForceAttribute(attributeName, attributeMax, attributeMin);
         }
 
@@ -767,13 +886,12 @@ const projectAttributeXAxis = function(selectElement) {
             attributeMin = graph.properties[attributeName].min;
             currentGraph.updateXForceProperty(attributeName);
         }
-
-        currentGraph.toggleXForce(true);
-        currentGraph.resetSimulation();
+        startSimulation();
         return;
     }
-    currentGraph.toggleXForce(false);
-    currentGraph.resetSimulation();
+
+    currentGraph.setDefaultXForce();
+    startSimulation();
 }
 
 
@@ -789,6 +907,16 @@ const projectAttributeYAxis = function (selectElement) {
         if (optgroup === "Attributes") {
             attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
             attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            //node.each(function (d) {
+            //    const attributeValue = currentGraph.getNodeDataValue(d.id, attributeName);
+            //    if (attributeValue == "") {
+            //        d.fy = height / 2;
+            //    }
+
+            //    const resultYCoord = height - (height * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)));
+            //    d.fy = resultYCoord;
+            //});
+            
             currentGraph.updateYForceAttribute(attributeName, attributeMax, attributeMin);
         }
 
@@ -798,12 +926,12 @@ const projectAttributeYAxis = function (selectElement) {
             currentGraph.updateYForceProperty(attributeName);
         }
 
-        currentGraph.toggleYForce(true);
-        currentGraph.resetSimulation();
+        startSimulation();
         return;
     }
-    currentGraph.toggleYForce(false);
-    currentGraph.resetSimulation();
+    
+    currentGraph.setDefaultYForce();
+    startSimulation();
 }
 
 
@@ -832,15 +960,3 @@ const createDoubleSlider = function (sliderId, attributeName, minValueId, maxVal
 }
 
 
-
-const changeNetworkNodeColour = function (colourInputId) {
-    const colour = $(`#${colourInputId}`).val();
-    nodeVisualProperties.colouring.network = colour;
-    updateNodeAndLinkColour(node, link);
-}
-
-const changeNetworkBackgroundColour = function (colourInputId) {
-    const colour = $(`#${colourInputId}`).val();
-    nodeVisualProperties.colouring.background = colour;
-    $('#network-background-rect.background').css("fill", colour);
-}

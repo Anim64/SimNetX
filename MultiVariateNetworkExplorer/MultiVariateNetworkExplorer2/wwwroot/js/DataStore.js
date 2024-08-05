@@ -3,11 +3,9 @@ class DataStore {
     constructor(data) {
         this._nodeData = data.nodes;
         this._linkData = data.links;
-
-        this._linkStore = [];
     }
 
-    get getNodeData() {
+    get nodeData() {
         return this._nodeData;
     }
 
@@ -15,16 +13,8 @@ class DataStore {
         this._nodeData = value;
     }
 
-    get getLinkData() {
+    get linkData() {
         return this._linkData;
-    }
-
-    addToLinkStore(link) {
-        this._linkStore.push(link);
-    }
-
-    removeFromLinkStore(sourceId, targetId) {
-        /*this._linkStore.splice();*/
     }
 
     getNodeDataValue(id, attribute) {
@@ -33,5 +23,30 @@ class DataStore {
 
     getLinkDataValue(id, attribute) {
         return this._linkData[id][attribute];
+    }
+
+    addNewNodeAttribute(id, attribute, value) {
+        this._nodeData[id][attribute] = value;
+    }
+
+    removeNodeAttribute(id, attribute) {
+        delete this._nodeData[id][attribute];
+    }
+
+    addNewLinkAttribute(id, attribute, value) {
+        this._linkData[id][attribute] = value;
+    }
+
+    removeLinkAttribute(id, attribute) {
+        delete this._linkData[id][attribute];
+    }
+
+    serialize() {
+        const serializedData = {
+            "nodeData": this._nodeData,
+            "linkData": this._linkData
+        };
+
+        return serializedData;
     }
 }

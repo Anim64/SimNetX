@@ -18,7 +18,7 @@ class Graph {
         
 
         this._links = input_graph.links;
-        this._linkedByIndex =[];
+        this._linkedByIndex = [];
         for (const l of this.links) {
             const { source, target } = l;
             const index = source + "," + target;
@@ -38,12 +38,14 @@ class Graph {
             .force(forceY, d3.forceY())
             .nodes(this.nodes);
 
+        
         this._forces = {
             center: {
                 x: 0.5,
                 y: 0.5,
                 width: view_width,
-                height: view_height
+                height: view_height,
+                strength: 2
             },
 
             charge: {
@@ -81,6 +83,9 @@ class Graph {
                 iterations: 1
             }
         };
+
+        this.toggleXForce(true);
+        this.toggleYForce(true);
     }
 
     get graph() {
@@ -142,6 +147,15 @@ class Graph {
 
     isConnected(nodeId1, nodeId2) {
         return this._linkedByIndex[nodeId1 + "," + nodeId2] || this._linkedByIndex[nodeId2 + "," + nodeId1] || nodeId1 === nodeId2;
+    }
+
+    addNode(id) {
+        const newNode = { "id": id };
+        this.nodes.push(newNode);
+    }
+
+    addLink(sourceId, targetId, value) {
+        const newLink = {}
     }
 
     getNodeDataValue(id, attribute) {
@@ -261,6 +275,26 @@ class Graph {
         }
     }
 
+    serialize() {
+        const serializedGraph = {
+            "nodes": this._nodes,
+            "links": structuredClone(this._links),
+            "properties": this._properties,
+            "partitions": this._partitions,
+            "classes": this._classes,
+            "attributes": this._attributes,
+            "linkedByIndex": this._linkedByIndex,
+            "forces": this._forces
+        };
+
+        //for (const link of serializedGraph.links) {
+        //    link.source = link.source.id;
+        //    link.target = link.target.id;
+        //}
+
+        return serializedGraph;
+    }
+
     updateForces(reset = true) {
         this.updateCenterForce();
         this.updateChargeForce();
@@ -281,7 +315,7 @@ class Graph {
     }
 
     updateCenterForce() {
-        const { x, y, width, height } = this._forces.center;
+        const { x, y, width, height, strength } = this._forces.center;
         this._simulation.force(Graph.forceNames.center)
             .x(width * x)
             .y(height * y);
@@ -327,6 +361,13 @@ class Graph {
         const { strength } = this.getForce(forceXName);
         this._simulation.force(forceXName)
             .strength(strength * enabled);
+    }
+
+    setDefaultXForce() {
+        const { forceX: forceXName } = Graph.forceNames;
+        const { x } = this.getForce(forceXName);
+        this._simulation.force(forceXName)
+            .x(x);
     }
 
     updateXForceAttribute(attributeName, attributeMax, attributeMin){
@@ -414,6 +455,7 @@ class Graph {
     }
 
     resetSimulation() {
+
         this._simulation.alpha(1).restart();
     }
 

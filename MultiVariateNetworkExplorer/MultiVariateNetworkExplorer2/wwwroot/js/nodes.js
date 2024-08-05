@@ -73,8 +73,8 @@ const filterNodeSearchList = function () {
         nodeListItem.style.display = "none";
     }
 }
-const nodeHeadingClick = function (event, nodeId, nodeIndex) {
-    selectNode(event,nodeId);
+const nodeHeadingClick = function (nodeId, nodeIndex) {
+    selectNode(nodeId);
     toggleNodeDetails(nodeId, nodeIndex);
     
     showNodeNeighbors(nodeId);
@@ -84,11 +84,8 @@ const nodeHeadingMouseOver = function (nodeId, opacity) {
     fadeDisconnectedNodes(nodeId, opacity);
 }
 
-const selectNode = function (event, nodeId) {
-    if (!event.shiftKey) {
-        deselectAllNodes();
-    }
-    
+const selectNode = function (nodeId) {
+    deselectAllNodes();
     nodeGroups.classed('selected', function (d) {
         return d.selected = d.selected | d.id == nodeId;
     });
@@ -112,7 +109,9 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
     for (const input of inputs) {
         //let attributeName = input.id.substring(input.id.indexOf('-') + 1, input.id.length);
         const attributeName = input.getAttribute('data-attribute');
-        input.value = currentGraph.getNodeDataValue(nodeId, attributeName)
+        const attributeValue = currentGraph.getNodeDataValue(nodeId, attributeName);
+        input.value = attributeValue;
+        input.setAttribute("title", attributeValue);
     };
 
     showNodeValueInHistogram(nodeId, nodeIndex, attributesDiv);
@@ -137,14 +136,13 @@ const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
         const attributeName = histogram.getAttribute('data-attribute');
         const attributeValue = currentGraph.getNodeDataValue(nodeId, attributeName);
         const bins = histogram.getElementsByTagName("rect");
-        d3.selectAll(bins).style("fill", "#ffeead");
-        for (const bin of bins) {
-            if (bin.getAttribute("data-max-value") > attributeValue) {
-                bin.style.fill = "red";
-                break;
-            }
-        }
-        
+        d3.selectAll(bins)
+            .style("fill", function (d) {
+                if (d.x0 <= attributeValue && d.x1 >= attributeValue) {
+                    return "red";
+                }
+                return "#ffeead";
+            });
     }
 }
 
@@ -152,7 +150,7 @@ const showNodeNeighbors = function (nodeId) {
     const neighborsContainer = document.getElementById("node-neighbors-section");
 
     const neighborsHeadlineElement = neighborsContainer.firstElementChild;
-    neighborsHeadlineElement.innerHTML = "Node \"" + nodeId + "\" neighbors";
+    neighborsHeadlineElement.innerHTML = `Node \"${nodeId}\" neighbors`;
 
     createNeighborHeadings(nodeId);
     
@@ -161,6 +159,7 @@ const showNodeNeighbors = function (nodeId) {
 const createNeighborHeadings = function (nodeId) {
     const neighborsGridElement = d3.select("#neighbors-nav");
     neighborsGridElement.html("");
+    const headingData = [];
 
     for (const link of currentGraph.links) {
         let neighbor = null;
@@ -173,22 +172,31 @@ const createNeighborHeadings = function (nodeId) {
 
         if (neighbor != null) {
             const { id: neighborId, index: neighborIndex } = neighbor;
-            createNeighborHeading(neighborsGridElement, neighborId, neighborIndex);
+            headingData.push({
+                nodeId: neighborId,
+                index: neighborIndex
+            })
         }
         
     }
+
+    neighborsGridElement
+        .on("click", function () {
+            const { nodeId, index } = d3.event.target.__data__;
+            nodeHeadingClick(nodeId, index);
+        })
+        .selectAll("div")
+        .data(headingData)
+        .enter()
+        .append("div")
+            .classed("node-heading", true)
+            .attr("role", "tab")
+            .attr("id", (d) => `neighbor-heading-${d.nodeId}` )
+            .append("h5")
+                .html((d) => d.nodeId);
+
 }
 
-const createNeighborHeading = function (neighborsGridElement, neighborId, neighborIndex) {
-    neighborsGridElement.append("div")
-        .classed("node-heading", true)
-        .attr("role", "tab")
-        .attr("id", "neighbor-heading-" + neighborId)
-        .on("mouseout", function () { /*mouseOut()*/ })
-        .on("click", function () { nodeHeadingClick(event, neighborId, neighborIndex) })
-        .on("mouseover", function () { /*nodeHeadingMouseOver(id, .2)*/ })
-        .append("h5")
-        .html(neighborId);
-}
+
 
 

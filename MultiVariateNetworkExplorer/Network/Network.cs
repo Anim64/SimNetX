@@ -533,7 +533,12 @@ namespace NetworkLibrary
                 foreach (var target in links.Where(node => string.Compare(sourceId, node.Key) < 0))
                 {
                     double weight = target.Value;
-                    JObject newLink = new();
+                    JObject newLink = new()
+                    {
+                        [jsonLinkSourceName] = sourceId,
+                        [jsonLinkTargetName] = target.Key,
+                        [jsonLinkValueName] = weight,
+                    };
                     
                     jLinks[(++edgeId).ToString()] = newLink;
                 }
