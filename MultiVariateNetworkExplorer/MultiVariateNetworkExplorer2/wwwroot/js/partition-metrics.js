@@ -35,7 +35,11 @@ const generatePartitionBoxplots = function () {
         const splitCount = 5;
         for (let i = 0; i < partitionStats.length; i += splitCount) {
             const splitData = partitionStats.slice(i, i + splitCount);
-            boxplot(partitionMetricContainer, splitData, 1270, 400, i);
+            const boxplotContainerDiv = partitionMetricContainer
+                .append("div")
+                .attr("id", `partition-metric-boxplot-graph-container-${i}-div`)
+                .style("position", "relative");
+            boxplot(boxplotContainerDiv, splitData, 1270, 400, i);
         }
 
         const colourObject = contructColourObjectFromList("partition-colour-list");

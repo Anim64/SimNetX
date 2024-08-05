@@ -16,6 +16,7 @@ This action sets all values that are lower than similarity matrix geometric mean
 ### Fixed
 - Project can be saved again to json
 - Filter are now working properly
+- Graph tooltips are now positioned correctly
 
 ### Changed
 

@@ -162,9 +162,9 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
     const xAxis = createBandAxis(data.map(d => d.key), 0, boxplotWidth, 0.5);
     const yAxis = createLinearAxis(yMin, yMax, boxplotHeight, 0);
 
-    const boxplotSvgId = `partition-metric-boxplot-svg-${id}`;
+    const boxplotSvgId = `partition-metric-boxplot-${id}-svg`;
 
-    const tooltipId = `${boxplotSvgId}-tooltip`;
+    const tooltipId = `partition-metric-boxplot-${id}`;
     const tooltip = createTooltip(plotContainer, tooltipId);
     const mouseenter = createBoxplotTooltipMouseEnter(tooltip);
     const mousemove = createTooltipMousemove(tooltip);
@@ -188,10 +188,6 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave);
 
-
-
-    
-
     //boxes
     appendBoxplotRects(boxContainers, xAxis,
         yAxis, data, axisColour);
@@ -203,10 +199,6 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
     appendMinBoxplotLine(boxContainers, xAxis, yAxis, axisColour);
     //MaxLine
     appendMaxBoxplotLine(boxContainers, xAxis, yAxis, axisColour);
-        
-
-    
-
 }
 
 const appendBoxplotRects = function (svg, xAxis, yAxis, fillColour, strokeColour) {
@@ -256,8 +248,8 @@ const createBarplotTooltipMouseEnter = function (tooltip) {
 const createTooltipMousemove = function (tooltip) {
     const mousemove = function (d) {
         tooltip
-            .style("left", (d3.mouse(this)[0]+ 20) + "px")
-            .style("top", (d3.mouse(this)[1] + 11) + "px");
+            .style("left", (event.offsetX + 3)/*(d3.mouse(this)[0]+ 20)*/ + "px")
+            .style("top", event.offsetY/*(d3.mouse(this)[1] + 11)*/ + "px");
     }
     return mousemove;
 }
