@@ -21,23 +21,6 @@ const displayAttributeTransformation = function (attribute, transformationListId
     //remodelCheckbox.checked = !isIn;
 } 
 
-const updateRemodelingAttributes = function (optionCheckbox, attributeSelectId) {
-    const attributeSelect = document.getElementById(attributeSelectId);
-    const attribute = optionCheckbox.value;
-
-    if (!optionCheckbox.checked) {
-        excludedAttributes.push(attribute);
-        return;
-    }
-
-    for (let i = 0; i < excludedAttributes.length; i++) {
-        if (excludedAttributes[i] === attribute) {
-            excludedAttributes.splice(i, 1);
-            return;
-        }
-    }
-}
-
 const deleteAllTransformations = function () {
     attributeTransform = {};
     document.getElementById("attribute-transformation-list").innerHTML = "";
@@ -164,12 +147,22 @@ const addTransformationToAll = function (transformationBtn, attributeSelectId) {
     }
 }
 
+const transferSelectedOptions = function(fromSelectId, toSelectId){
+    const fromSelectedOptions = $(`#${fromSelectId} option:selected`).remove();
+    const toSelect = $(`#${toSelectId}`);
+
+    toSelect.append(fromSelectedOptions);
+}
 
 const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId, nulifyId) {
     const selectedAlgorithm = document.getElementById(algorithmSelectId).value;
     const selectedMetric = document.getElementById(metricSelectId).value;
     const nulify = document.getElementById(nulifyId).checked;
-
+    const excludedAttributes = $("#remodel-inactive-attributes-select option")
+        .map(function ()
+        {
+            return $(this).val();
+        }).get();
 
 
     const networkRemodelParams =
@@ -204,30 +197,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     for (const parameter of parameterInputs) {
         algorithmParams.push(parseFloat(parameter.value));
     }
-    //switch (selectedAlgorithm) {
-    //    default:
-    //        break;
-    //    case "lrnet-parameters-remodel": {
-    //        const lrnetKNNElement = document.getElementById('lrnet-kNNmin-remodel');
-    //        const lrnetReduction = parseFloat(document.getElementById('lrnet-reduction-remodel').value);
-    //        const lrNetK = parseInt(lrnetKNNElement.value);
-    //        const algorithmParams = networkRemodelParams["algorithm"]["params"];
-    //        algorithmParams.push(lrnetReduction);
-    //        algorithmParams.push(lrNetK);
-    //        break;
-    //    }
-            
-
-    //    case 'epsilon-parameters-remodel': {
-    //        const epsilonRadius = parseFloat(document.getElementById('epsilonRadius').value);
-    //        const k = parseInt(document.getElementById('kNNmin').value);
-    //        const algorithmParams = networkRemodelParams["algorithm"]["params"];
-    //        algorithmParams.push(epsilonRadius);
-    //        algorithmParams.push(k);
-    //        break;
-    //    }
-            
-    //}
+    
 
     const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
@@ -236,13 +206,20 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
 
     $.ajax({
-        url: '/Home/RemodelNetwork',
+        url: /*'/mvne/Home/RemodelNetwork'*/ 'RemodelNetwork',
         type: 'POST',
         //dataType: 'json',
         // It is important to set the content type
         // request header to application/json because
         // that's how the client will send the request
-        //contentType: 'application/json',
+        /*contentType: 'application/json',*/
+        //data: JSON.stringify({
+        //    "nodes": dataStore.nodeData,
+        //    "attributes": currentGraph.attributes,
+        //    "attributeTransform": attributeTransform,
+        //    "networkRemodelParams": networkRemodelParams,
+        //    "excludedAttributes": excludedAttributes
+        //}),
         data: {
             nodes: nodes_string,
             attributes: attributes_string,

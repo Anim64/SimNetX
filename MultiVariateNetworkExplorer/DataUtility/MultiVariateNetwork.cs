@@ -50,26 +50,25 @@ namespace MultiVariateNetworkLibrary
 
         public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric,  bool grouping, bool directed = false, bool header = false, params char[] separator)
         {
-            this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, header, separator);
+            this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, groupColumn, header, separator);
 
             this.Directed = directed;
             this.Partition = this.RealClasses = null;
             
-            if (!String.IsNullOrEmpty(groupColumn))
-            {
-                groupColumn = groupColumn.RemoveDiacritics().RemoveSpecialCharacters();
-                this.RealClasses = new Dictionary<string, string>();
+            //if (!string.IsNullOrEmpty(groupColumn))
+            //{
+            //    groupColumn = groupColumn.RemoveDiacritics().RemoveSpecialCharacters();
+            //    this.RealClasses = new Dictionary<string, string>();
 
-                bool isParsable = int.TryParse(groupColumn, out int result);
-                var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
-
-                for (int i = 0; i < columnList.DataCount; i++)
-                {
-                    string id = this.VectorData.IdColumn[i].ToString();
-                    string value = columnList[i].ToString();
-                    this.RealClasses[id] = value;
-                }
-            }
+            //    bool isParsable = int.TryParse(groupColumn, out int result);
+            //    var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
+            //    for (int i = 0; i < columnList.DataCount; i++)
+            //    {
+            //        string id = this.VectorData.IdColumn[i].ToString();
+            //        string value = columnList[i].ToString();
+            //        this.RealClasses[id] = value;
+            //    }
+            //}
 
             this.VectorData.FindAttributeExtremesAndValues();
             this.Network = paths.Count() > 1 ? 

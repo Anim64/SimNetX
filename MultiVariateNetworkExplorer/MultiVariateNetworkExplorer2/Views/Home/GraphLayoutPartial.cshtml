@@ -132,53 +132,51 @@
                         <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
                     </div>
                 }
-
-
-                //<div class="transformation-option" id="normalize-option" data-role="normalize">
-                //    <h5>Normalize</h5>
-                //    <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
-                //    <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
-                //</div>
-                //<div class="transformation-option" id="rescale-option" data-role="rescale">
-                //    <h5>Rescale</h5>
-                //    <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
-                //    <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
-                //</div>
-                //<div class="transformation-option" id="standardize-option" data-role="standardize">
-                //    <h5>Standardize</h5>
-                //    <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
-                //    <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
-                //</div>
-                //<div class="transformation-option" id="distribute" data-role="distribute">
-                //    <h5>Log Normal To Normal</h5>
-                //    <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
-                //    <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
-                //</div>
             }
         </div>
 
         <div class="remodel-attribute-panel" id="remodel-panel">
             <h4 id="remodel-attribute-panel-header" onload="updateRemodelOptionsHeader(this.id, 'remodel-network-select')"></h4>
-            @* <div class="checkboxes">
-            <label for="remodel-checkbox">Use for remodeling?</label>
-            <input type="checkbox" id="remodel-checkbox" data-role="remodeling" onchange="updateRemodelingAttributes(this, 'remodel-network-select')" checked />
-            </div> *@
-
             <ul class="transformation-list" id="attribute-transformation-list"></ul>
             <button class="attribute-clear-btn" onclick="clearAttributeTransformations('remodel-network-select')">Clear</button>
         </div>
 
-        <div class="checkboxes" id="remodel-attribute-checkboxes">
-            @foreach (string attribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-            {
-                <label for="@(attribute + "-checkbox")">@(attribute)</label>
-                <input type="checkbox" id="@(attribute + "-checkbox")" value="@(attribute)" onchange="updateRemodelingAttributes(this, 'remodel-network-select')" checked />
-            }
-        </div>
+        <section id="remodel-attributes-container">
+            @* Remodel attributes select labels *@
+            <div class="d-flex flex-row justify-content-around" id="remodel-active-attributes-container">
+                <label class="attribute-selection-label" for="remodel-active-attributes-select">
+                    Active Attributes:
+                </label>
+                <label class="attribute-selection-label" for="remodel-inactive-attributes-select">
+                    Inactive Attributes:
+                </label>
+            </div>
+            <div class="d-flex flex-row" id="remodel-attributes-select-controls-container">
+                @* Select for current active attributes for remodeling *@
+                <select class="attribute-select attribute-select-border" id="remodel-active-attributes-select" multiple size="8">
+                    @foreach (string attribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
+                    {
+                        <option value="@(attribute)" title="@(attribute)">@(attribute)</option>
+                    }
+                </select>
+                @* Buttons to transfer attributes between active and inactive attribute lists *@
+
+                <div class="d-flex flex-column justify-content-around" id="remodel-attributes-transfer-button-container">
+                    <button onclick="transferSelectedOptions('remodel-active-attributes-select', 'remodel-inactive-attributes-select')"><i class="fas fa-arrow-right"></i></button>
+                    <button onclick="transferSelectedOptions('remodel-inactive-attributes-select', 'remodel-active-attributes-select')"><i class="fas fa-arrow-left"></i></button>
+                </div>
+                @* Select for current inactive attributes for remodeling *@
+
+                <select class="attribute-select attribute-select-border" id="remodel-inactive-attributes-select" multiple size="8"></select>
+
+            </div>
+            
+            
+        </section>
 
         <div class="remodel-div" id="remodel-div">
             <h4 id="remodel-algorithm-headline">Algorithm Parameters</h4>
-            <label for="remodel-algorithm-select">Choose a conversion algorithm:</label>
+            <label title="An algorithm that converts vector data to network" for="remodel-algorithm-select">Conversion algorithm:</label>
             <select name="remodel-algorithm-select" id="remodel-algorithm-select" onchange="displayAlgorithmParameters(this.id, '-parameters-remodel')">
                 <option value="LRNet" selected>LRNet</option>
                 <option value="EpsilonKNN">Epsilon and kNN</option>
@@ -186,25 +184,25 @@
 
             <div class="algorithm-parameters-container">
                 <div class="algorithm-parameters" id="lrnet-parameters-remodel">
-                    <label for="lrnet-reduction">Choose a reduction coefficient</label>
+                    <label for="lrnet-reduction">Reduction coefficient</label>
                     <input type="number" id="lrnet-reduction-remodel" name="algsParams" min="0.1" step="0.1" max="10" value="1" />
 
-                    <label for="lrnet-kNNmin">Choose a minimal number of neighbours</label>
+                    <label title="Minimal number of Neighbours" for="lrnet-kNNmin">k</label>
                     <input type="number" id="lrnet-kNNmin" name="algsParams" min="0" max="20" step="1" value="1" />
                 </div>
 
                 <div class="algorithm-parameters" id="epsilonknn-parameters-remodel">
-                    <label for="epsilonRadius">Choose a radius</label>
-                    <input type="number" id="epsilonRadius" name="epsilonRadius" step="0.00001" min="0" max="1" value="1" />
+                    <label title="Similarity threshold for edge creation" for="epsilonRadius">Epsilon</label>
+                    <input type="number" id="epsilonRadius" name="algsParams" step="0.00001" min="0" max="1" value="1" />
 
-                    <label for="kNNmin">Choose a minimal number of neighbours</label>
-                    <input type="number" id="kNNmin" name="kNNmin" min="0" value="1" />
+                    <label title="Minimal number of Neighbours" for="kNNmin">k</label>
+                    <input type="number" id="kNNmin" name="algsParams" min="0" value="1" />
                 </div>
             </div>
 
 
             <h4 id="remodel-metric-headline">Metric Parameters</h4>
-            <label for="remodel-metric-select">Choose a conversion metric:</label>
+            <label title="A similarity measure used to determine an existence of an edge" for="remodel-metric-select">Conversion metric:</label>
             <select name="remodel-metric-select" id="remodel-metric-select" onchange="displayMetricParameters(this.id)">
                 <option value="GaussKernel" selected>Gaussian Kernel</option>
                 <option value="CosineSimilarity">Cosine Similarity</option>
@@ -217,13 +215,13 @@
 
             <div class="metric-parameters-container">
                 <div class="metric-parameters" id="gauss-parameters">
-                    <label for="sigma">Choose a standard deviation</label>
+                    <label title="Standard deviation for Gaussian Kernel" for="sigma">Sigma</label>
                     <input type="number" id="sigma" name="sigma" step="0.001" min="0" value="1" />
                 </div>
-
-                <label for="remodel-nulify">Nulify?</label>
-                <input type="checkbox" id="remodel-nulify" name="remodel-nulify" />
             </div>
+
+            <label title="Edges with similarity lower then similarity geometric mean will be omited" for="remodel-nulify">Nulify?</label>
+            <input type="checkbox" id="remodel-nulify" name="remodel-nulify" />
 
         </div>
         <div class="align-right-div">

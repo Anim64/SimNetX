@@ -93,7 +93,8 @@ namespace MultiVariateNetworkExplorer.Controllers
             bool doCommunityDetection = inputModel.CommunityDetection == BooleanParameter.Yes;
 
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == inputModel.MetricName);
-            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, inputModel.MetricParams.Cast<object>().ToArray());
+            object[] metricParams = inputModel.MetricParams?.Cast<object>().ToArray();
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams);
 
             Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == inputModel.ConversionAlgorithmName);
             var conversionAlgorithmParams = inputModel.ConversionAlgorithmParams.Cast<object>().ToArray();
