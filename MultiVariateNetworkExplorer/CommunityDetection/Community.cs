@@ -125,7 +125,7 @@ namespace CommunityDetection
             var ret = new Dictionary<A, string>();
             var new_values = new Dictionary<string, string>();
 
-            foreach (A key in dict.Keys.OrderBy(a => a/*int.Parse(a.ToString(), CultureInfo.InvariantCulture)*/))
+            foreach (A key in dict.Keys.OrderBy(a => a))
             {
                 string value = dict[key];
                 if (!new_values.TryGetValue(value, out string new_value))
@@ -182,49 +182,43 @@ namespace CommunityDetection
                 {
                     foreach (var node in graph.Nodes)
                     {
-                        Node2Com[node] = count.ToString();
+                        string community = count.ToString();
+                        Node2Com[node] = community;
                         double deg = graph.GetDegree(node);
                         if (deg < 0)
                         {
                             throw new ArgumentException("Graph has negative weights.");
                         }
-                        Degrees[count.ToString()] = GDegrees[node] = deg;
-                        Internals[count.ToString()] = Loops[node] = graph.EdgeWeight(node, node, 0);
+                        Degrees[community] = GDegrees[node] = deg;
+                        Internals[community] = Loops[node] = graph.EdgeWeight(node, node, 0);
                         count += 1;
                     }
+                    return;
                 }
-                else
+                
+                foreach (var node in graph.Nodes)
                 {
-                    foreach (var node in graph.Nodes)
+                    string com = part[node];
+                    Node2Com[node] = com;
+                    double deg = graph.GetDegree(node);
+                    Degrees[com] = DictGet(Degrees, com, 0) + deg;
+                    GDegrees[node] = deg;
+                    double inc = 0;
+                    foreach (var edge in graph[node])
                     {
-                        string com = part[node];
-                        Node2Com[node] = com;
-                        double deg = graph.GetDegree(node);
-                        Degrees[com] = DictGet(Degrees, com, 0) + deg;
-                        GDegrees[node] = deg;
-                        double inc = 0;
-                        foreach (var edge in graph[node])
+                        string neighbor = edge.Key;
+                        if (edge.Value <= 0)
                         {
-                            string neighbor = edge.Key;
-                            if (edge.Value <= 0)
-                            {
-                                throw new ArgumentException("Graph must have positive weights.");
-                            }
-                            if (part[neighbor] == com)
-                            {
-                                if (neighbor == node)
-                                {
-                                    inc += edge.Value;
-                                }
-                                else
-                                {
-                                    inc += edge.Value / 2;
-                                }
-                            }
+                            throw new ArgumentException("Graph must have positive weights.");
                         }
-                        Internals[com] = DictGet(Internals, com, 0) + inc;
+                        if (part[neighbor] == com)
+                        {
+                            inc += neighbor == node ? edge.Value : (edge.Value / 2);
+                        }
                     }
+                    Internals[com] = DictGet(Internals, com, 0) + inc;
                 }
+                
             }
 
             /// <summary>
@@ -286,6 +280,7 @@ namespace CommunityDetection
                                .Concat(new[] { Tuple.Create(0.0, com_node) }.AsParallel())
                                .Max();
                         string best_com = best.Item2;
+                        Console.WriteLine($"Node: {node}, Increase: {best.Item1}, Best comm: {best.Item2}");
                         Insert(node, best_com, DictGet(neigh_communities, best_com, 0));
                         if (best_com != com_node)
                         {

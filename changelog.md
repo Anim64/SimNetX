@@ -17,6 +17,8 @@ This action sets all values that are lower than similarity matrix geometric mean
 - Project can be saved again to json
 - Filter are now working properly
 - Graph tooltips are now positioned correctly
+- Fixed the LRNet algorithm which was constructing the network incorrectly.
+- Fixed the Louvain algorithm. Now the correct number of communities is found. 
 
 ### Changed
 

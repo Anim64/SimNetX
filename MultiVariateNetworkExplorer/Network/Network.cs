@@ -28,10 +28,12 @@ namespace NetworkLibrary
         /// <summary>
         /// The total weight of all edges.
         /// </summary>
+        private double totalWeight;
         public double TotalWeight { 
             get
             {
-                return this.Data.Sum(fromNode => fromNode.Value.Sum(toNode => toNode.Value)) / 2;
+                //return this.Data.Sum(fromNode => fromNode.Value.Sum(toNode => toNode.Value)) / 2;
+                return totalWeight;
             }
             //private set; 
         }
@@ -39,15 +41,15 @@ namespace NetworkLibrary
         /// <summary>
         /// Return the total number of edges that exist in network.
         /// </summary>
-        private int numberOfEdges = -1;
+        private int numberOfEdges;
         public int NumberOfEdges
         {
             get
             {
-                if (numberOfEdges < 0)
-                {
-                    numberOfEdges = this.Data.Sum(kv => kv.Value.Count) / 2;
-                }
+                //if (numberOfEdges < 0)
+                //{
+                //    numberOfEdges = this.Data.Sum(kv => kv.Value.Count) / 2;
+                //}
                 return numberOfEdges;
             }
         }
@@ -139,6 +141,8 @@ namespace NetworkLibrary
         {
             Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             NumberOfVertices = 0;
+            numberOfEdges = 0;
+            totalWeight = 0;
         }
 
         /// <summary>
@@ -153,6 +157,8 @@ namespace NetworkLibrary
                 Data[i.ToString()] = new SortedDictionary<string, double>();
             }
             this.NumberOfVertices = initSize;
+            numberOfEdges = 0;
+            totalWeight = 0;
         }
 
         public Network(ColumnString idColumn)
@@ -163,6 +169,8 @@ namespace NetworkLibrary
                 Data[node.ToString()] = new SortedDictionary<string, double>();
             }
             this.NumberOfVertices = idColumn.DataCount;
+            numberOfEdges = 0;
+            totalWeight = 0;
 
         }
 
@@ -174,8 +182,10 @@ namespace NetworkLibrary
         {
             this.Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             this.NumberOfVertices = json["nodes"].Count();
+            this.numberOfEdges = 0;
+            this.totalWeight = 0;
             //this.TotalWeight = 0;
-            foreach(var node in json["nodes"])
+            foreach (var node in json["nodes"])
             {
                 this.Data[(string)node["id"]] = new SortedDictionary<string, double>();
             }
@@ -191,7 +201,8 @@ namespace NetworkLibrary
         {
             this.Data = new SortedDictionary<string, SortedDictionary<string, double>>();
             this.NumberOfVertices = jNodes.Count;
-            //this.TotalWeight = 0;
+            this.numberOfEdges = 0;
+            this.totalWeight = 0;
             foreach (var node in jNodes)
             {
                 this.Data[node[jsonLinkIdName].ToString()] = new SortedDictionary<string, double>();
@@ -217,6 +228,8 @@ namespace NetworkLibrary
             
             //this.TotalWeight = net.TotalWeight;
             this.NumberOfVertices = net.NumberOfVertices;
+            this.numberOfEdges = net.NumberOfEdges;
+            this.totalWeight = net.TotalWeight;
             foreach(var pair in net.Data)
             {
                 this.Data.Add(pair.Key, pair.Value);
@@ -313,14 +326,12 @@ namespace NetworkLibrary
         /// <param name="fromNode">The starting node</param>
         /// <param name="toNode">The destination node</param>
         /// <param name="weight">The edge weight</param>
-        public void AddDirectedEdge(string fromNode, string toNode, double weight)
+        public bool AddDirectedEdge(string fromNode, string toNode, double weight)
         {
             var outdict = EnsureIncidenceList(fromNode);
             outdict.TryGetValue(toNode, out double oldWeight);
             outdict[toNode] = oldWeight + weight;
-            this.numberOfEdges = -1;
-
-
+            return oldWeight == 0;
         }
         /// <summary>
         /// Adds a new indirected edge into the network. If the edge already exists, it adds the new weight to the old one.
@@ -330,13 +341,19 @@ namespace NetworkLibrary
         /// <param name="weight">The edge weight</param>
         public void AddIndirectedEdge(string fromNode, string toNode, double weight)
         {
-            AddDirectedEdge(fromNode, toNode, weight);
-            if(fromNode != toNode)
+
+            bool isNewEdge = AddDirectedEdge(fromNode, toNode, weight);
+            if (fromNode != toNode)
             {
                 AddDirectedEdge(toNode, fromNode, weight);
             }
-            //TotalWeight += weight;
-            
+
+            if (isNewEdge)
+            {
+                this.numberOfEdges++;
+            }
+            this.totalWeight += weight;
+
         }
 
         /// <summary>
@@ -348,8 +365,8 @@ namespace NetworkLibrary
         public void SetDirectedEdge(string fromNode, string toNode, double weight)
         {
             var outdict = EnsureIncidenceList(fromNode);
+            outdict.TryGetValue(toNode, out double oldWeight);
             outdict[toNode] = weight;
-            this.numberOfEdges = -1;
         }
 
         /// <summary>
@@ -360,13 +377,20 @@ namespace NetworkLibrary
         /// <param name="weight">The edge weight</param>
         public void SetIndirectedEdge(string fromNode, string toNode, double weight)
         {
+            this.Data[fromNode].TryGetValue(toNode, out double oldWeight);
+            if(oldWeight > 0)
+            {
+                this.totalWeight -= oldWeight;
+                this.numberOfEdges--;
+            }
             SetDirectedEdge(fromNode, toNode, weight);
             if (fromNode != toNode)
             {
                 SetDirectedEdge(toNode, fromNode, weight);
             }
 
-            //TotalWeight += weight;
+            this.numberOfEdges++;
+            this.totalWeight += weight; 
         }
 
 
@@ -390,10 +414,7 @@ namespace NetworkLibrary
             {
                 return defaultValue;
             }
-            else
-            {
-                return value;
-            }
+            return value;
         }
 
 

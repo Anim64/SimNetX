@@ -62,7 +62,7 @@ namespace VectorConversion.VectorDataConversion
             return resultNet;
         }
 
-        void FillDegreeAndSignificance(Network resultNet, 
+        private void FillDegreeAndSignificance(Network resultNet, 
             Dictionary<int, uint> localDegrees, Dictionary<int, uint> localSignificances)
         {
             for (int i = 0; i < resultNet.Count; i++)
@@ -72,7 +72,7 @@ namespace VectorConversion.VectorDataConversion
             }
         }
 
-        void CalculateDegreeAndSignificance(Network resultNet, Matrix<double> kernelMatrix, 
+        private void CalculateDegreeAndSignificance(Network resultNet, Matrix<double> kernelMatrix, 
             Dictionary<int, uint> localDegrees, Dictionary<int, uint> localSignificances)
         {
             for (int i = 0; i < resultNet.Count; i++)
@@ -80,10 +80,10 @@ namespace VectorConversion.VectorDataConversion
                 List<int> nearestNeighbours = null;
                 double nearestNeighboursSimilarity = 0;
 
-                for (int j = i + 1; j < resultNet.Count; j++)
+                for (int j = 0; j < resultNet.Count; j++)
                 {
                     double similarity = kernelMatrix[i, j];
-                    if (similarity > 0)
+                    if (similarity > 0 && i != j)
                     {
                         localDegrees[i]++;
                         if (similarity > nearestNeighboursSimilarity)
@@ -110,7 +110,7 @@ namespace VectorConversion.VectorDataConversion
             }
         }
 
-        Dictionary<int, double> CalculateXRepresentativenessBase(Dictionary<int, uint> localDegrees, 
+        private Dictionary<int, double> CalculateXRepresentativenessBase(Dictionary<int, uint> localDegrees, 
             Dictionary<int, uint> localSignificances)
         {
             Dictionary<int, double> xRepreBases = new();
@@ -126,7 +126,7 @@ namespace VectorConversion.VectorDataConversion
             return xRepreBases;
         }
 
-        Dictionary<int, double> CalculateLocalRepresentativeness(Dictionary<int, double> xRepreBases)
+        private Dictionary<int, double> CalculateLocalRepresentativeness(Dictionary<int, double> xRepreBases)
         {
             Dictionary<int, double> localRepresentativeness = new();
 
@@ -139,7 +139,7 @@ namespace VectorConversion.VectorDataConversion
             return localRepresentativeness;
         }
 
-        Dictionary<int, uint> CalculateRepresentativeNeighbourK(Dictionary<int, uint> localDegrees, 
+        private Dictionary<int, uint> CalculateRepresentativeNeighbourK(Dictionary<int, uint> localDegrees, 
             Dictionary<int, double> localRepresentativeness)
         {
             Dictionary<int, uint> k = new();

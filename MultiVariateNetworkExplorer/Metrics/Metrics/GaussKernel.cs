@@ -46,15 +46,14 @@ namespace Metrics.Metrics
                         {
                             double vectorValueA = column.Data[i] != null ? Convert.ToDouble(column.Data[i]) : vectorData.Averages[columnName];
                             double vectorValueB = column.Data[j] != null ? Convert.ToDouble(column.Data[j]) : vectorData.Averages[columnName];
-                            euclideanDistance += Math.Pow((vectorValueA - vectorValueB), 2);
+                            double difference = vectorValueA - vectorValueB;
+                            euclideanDistance += difference * difference;
                         }
 
                     }
 
-                    double gauss1 = 1.0 / (this.Sigma * Math.Sqrt(2 * Math.PI));
-                    double gauss2 = (-euclideanDistance) / (2 * Math.Pow(this.Sigma, 2));
-                    double gauss3 = Math.Pow(Math.E, (gauss2));
-                    double gauss4 = gauss1 * gauss3;
+                    double gauss1 = -(euclideanDistance / (2 * Sigma * Sigma));
+                    double gauss4 = Math.Exp(gauss1);
                     kernelMatrix[i, j] = kernelMatrix[j, i] = gauss4;
 
                 }
