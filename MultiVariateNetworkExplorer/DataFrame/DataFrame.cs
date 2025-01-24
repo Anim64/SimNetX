@@ -112,25 +112,24 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
         CatAttrValues = new Dictionary<string, List<string>>();
 
-        this.ReadFromFile(fileName, missingvalues, idColumn, classColumn, header, separator);
-
-        if (!string.IsNullOrEmpty(idColumn))
-        {
-            idColumn = Utils.RemoveDiacritics(idColumn);
-            bool isParsable = int.TryParse(idColumn, out int result);
-            IdColumnName = (isParsable ? "Attribute" + idColumn : idColumn).Trim();
-            IdColumnName = Regex.Replace(IdColumnName, @"[\s]+", "");
-            IdColumn = this[IdColumnName].ToColumnString();
-            IdColumn.Map(Utils.RemoveDiacritics);
-            IdColumn.Map(Utils.RemoveSpecialCharacters);
-            this.RemoveColumn(IdColumnName);
-        }
-
-        else
+        if (string.IsNullOrEmpty(idColumn))
         {
             IdColumnName = null;
             IdColumn = new ColumnString(Enumerable.Range(0, this.DataCount).Select(id => id.ToString()).ToList());
         }
+
+        else
+        {
+            idColumn = Utils.RemoveDiacritics(idColumn);
+            bool isParsable = int.TryParse(idColumn, out int result);
+            IdColumnName =
+                (isParsable ? "Attribute" + idColumn : idColumn)
+                .Trim()
+                .RemoveSpecialCharacters()
+                .HandleInvalidStartingChar();
+        }
+
+        this.ReadFromFile(fileName, missingvalues, classColumn, header, separator);
     }
 
     /// <summary>
@@ -365,8 +364,9 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
                 headers[i] = headers[i]
                     .Trim()
-                    .HandleInvalidStartingChar()
-                    .RemoveSpecialCharacters();
+                    .RemoveSpecialCharacters()
+                    .HandleInvalidStartingChar();
+                    
             }
 
             if ((line = sr.ReadLine()) is not null)
@@ -431,7 +431,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="emptyAtrributeCount"></param>
     /// <param name="nullIndeces"></param>
     /// <param name="averages"></param>
-    private void PrepareColumns(string[] headers, string[] vector, string missingValues, string idColumn, string classColumn, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
+    private void PrepareColumns(string[] headers, string[] vector, string missingValues, string classColumn, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
         Dictionary<string, double> averages)
     {
         int columnCount = headers.Length;
@@ -442,7 +442,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             nullIndeces[header] = new List<int>();
             averages[header] = 0;
 
-            if (header == classColumn || header == idColumn)
+            if (header == classColumn || header == IdColumnName)
             {
                 this.Data[header] = new ColumnString();
                 this.Data[header].AddData(vectorValue);
@@ -587,7 +587,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="filename"></param>
     /// <param name="header"></param>
     /// <param name="separator"></param>
-    public void ReadFromFile(string filename, string missingvalues, string idColumn, string classColumn, bool header = false, params char[] separator)
+    public void ReadFromFile(string filename, string missingvalues, string classColumn, bool header = false, params char[] separator)
     {
         Dictionary<string, int> emptyAtrributeCount = new Dictionary<string, int>();
         Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
@@ -604,7 +604,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             {
                         
                 headers = PrepareHeaders(sr, header, line, ref vector, separator);
-                PrepareColumns(headers, vector, missingvalues, idColumn, classColumn, emptyAtrributeCount, nullIndeces, averages);
+                PrepareColumns(headers, vector, missingvalues, classColumn, emptyAtrributeCount, nullIndeces, averages);
                 DataCount++;
 
                 //Load Data to Frame
@@ -640,27 +640,20 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                 this.Averages = averages;
                 FindAttributeExtremesAndValues();
 
+                if(IdColumnName is not null)
+                {
+                    IdColumn = this[IdColumnName].ToColumnString();
+                    IdColumn.Map(Utils.RemoveDiacritics);
+                    IdColumn.Map(Utils.RemoveSpecialCharacters);
+                    this.RemoveColumn(IdColumnName);
+                }
+
                 return;
             }
 
             var resourceManager = new ResourceManager(exceptionMessageResourceName, Assembly.GetExecutingAssembly());
             throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
-               
-                    
         }
-            
-            
-
-        /*foreach(var pair in nullIndeces)
-        {
-            double columnAverage = averages[pair.Key] / DataCount;
-            foreach(int index in pair.Value)
-            {
-                this.Data[pair.Key].Data[index] = columnAverage;
-            }
-        }*/
-
-
     }
 
     public void ReadAndAppendFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
