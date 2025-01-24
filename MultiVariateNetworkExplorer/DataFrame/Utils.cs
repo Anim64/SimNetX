@@ -39,6 +39,17 @@ namespace DataFrameLibrary
             return noDashedAtEnd;
         }
 
+        public static string HandleInvalidStartingChar(this string text)
+        {
+            string digitStartPattern = @"^\d";
+            if(Regex.IsMatch(text, digitStartPattern))
+            {
+                return $"a{text}";
+            }
+
+            return text;
+        }
+
         public static bool IsNotBinary(this double x)
         {
             return x != 0 && x != 1;
