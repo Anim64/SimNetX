@@ -25,7 +25,8 @@ This action sets all values that are lower than similarity matrix geometric mean
 - Change the way the graph is stored at client side. Lowered memory consumption.
 - The color settings and other visual settings were moved to its own tab to better 
 separate graph visual and layout settings.
-- Moved node attribute sizing to visual settings
+- Moved node attribute sizing to visual settings.
+- Changed the form structure for dataset loading for better clarity.
 
 ### Removed
 

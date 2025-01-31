@@ -21,47 +21,35 @@
                 <span>Data parameters</span>
             </div>
             <div class="collapsible-parameters-content">
-                <label asp-for="InputModel.Directed"><span>Is the network directed?</span></label>
-                <select asp-for="InputModel.Directed" asp-items="Model.InputModel.YesNoList"></select> 
-
                 <label asp-for="InputModel.Header"><span>Does the vector data file contain headers?</span></label>
                 <select asp-for="InputModel.Header" asp-items="Model.InputModel.YesNoList"></select>
 
+                <label asp-for="InputModel.Separators">Enter the data separating characters(separated by SPACE):</label>
+                @Html.TextBoxFor(m => m.InputModel.Separators)
                 
                 <label asp-for="InputModel.MissingValues">
                     <span>Enter the character representing missing data (leave empty if no character is used)</span>
                 </label>
                 <input type="text" asp-for="InputModel.MissingValues" value="na" placeholder="eg: -, --, NA etc."/>
-            </div>
-            <div class="collapsible-parameters-btn">
-                <i class='fa fa-chevron-up'></i>
-                <span>Separators</span>
-            </div>
-            <div class="collapsible-parameters-content">
-                <label asp-for="InputModel.Separators">Enter the data separating characters(separated by SPACE):</label>
-                @Html.TextBoxFor(m => m.InputModel.Separators)
-            </div>
-
-            <div class="collapsible-parameters-btn">
-                <i class='fa fa-chevron-up'></i>
-                <span>Group and Id Parameters</span>
-            </div>
-            <div class="collapsible-parameters-content">
-                <label asp-for="InputModel.CommunityDetection">Initialize with community detection</label>
-                <select asp-for="InputModel.CommunityDetection" asp-items="Model.InputModel.YesNoList"></select>
-
-                <label asp-for="InputModel.GroupColumnName">Enter the column name or number with groups (optional)</label>
-                @Html.TextBoxFor(m => m.InputModel.GroupColumnName)
 
                 <label asp-for="InputModel.IdColumnName">Enter the column name or number with ids (optional)</label>
                 @Html.TextBoxFor(m => m.InputModel.IdColumnName)
+
+                <label asp-for="InputModel.GroupColumnName">Enter the column name or number with groups (optional)</label>
+                @Html.TextBoxFor(m => m.InputModel.GroupColumnName)
             </div>
-            
+
             <div class="collapsible-parameters-btn">
                 <i class='fa fa-chevron-up'></i>
-                <span>Conversion Parameters</span>
+                <span>Network Construction Parameters</span>
             </div>
             <div class="collapsible-parameters-content" id="conversion-collapsible-content">
+                <label asp-for="InputModel.Directed"><span>Is the network directed?</span></label>
+                <select asp-for="InputModel.Directed" asp-items="Model.InputModel.YesNoList"></select>
+
+                <label asp-for="InputModel.CommunityDetection">Initialize with community detection</label>
+                <select asp-for="InputModel.CommunityDetection" asp-items="Model.InputModel.YesNoList"></select>
+
                 <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
                 <label asp-for="InputModel.ConversionAlgorithmName">Choose a conversion algorithm:</label>
                 <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>
