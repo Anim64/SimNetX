@@ -49,15 +49,29 @@ namespace VectorConversion.VectorDataConversion
                 }
                 neighbours = neighbours
                     .OrderByDescending(j => kernelMatrix[objectI, j])
-                    .Take(Math.Min((int)Math.Max(k.Value, this.K), neighbours.Count))
                     .ToList();
 
+                int finalK = Math.Min((int)Math.Max(k.Value, this.K), neighbours.Count);
+
+                //Max similarity is 1, so 2 will always be higher
+                double lastSimilarity = 2;
                 string iNodeId = idColumn[objectI];
-                foreach (var j in neighbours)
+                int count = 0;
+                int n = 0;
+                while(count < finalK && n < neighbours.Count) 
                 {
-                    string jNodeId = idColumn[j];
+                    int neighbourId = neighbours[n];
+                    string jNodeId = idColumn[neighbourId];
                     resultNet.SetIndirectedEdge(iNodeId, jNodeId, 1);
+
+                    if (kernelMatrix[objectI, neighbourId] < lastSimilarity)
+                    {
+                        count++;
+                    }
+
+                    n++;
                 }
+                
             }
             return resultNet;
         }
