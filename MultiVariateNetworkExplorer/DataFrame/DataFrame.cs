@@ -112,24 +112,23 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
         CatAttrValues = new Dictionary<string, List<string>>();
 
+        this.ReadFromFile(fileName, missingvalues, classColumn, header, separator);
+
         if (string.IsNullOrEmpty(idColumn))
         {
             IdColumnName = null;
             IdColumn = new ColumnString(Enumerable.Range(0, this.DataCount).Select(id => id.ToString()).ToList());
+            return;
         }
-
-        else
-        {
-            idColumn = Utils.RemoveDiacritics(idColumn);
-            bool isParsable = int.TryParse(idColumn, out int result);
-            IdColumnName =
-                (isParsable ? "Attribute" + idColumn : idColumn)
-                .Trim()
-                .RemoveSpecialCharacters()
-                .HandleInvalidStartingChar();
-        }
-
-        this.ReadFromFile(fileName, missingvalues, classColumn, header, separator);
+        
+        idColumn = Utils.RemoveDiacritics(idColumn);
+        bool isParsable = int.TryParse(idColumn, out int result);
+        IdColumnName =
+            (isParsable ? "Attribute" + idColumn : idColumn)
+            .Trim()
+            .RemoveSpecialCharacters()
+            .HandleInvalidStartingChar();
+        
     }
 
     /// <summary>
