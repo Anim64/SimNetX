@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataFrame\DataFrame.csproj" />
+    <ProjectReference Include="..\Matrix\Matrix.csproj" />
   </ItemGroup>
 
 </Project>

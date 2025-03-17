@@ -1,5 +1,6 @@
 ﻿using Columns.Types;
 using DataFrameLibrary;
+using Matrix;
 using System;
 using System.Collections.Generic;
 using System.Linq;

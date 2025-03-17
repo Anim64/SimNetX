@@ -6,26 +6,22 @@
     display: none;
 }
 
-
-.partition-metric-graph-container{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
+.partition-metric-graph-container {
+    display: block;
     padding-top: 1rem;
     padding-left: 1rem;
     height: 100%;
-    
 }
 
-#partition-metric-boxplot-graph-container {
-    display: flex;
-    -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    
+.partition-metric-graph-container-grid {
+    display: grid;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    height: 100%;
+    grid-template-columns: repeat(3, 1fr);
 }
 
-#partition-metric-boxplot-graph-container svg {
-    -ms-flex: 1 1 100%;
-    -webkit-flex: 1 1 100%;
-    flex: 1 1 100%;
+.partition-boxplot-container {
+    grid-template-columns: repeat(2, 1fr);
+    display: none;
 }

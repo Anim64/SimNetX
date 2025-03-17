@@ -85,16 +85,21 @@ namespace Columns.Types
             double min = double.MaxValue;
             double max = double.MinValue;
 
-            foreach (double value in Data)
+            foreach (double? value in Data)
             {
+                if(value is null)
+                {
+                    continue;
+                } 
+
                 if (value > max)
                 {
-                    max = value;
+                    max = (double)value;
                 }
 
                 if (value < min)
                 {
-                    min = value;
+                    min = (double)value;
                 }
             }
 

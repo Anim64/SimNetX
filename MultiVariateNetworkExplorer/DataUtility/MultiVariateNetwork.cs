@@ -19,7 +19,10 @@ namespace MultiVariateNetworkLibrary
         private static readonly string jsonPartitionsName = "partitions";
         private static readonly string jsonRealClassesName = "classes";
         private static readonly string jsonAttributesName = "attributes";
-        
+        private static readonly string jsonMetricName = "metric";
+        private static readonly string jsonConversionAlgName = "conversionAlg";
+
+
         public DataFrame VectorData { get; set; }
         public Network Network { get; set; }
 
@@ -28,6 +31,8 @@ namespace MultiVariateNetworkLibrary
         public Dictionary<string, string> RealClasses { get; set; }
 
         public bool Directed { get; set; }
+        public IVectorConversion ConversionAlg { get; }
+        public IMetric Metric { get; }
 
         public MultiVariateNetwork()
         {
@@ -54,6 +59,8 @@ namespace MultiVariateNetworkLibrary
 
             this.Directed = directed;
             this.Partition = this.RealClasses = null;
+            this.ConversionAlg = convertAlg;
+            this.Metric = chosenMetric;
             
             //if (!string.IsNullOrEmpty(groupColumn))
             //{
@@ -133,8 +140,25 @@ namespace MultiVariateNetworkLibrary
             JArray jLinks = this.Network.LinksToD3Json();
 
             JObject jAttributes = this.VectorData.AttributesToD3Json();
-            JObject jPartition = new JObject();
-            JObject jRealClasses = new JObject();
+            JObject jPartition = new();
+            JObject jRealClasses = new();
+
+            JObject jMetric = new()
+            {
+                ["name"] = this.Metric.GetType().Name,
+                ["params"] = new JArray(this.Metric
+                    .GetType()
+                    .GetProperties()
+                    .Select(p => p.GetValue(Metric)))
+            };
+            JObject jConversion = new()
+            {
+                ["name"] = this.ConversionAlg.GetType().Name,
+                ["params"] = new JArray(this.ConversionAlg
+                    .GetType()
+                    .GetProperties()
+                    .Select(p => p.GetValue(ConversionAlg)))
+            };
 
             int dataCount = this.VectorData.DataCount;
 
@@ -151,13 +175,15 @@ namespace MultiVariateNetworkLibrary
                 [jsonLinksName] = jLinks,
                 [jsonPartitionsName] = jPartition,
                 [jsonRealClassesName] = jRealClasses,
-                [jsonAttributesName] = jAttributes
+                [jsonAttributesName] = jAttributes,
+                [jsonMetricName] = jMetric,
+                [jsonConversionAlgName] = jConversion
             };
 
             JObject jData = new()
             {
                 [jsonNodesName] = jNodeData,
-                [jsonLinksName] = jLinkData,
+                [jsonLinksName] = jLinkData
             };
 
             root["graph"] = jGraph;

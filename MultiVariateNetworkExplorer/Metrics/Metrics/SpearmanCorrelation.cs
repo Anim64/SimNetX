@@ -1,7 +1,10 @@
 ﻿using Columns.Types;
 using DataFrameLibrary;
+using Matrix;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Metrics.Metrics
 {
@@ -10,8 +13,50 @@ namespace Metrics.Metrics
         protected override Matrix<double> CalculateMetricMatrix(DataFrame vectorData, IEnumerable<string> exclude = null)
         {
             DataFrame orderDataFrame = GetValueOrderDataFrame(vectorData, exclude);
-            PearsonCorrelation pc = new();
-            return pc.GetMetricMatrix(orderDataFrame, false, null);
+            int dataCount = vectorData.DataCount;
+            Matrix<double> kernelMatrix = new Matrix<double>(dataCount, dataCount);
+            var columnNames = orderDataFrame.Columns;
+            Parallel.For(0, dataCount, i =>
+            {
+                for (int j = i; j < dataCount; j++)
+                {
+                    if (i == j)
+                    {
+                        kernelMatrix[i, j] = kernelMatrix[j, i] = 1;
+                        continue;
+                    }
+
+                    double sumOfSquaredDiffs = 0;
+
+                    foreach (var columnName in columnNames)
+                    {
+                        var column = orderDataFrame[columnName];
+                        if (column is not ColumnString)
+                        {
+                            //Get vector values
+                            double vectorValueA = orderDataFrame[columnName,i] != null ? Convert.ToDouble(orderDataFrame[columnName,i]) : orderDataFrame.Averages[columnName];
+                            double vectorValueB = orderDataFrame[columnName,j] != null ? Convert.ToDouble(orderDataFrame[columnName,j]) : orderDataFrame.Averages[columnName];
+
+                            //Calculate difference of vector values
+                            double difference = vectorValueA - vectorValueB;
+
+                            //Difference squared
+                            double diffSquared = difference * difference;
+
+                            sumOfSquaredDiffs += diffSquared;
+                        }
+                    }
+
+                    double correlationPairCount = columnNames.Count();
+                    double numerator = 6 * sumOfSquaredDiffs;
+                    double denominator = correlationPairCount * ((correlationPairCount * correlationPairCount) - 1);
+                    double spearmanCorrelation = 1 - (numerator / denominator);
+                    kernelMatrix[i, j] = kernelMatrix[j, i] = spearmanCorrelation;
+
+                }
+            });
+
+            return kernelMatrix;
         }
 
         private DataFrame GetValueOrderDataFrame(DataFrame vectorData, IEnumerable<string> exclude)
@@ -32,66 +77,45 @@ namespace Metrics.Metrics
             }
 
             columnNames = result.Columns;
-
-            //Parallel.For(0, vectorData.DataCount, i =>
-            for (int i = 0; i < vectorData.DataCount; i++)
-            {
-                RankifyVector(vectorData, columnNames, i, result);
-            }//);
+            
+            RankifyVector(vectorData, columnNames, result);
 
             return result;
         }
 
-        private void RankifyVector(DataFrame vectorData, IEnumerable<string> columns, int vectorIndex, DataFrame output)
+        private void RankifyVector(DataFrame vectorData, IEnumerable<string> columns, DataFrame output)
         {
             int columnCount = columns.Count();
-            for (int i = 0; i < columnCount; i++)
-            {
+            int dataCount = vectorData.DataCount;
 
-                int r = 1, s = 1;
-
-                int j = 0;
-                double iValue = (double)vectorData[columns.ElementAt(i)][vectorIndex];
-                while(j < i)
+            for(int i = 0; i < dataCount ;i++)
+            {   
+                List<double?> vectorValues = new List<double?>();
+                foreach(string column in columns)
                 {
-                    double jValue = (double)vectorData[columns.ElementAt(j)][vectorIndex];
-                    if (jValue < iValue)
-                    {
-                        r++;
-                        j++;
-                        continue;
-                    }
-
-                    if(jValue == iValue)
-                    {
-                        s++;
-                    }
-
-                    j++;
+                    vectorValues.Add((double)vectorData[column][i]);
                 }
 
-                j = i + 1;
-
-                while(j < columnCount) 
+                for(int j = 0; j < columnCount; j++)
                 {
-                    double jValue = (double)vectorData[columns.ElementAt(j)][vectorIndex];
-                    if (jValue < iValue)
+                    int r = 1, s = 1;
+
+                    for(int k = 0; k < columnCount; k++)
                     {
-                        r++;
-                        j++;
-                        continue;
+                        if (k != j && vectorValues[k] < vectorValues[j])
+                        {
+                            r += 1;
+                        }
+            
+                        if (k != j && vectorValues[k] == vectorValues[j]) 
+                        {
+                            s += 1;
+                        }
                     }
 
-                    if (jValue == iValue)
-                    {
-                        s++;
-                    }
-
-                    j++;
+                    double rank = r + 0.5 * (s - 1);
+                    output[columns.ElementAt(j)].AddData(rank);
                 }
-
-                double rank = (r + (s - 1) * 0.5);
-                output[columns.ElementAt(i)].AddData(rank);
             }
         }
     }

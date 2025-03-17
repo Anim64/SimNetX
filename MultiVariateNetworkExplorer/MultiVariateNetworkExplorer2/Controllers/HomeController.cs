@@ -4,23 +4,36 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using DataFrameLibrary;
+using Matrix;
 using Metrics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Framework;
+using Microsoft.Extensions.Logging;
 using MultiVariateNetworkExplorer.Models;
 using MultiVariateNetworkExplorer2.Models;
 using MultiVariateNetworkLibrary;
 using NetworkLibrary;
 using Newtonsoft.Json.Linq;
+using NuGet.Common;
 using VectorConversion;
 using static Metrics.Enums.ParameterEnums;
 
 namespace MultiVariateNetworkExplorer.Controllers
 {
+    
     public class HomeController : Controller
     {
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(ILogger<HomeController> logger)
+        {
+            _logger = logger;
+        }
+
         [Authorize]
         private bool GraphErrorHandling(out ErrorInputModel eim, List<IFormFile> files, string separators, string missingvalues,
              string groupColumn, string idColumn)
@@ -183,7 +196,13 @@ namespace MultiVariateNetworkExplorer.Controllers
             JObject jAttributeTransform = JObject.Parse(attributeTransform);
             JObject jNetworkRemodelParams = JObject.Parse(networkRemodelParams);
             JArray jExcludedAttributes = JArray.Parse(excludedAttributes);
-            
+
+            //JObject jNodes = (JObject)data["nodes"];
+            //JObject jAttributes = (JObject)data["attributes"];
+            //JObject jAttributeTransform = (JObject)data["attributeTransform"];
+            //JObject jNetworkRemodelParams = (JObject)data["networkRemodelParams"];
+            //JArray jExcludedAttributes = (JArray)data["excludedAttributes"];
+
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
             await nodeAttributes.ApplyJsonTransformationAsync(jAttributeTransform);
@@ -212,9 +231,12 @@ namespace MultiVariateNetworkExplorer.Controllers
             
         }
 
+
         [HttpPost, Authorize]
         public JsonResult GraphCommunityDetection(string nodes, string links)
         {
+            this._logger.LogInformation("Starting community detection...");
+            
             JArray jNodes = JArray.Parse(nodes);
             JArray jLinks = JArray.Parse(links);
             Network filteredNetwork = Network.FromD3Json(jNodes, jLinks);
@@ -229,8 +251,46 @@ namespace MultiVariateNetworkExplorer.Controllers
                 partitions[node.Key] = node.Value;
             }
 
-
+            this._logger.LogInformation("Finished community detection...");
             return Json(new { newPartitions = partitions.ToString(), newSelections = mvnTemp.PartitionsToD3Json()});
+        }
+
+        [HttpPost, Authorize]
+        public JsonResult GetSilhouette(string nodes, string attributes, string partitions, string excludedAttributes, string metric)
+        {
+            JObject jNodes = JObject.Parse(nodes);
+            JObject jAttributes = JObject.Parse(attributes);
+            JObject jMetric = JObject.Parse(metric);
+            List<string> excludedAttributesList = JArray.Parse(excludedAttributes).ToObject<List<string>>();
+
+            Dictionary<string, string> partitionsDict = 
+                JObject.Parse(partitions)
+                .ToObject<Dictionary<string, string>>();
+
+            DataFrame data = DataFrame.FromD3Json(jNodes, jAttributes);
+
+            Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
+            object[] metricParams = jMetric["params"].ToObject<object[]>();
+            bool doNulify = false;// jMetric["nulify"].ToObject<bool>();
+            IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams);
+            Matrix<double> metricMat = chosenMetric.GetMetricMatrix(data, doNulify, excludedAttributesList);
+
+            //Get the silhouette
+            Dictionary<string, double> silhouette = data.Silhouette(partitionsDict, metricMat);
+
+
+            JArray silhouetteData = new();
+            foreach(var partitionsPair in partitionsDict)
+            {
+                string nodeId = partitionsPair.Key;
+                JObject plotData = new();
+                plotData["x"] = nodeId;
+                plotData["y"] = silhouette[nodeId];
+                silhouetteData.Add(plotData);
+            }
+            
+            
+            return Json(new { silhouetteData = silhouetteData.ToString() });
         }
 
 

@@ -21,17 +21,18 @@ const dormanFormula = function (attributeValues) {
     return k;
 }
 
-const hist = function (containerDivId, currentGraph, attribute, svgWidth, svgHeight) {
-    const attributeValues = currentGraph.getAllAttributeValues(attribute);
-    const nBins = dormanFormula(attributeValues);
+const hist = function (containerDivId, data, attribute, svgWidth, svgHeight) {
+    const nBins = 30;//dormanFormula(attributeValues);
     const histogramMargin = { top: 10, right: 10, bottom: 20, left: 25 },
         histogramWidth = svgWidth - (histogramMargin.left + histogramMargin.right),
         histogramHeight = svgHeight - (histogramMargin.top + histogramMargin.bottom);
 
 
-    const xMin = d3.min(attributeValues);
-    const xMax = d3.max(attributeValues);
-    const xAxis = createLinearAxis(xMin, xMax, 0, histogramWidth);
+    const xMin = d3.min(data);
+    let xMax = d3.max(data);
+    xMax += xMax * 0.1;
+    const xAxis = createLinearAxis(xMin, xMax, 0, histogramWidth).nice();
+    
 
 
     const histogram = d3
@@ -39,13 +40,16 @@ const hist = function (containerDivId, currentGraph, attribute, svgWidth, svgHei
         .domain(xAxis.domain())
         .thresholds(xAxis.ticks(nBins));
 
-    const bins = histogram(attributeValues);
+    const bins = histogram(data);
 
     const yMin = 0;
     const yMax = d3.max(bins, function (d) {
         return d.length;
     });
-    const yAxis = createLinearAxis(yMin, yMax, histogramHeight, 0);
+    const yAxis = createLinearAxis(yMin, yMax, histogramHeight, 0)
+
+    //const yAxis = createLogAxis(yMin, yMax, histogramHeight, 0, 2)
+    
 
     const plotContainer = getPlotContainer(containerDivId);
     const histogramSvg =
@@ -54,7 +58,7 @@ const hist = function (containerDivId, currentGraph, attribute, svgWidth, svgHei
 
     
     appendGraphXAxis(histogramSvg, xAxis, 0, histogramHeight);
-    appendGraphYAxis(histogramSvg, yAxis, 0, 0);
+    appendGraphYLeftAxis(histogramSvg, yAxis, 0, 0, 8);
     appendHistogramBins(histogramSvg, bins, histogramHeight, xAxis, yAxis);
 }
 
@@ -77,6 +81,7 @@ const appendHistogramBins = function (svg, bins, height, xAxis, yAxis) {
             return xAxis(d.x1) - xAxis(d.x0) - 1;
         })
         .attr("height", function (d) {
+
             return height - yAxis(d.length);
         })
         .style("fill", "#ffeead");
@@ -86,26 +91,27 @@ const appendHistogramBins = function (svg, bins, height, xAxis, yAxis) {
 
 
 
-const barplot = function (containerDivId, data, yMin, yMax, svgWidth, svgHeight, cluster) {
-    const barplotMargin = { top: 10, right: 10, bottom: 30, left: 25 },
+const barplot = function (containerDivId, data, yMin, yMax, svgWidth, svgHeight, barColour, id, title, titleColour, paddingInner = 0.1) {
+    const barplotMargin = { top: 25, right: 10, bottom: 30, left: 25 },
         barplotWidth = svgWidth - (barplotMargin.left + barplotMargin.right),
         barplotHeight = svgHeight - (barplotMargin.top + barplotMargin.bottom);
 
-    const xAxis = createBandAxis(data.map((d) => { return d.className }), 0, barplotWidth);
+    const xAxis = createBandAxis(data.map((d) => { return d.x }), 0, barplotWidth, paddingInner);
     const yAxis = createLinearAxis(yMin, yMax, barplotHeight, 0);
 
     const plotContainer = getPlotContainer(containerDivId);
-    const barplotSvg = createGraphSvg(plotContainer, svgWidth, svgHeight, barplotMargin, cluster)
+    const barplotSvg = createGraphSvg(plotContainer, svgWidth, svgHeight, barplotMargin, id)
 
     const axisColour = "white";
     appendGraphXAxis(barplotSvg, xAxis, 0, barplotHeight, axisColour, true);
-    appendGraphYAxis(barplotSvg, yAxis, 0, 0, axisColour);
+    appendGraphYLeftAxis(barplotSvg, yAxis, 0, 0, undefined, axisColour);
     appendLine(barplotSvg, 0, barplotWidth, yAxis(0), yAxis(0), axisColour);
-    const tooltip = createTooltip(plotContainer, cluster);
+    appendTitle(barplotSvg, title, barplotWidth, barplotMargin, 16, titleColour);
+    const tooltip = createTooltip(plotContainer, id);
     const mouseenter = createBarplotTooltipMouseEnter(tooltip);
     const mousemove = createTooltipMousemove(tooltip);
     const mouseleave = createTooltipMouseleave(tooltip);
-    createBars(barplotSvg, data, xAxis, yAxis, barplotHeight, "#ffeead", mouseenter, mousemove, mouseleave);
+    createBars(barplotSvg, data, xAxis, yAxis, barplotHeight, barColour, mouseenter, mousemove, mouseleave);
 
 }
 
@@ -120,7 +126,7 @@ const createBars = function (svg, data, xAxis, yAxis, height, fillColor,
 
     gBars
         .append("rect")
-        .attr("x", (d) => { return xAxis(d.className); })
+        .attr("x", (d) => { return xAxis(d.x); })
         .attr("y", (d) => { return yAxis(1); })
         .attr("width", xAxis.bandwidth())
         .attr("height", (d) => { return Math.abs(yAxis(1) - yAxis(-1)); })
@@ -133,21 +139,30 @@ const createBars = function (svg, data, xAxis, yAxis, height, fillColor,
 
     gBars
         .append("rect")
-        .attr("x", (d) => { return xAxis(d.className); })
-        .attr("y", (d) => { return yAxis(Math.max(0, d.value)); })
+        .attr("x", (d) => { return xAxis(d.x); })
+        .attr("y", (d) => { return yAxis(Math.max(0, d.y)); })
         .attr("width", xAxis.bandwidth())
-        .attr("height", (d) => { return Math.abs(yAxis(d.value) - yAxis(0)); })
-        .attr("fill", fillColor)
+        .attr("height", (d) => { return Math.abs(yAxis(d.y) - yAxis(0)); })
         .attr("pointer-events", "none");
-        
 
-    
-
+    if (typeof fillColor === 'object' && !Array.isArray(fillColor) && fillColor !== null) {
+        gBars.attr("fill", (d) => { return fillColor[d.x]; });
+        return svg;
+    }
+    else if (Array.isArray(fillColor)) {
+        gBars.attr("fill", (d, i) => { return fillColor[i]; });
+        return svg;
+    }
+    else if (typeof fillColor === "string") {
+        gBars.attr("fill", fillColor);
+        return svg;
+    }
+    gBars.attr("fill", "#ffeead");
     return svg;
 }
 
-const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
-    const boxplotMargin = { top: 10, right: 25, bottom: 50, left: 25 },
+const boxplot = function (plotContainer, data, svgWidth, svgHeight, idPrefix ,id, title, boxColour = "red") {
+    const boxplotMargin = { top: 25, right: 40, bottom: 50, left: 40 },
         boxplotWidth = svgWidth - (boxplotMargin.left + boxplotMargin.right),
         boxplotHeight = svgHeight - (boxplotMargin.top + boxplotMargin.bottom);
 
@@ -159,25 +174,31 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
     yMin -= attributeRangePortion;
     yMax += attributeRangePortion;
 
-    const xAxis = createBandAxis(data.map(d => d.key), 0, boxplotWidth, 0.5);
+    const xAxis = createBandAxis(data.map(d => d.key), 0, boxplotWidth, 0.1, 0.3);
     const yAxis = createLinearAxis(yMin, yMax, boxplotHeight, 0);
 
-    const boxplotSvgId = `partition-metric-boxplot-${id}-svg`;
+    const boxplotSvgId = `${idPrefix}-${id}-svg`;
 
-    const tooltipId = `partition-metric-boxplot-${id}`;
-    const tooltip = createTooltip(plotContainer, tooltipId);
+    const divId = `${idPrefix}-${id}-container`;
+    const plotDiv = plotContainer
+        .append("div")
+        .attr("id", divId)
+        .style("position", "relative");
+    
+    const tooltip = createTooltip(plotDiv, divId);
     const mouseenter = createBoxplotTooltipMouseEnter(tooltip);
     const mousemove = createTooltipMousemove(tooltip);
     const mouseleave = createBoxplotTooltipMouseleave(tooltip);
 
-    
+    const boxplotSvg = createGraphSvg(plotDiv, svgWidth, svgHeight, boxplotMargin, boxplotSvgId);
 
-    const boxplotSvg = createGraphSvg(plotContainer, svgWidth, svgHeight, boxplotMargin, boxplotSvgId)
+    boxplotSvg
+        .datum({ 'id': id });
 
     const axisColour = "white";
     appendGraphXAxis(boxplotSvg, xAxis, 0, boxplotHeight, axisColour, false);
-    appendGraphYAxis(boxplotSvg, yAxis, 0, 0, axisColour);
-    appendGraphYAxis(boxplotSvg, yAxis, boxplotWidth, 0, axisColour);
+    appendGraphYLeftAxis(boxplotSvg, yAxis, 0, 0, undefined, axisColour);
+    appendGraphYRightAxis(boxplotSvg, yAxis, boxplotWidth, 0, axisColour);
 
 
     const boxContainers = boxplotSvg.selectAll("boxesG")
@@ -190,7 +211,7 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
 
     //boxes
     appendBoxplotRects(boxContainers, xAxis,
-        yAxis, data, axisColour);
+        yAxis, boxColour, axisColour);
     //medianLine
     appendMedianBoxplotLine(boxContainers, "median", xAxis, yAxis, axisColour);
     //verticalLine
@@ -199,6 +220,10 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, id) {
     appendMinBoxplotLine(boxContainers, xAxis, yAxis, axisColour);
     //MaxLine
     appendMaxBoxplotLine(boxContainers, xAxis, yAxis, axisColour);
+
+    appendTitle(boxplotSvg, title, boxplotWidth, boxplotMargin, 16);
+
+    return boxplotSvg;
 }
 
 const appendBoxplotRects = function (svg, xAxis, yAxis, fillColour, strokeColour) {
@@ -220,11 +245,25 @@ const appendBoxplotRects = function (svg, xAxis, yAxis, fillColour, strokeColour
         .style("stroke", strokeColour);
 }
 
-const updateBoxplotColour = function (boxplots, colourObject) {
-    boxplots.selectAll("rect")
-        .style("fill", function (d) {
+const updateBoxplotColour = function (boxplotContainer, colourObject) {
+    const boxes = boxplotContainer.selectAll("rect");
+    if (typeof colourObject === 'string' || colourObject instanceof String) {
+        boxes.style("fill", function (d) {
+            return colourObject;
+        });
+    }
+    else if (Array.isArray(colourObject)) {
+        boxes.style("fill", function (d, i) {
+            return colourObject[i];
+        });
+    }
+    else if (typeof colourObject === 'object' && colourObject !== null)
+    {
+        boxes.style("fill", function (d, i) {
             return colourObject[d.key];
-        })
+        });
+    }
+        
 }
 
 const createTooltip = function (plotContainer, id) {
@@ -236,10 +275,10 @@ const createTooltip = function (plotContainer, id) {
 
 const createBarplotTooltipMouseEnter = function (tooltip) {
     const mouseenter = function (d) {
-        const { className, value } = d;
+        const { x, y } = d;
         d3.select(this).style("stroke-opacity", 1);
         tooltip
-            .html("Class: " + className + "<br>" + "Value: " + value.toFixed(2))
+            .html("x: " + x + "<br>" + "y: " + y.toFixed(2))
             .style("opacity", 1);
     }
     return mouseenter;
@@ -267,12 +306,7 @@ const createBoxplotTooltipMouseEnter = function (tooltip) {
     const mouseenter = function (d) {
         const { className, value } = d;
         d3.select(this).selectAll("*").style("stroke", "black");
-        const text = `Median: ${d.value.median.toFixed(2)} <br>
-                      Q1: ${d.value.q1.toFixed(2)} <br>
-                      Q3: ${d.value.q3.toFixed(2)} <br>
-                      IQR: ${d.value.IQR.toFixed(2)} <br>
-                      min: ${d.value.min.toFixed(2)} <br>
-                      max: ${d.value.max.toFixed(2)}`;
+        const text = `Median: ${d.value.median.toFixed(2)} <br> Q1: ${d.value.q1.toFixed(2)} <br> Q3: ${d.value.q3.toFixed(2)} <br> IQR: ${d.value.IQR.toFixed(2)} <br> min: ${d.value.min.toFixed(2)} <br> max: ${d.value.max.toFixed(2)}`;
         tooltip
             .html(text)
             .style("opacity", 1);
@@ -290,16 +324,17 @@ const createBoxplotTooltipMouseleave = function (tooltip) {
 }
 
 const getPlotContainer = function (containerDivId) {
-    return d3.select(`#${containerDivId}`);
+    return d3.select(`#${containerDivId}`).html("");
 }
 
-const createGraphSvg = function (plotContainer, width, height, margin, attribute, id) {
+const createGraphSvg = function (plotContainer, width, height, margin/*, attribute*/, id) {
+    
     const histogramSvg = plotContainer
         .append("svg")
         .attr("width", "100%"/*width + margin.left + margin.right*/)
         .attr("height", height + margin.top + margin.bottom)
-        .attr("data-attribute", attribute)
-        .attr("id", id)
+        //.attr("data-attribute", attribute)
+        .attr("id", `${id}-svg`)
         .attr("viewBox", [0, 0, width, height])
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -314,7 +349,16 @@ const appendGraphXAxis = function (svg, axis, translateX, translateY, colour = "
     const axisBot = d3.axisBottom(axis);
     if (hideLabels) {
         axisBot.tickFormat("");
+        axisBot.tickSize(0);
     }
+
+    else {
+        const maxAxisTickNameLength = 8;
+        axisBot.tickFormat(function (d) {
+            return d.length > maxAxisTickNameLength ? d.slice(0, maxAxisTickNameLength) : d;
+        });
+    }
+    
 
     const resultAxis = svg
         .append("g")
@@ -327,7 +371,13 @@ const appendGraphXAxis = function (svg, axis, translateX, translateY, colour = "
         .attr("stroke", colour);
 
     resultAxis.selectAll(".tick text")
-        .attr("fill", colour);
+        .attr("fill", colour)
+
+    resultAxis.selectAll(".tick")
+        .append("title")
+        .text(function (d) {
+            return d;
+        });
 
     
 
@@ -342,11 +392,26 @@ const tiltAxisText = function (axisGElement) {
     return axisGElement;
 }
 
-const appendGraphYAxis = function (svg, axis, translateX, translateY, colour = "black") {
+const appendGraphYLeftAxis = function (svg, axis, translateX, translateY, ticks = 10, colour = "black") {
     const resultAxis = svg
         .append("g")
         .attr("transform", "translate(" + translateX + "," + translateY + ")")
-        .call(d3.axisLeft(axis));
+        .call(d3.axisLeft(axis)/*.ticks(ticks)*/);
+
+    resultAxis.selectAll(".domain,.tick line")
+        .attr("stroke", colour);
+
+    resultAxis.selectAll(".tick text")
+        .attr("fill", colour);
+
+    return resultAxis;
+}
+
+const appendGraphYRightAxis = function (svg, axis, translateX, translateY, colour = "black") {
+    const resultAxis = svg
+        .append("g")
+        .attr("transform", "translate(" + translateX + "," + translateY + ")")
+        .call(d3.axisRight(axis));
 
     resultAxis.selectAll(".domain,.tick line")
         .attr("stroke", colour);
@@ -365,6 +430,17 @@ const appendLine = function(svg, x1, x2, y1, y2, colour = "black"){
             .attr("x2", x2)
             .attr("y1", y1)
             .attr("y2", y2);
+}
+
+const appendTitle = function (container, titleText, plotWidth, plotMargin, fontSize, colour = "white") {
+    return container.append("text")
+        .attr("x", (plotWidth / 2))
+        .attr("y", 0 - (plotMargin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", `${fontSize}px`)
+        .style("text-decoration", "underline")
+        .style("fill", colour)
+        .text(titleText);
 }
 
 const appendMedianBoxplotLine = function (svg, attributeName, xAxis, yAxis, colour = "black") {
@@ -428,11 +504,22 @@ const createLinearAxis = function (domainMin, domainMax, rangeMin, rangeMax) {
     return axis;
 }
 
-const createBandAxis = function (domainValues, rangeMin, rangeMax, padding = 0.2) {
+const createBandAxis = function (domainValues, rangeMin, rangeMax, paddingInner = 0.1, paddingOuter = 0.5) {
     const axis = d3
         .scaleBand()
         .range([rangeMin, rangeMax])
         .domain(domainValues)
-        .padding(padding);
+        .paddingInner(paddingInner)
+        .paddingOuter(paddingOuter);
+    return axis;
+}
+
+const createLogAxis = function (domainMin, domainMax, rangeMin, rangeMax, base = 10) {
+    const axis = d3
+        .scaleSymlog()
+        .domain([domainMin, domainMax])
+        .range([rangeMin, rangeMax])
+        .constant(10)
+        
     return axis;
 }

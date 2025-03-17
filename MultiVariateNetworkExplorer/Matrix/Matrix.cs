@@ -1,4 +1,4 @@
-﻿namespace Metrics
+﻿namespace Matrix
 {
     public class Matrix<T>
     {

@@ -62,11 +62,20 @@
                 <div id="partition-metric-select-container">
                     <label for="partition-metric-select">Select metric:</label>
                     <select id="partition-metric-select" onchange="displayPartitionMetric()">
-                            <option selected value="mcc" title="Mathews\'s correlation coefficient">Mathews's correlation coefficient</option>
+                            <option selected value="silhouette" title="Silhouette">Silhouette Index</option>
+                            <option value="mcc" title="Mathews\'s correlation coefficient">Mathews's correlation coefficient</option>
                             <option value="boxplot" title="Boxplot">Boxplot</option>
                     </select>
                 </div>
-                <div class="active-block partition-metric-wrapper" id="partition-metric-mcc-container">
+                <div class="active-block partition-metric-wrapper" id="partition-metric-silhouette-container">
+                    <div class="flex-row justify-content-start">
+                         <label for="silhouette-metric-btn">Calculate Silhouette index for current partitions:</label>
+                        <button id="silhouette-metric-btn" onclick="requestSilhouette()">Run</button>
+                    </div>
+                    <div class="partition-metric-graph-container" id="partition-metric-silhouette-complete-graph-container"></div>
+                    <div class="partition-metric-graph-container-grid" id="partition-metric-silhouette-graph-container"></div>
+                </div>
+                <div class="partition-metric-wrapper" id="partition-metric-mcc-container">
                     <div class="flex-row justify-content-start">
                         <label for="partition-metric-mcc-attribute-select">Select real class attribute:</label>
                         <select id="partition-metric-mcc-attribute-select">
@@ -75,22 +84,21 @@
                                 <option value="@key">@key</option>
                             }
                         </select>
-                        <button onclick="createPartitionMccGraphs()">Run</button>
+                            <button onclick="createPartitionMccGraphs()">Run</button>
                     </div>
-                    <div class="partition-metric-graph-container" id="partition-metric-mcc-graph-container"></div>
+                    <div class="partition-metric-graph-container-grid" id="partition-metric-mcc-graph-container"></div>
                 </div>
-                    <div class="partition-metric-wrapper " id="partition-metric-boxplot-container">
+                <div class="partition-metric-wrapper " id="partition-metric-boxplot-container">
                     <div class="flex-row justify-content-start">
-                        <label for="partition-metric-boxplot-attribute-select">Select attribute:</label>
-                        <select id="partition-metric-boxplot-attribute-select">
-                            @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-                            {
-                                <option value="@key">@key</option>
-                            }
+                        <label for="partition-metric-boxplot-type-select">Select boxplot type:</label>
+                        <select id="partition-metric-boxplot-type-select" onchange="changeBoxplotContainer(event)">
+                            <option value="attributes" selected>Atributes across Partition</option>
+                            <option value="partitions">Partitions across Atribute</option>
                         </select>
-                        <button onclick="generatePartitionBoxplots()">Run</button>
+                        <button onclick="invokeBoxplotGeneration()">Run</button>
                     </div>
-                    <div class="partition-metric-graph-container" id="partition-metric-boxplot-graph-container"></div>
+                    <div class="partition-metric-graph-container-grid partition-boxplot-container active-grid" id="partition-metric-partition-boxplot-graph-container"></div>
+                    <div class="partition-metric-graph-container-grid partition-boxplot-container" id="partition-metric-attribute-boxplot-graph-container"></div>
                 </div>
             </div>
         
@@ -118,7 +126,8 @@
     </environment>
     <environment exclude="Development">
         <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-        <script src="~/js/graph-drawing.min.js" type="text/javascript" asp-append-version="true"></script>
+        <script src="~/js/Graph.js" type="text/javascript" charset="utf-8" asp-append-version="true"></script>
+        <script src="~/js/graph.min.js" type="text/javascript" asp-append-version="true"></script>
     </environment>
     <script>
         initGraph(@Html.Raw(Model.GraphModel.Graph));

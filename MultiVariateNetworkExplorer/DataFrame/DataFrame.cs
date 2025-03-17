@@ -3,6 +3,7 @@ using Columns.TransformationComposite.Transformations;
 using Columns.Transforms;
 using Columns.Types;
 using DataFrameLibrary.DataFrameExceptions;
+using Matrix;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Resources;
@@ -263,6 +265,45 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             this.Averages = result;
         }
         return result;
+    }
+
+    public Dictionary<string, double> Silhouette(Dictionary<string, string> partitions, Matrix<double> metricMat) 
+    {
+        Dictionary<string, double> silhouette = new();
+        for(int i = 0; i < this.DataCount; i++)
+        {
+            string iNodeId = this.IdColumn[i];
+            Dictionary<string, int> partitionNodeCount = new() { [partitions[iNodeId]] = 0 };
+            Dictionary<string, double> averageSimilarities = new() { [partitions[iNodeId]] = 0 };
+            for(int j = 0; j < this.DataCount; j++)
+            {
+                if (i == j) continue;
+                string jNodeId = this.IdColumn[j];
+                string jNodePartitions = partitions[jNodeId];
+                if (!partitionNodeCount.TryGetValue(jNodePartitions, out int count))
+                {
+                    partitionNodeCount[jNodePartitions] = 0;
+                    averageSimilarities[jNodePartitions] = 0;
+                }
+
+                partitionNodeCount[jNodePartitions]++;
+                averageSimilarities[jNodePartitions] += metricMat[i,j];
+            }
+
+            foreach (var partition in averageSimilarities.Keys)
+            {
+                averageSimilarities[partition] /= partitionNodeCount[partition];
+            }
+
+            double a_i = averageSimilarities[partitions[iNodeId]];
+            averageSimilarities.Remove(partitions[iNodeId]);
+            var simMaxPartition = averageSimilarities.MaxBy(kvp => kvp.Value);
+            double b_i = simMaxPartition.Value;
+
+            silhouette[iNodeId] = (a_i - b_i) / (Math.Max(a_i, b_i));
+
+        }
+        return silhouette;
     }
 
     /// <summary>
