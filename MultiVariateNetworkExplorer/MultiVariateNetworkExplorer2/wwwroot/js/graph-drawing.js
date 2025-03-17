@@ -169,29 +169,16 @@ const prepareLinks = function() {
         .selectAll("path")
         .data(currentGraph.links)
         .enter().append("path")
-        .style("display", "none");
 
     link.append("title")
         .text(function (l) {
             return l.id;
         });
 
-    //TBR
-    //for (let l of graph.links) {
-    //    const { source, target } = l;
-    //    const index = source + "," + target
-    //    linkedByIndex[index] = 1;
-    //}
-
 }
 
 const prepareNodes = function () {
-    //TO BE REMOVED
     //Create node circles in SVG
-    //TBR
-    //const { nodes } = graph;
-    //const { radius } = curr;
-
     gNodes = gDraw.append("g")
         .attr("class", "nodes")
         .attr("id", "nodes")
@@ -201,7 +188,6 @@ const prepareNodes = function () {
     nodeGroups = gNodes.enter()
         .append("g")
         .attr("class", "node-group")
-        .style("display", "none")
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
@@ -212,14 +198,7 @@ const prepareNodes = function () {
         .on("mouseover", nodeMouseOver(.2))
         .on("mouseout", mouseOut);
 
-
-    //TO BE REMOVED
-    //Add nodes to simulation
-    //simulation
-    //    .nodes(nodes)
-    //    //.on("tick", ticked)
-    //    .on("end", simulationEnd);
-
+    currentGraph.updateSimulationTick(ticked);
     currentGraph.updateSimulationEnd(simulationEnd);
 }
 
@@ -256,7 +235,7 @@ const prepareBrush = function() {
     brushing = false;
 
     brush = d3.brush()
-        //.extent([[0, 0], [width, height]])
+        .extent([[0, 0], [width, height]])
         .on("start", brushstarted)
         .on("brush", brushed)
         .on("end", brushended);
@@ -309,25 +288,14 @@ const drawNetwork = function (data) {
     prepareText();
 }
 
-//TBR
-//const updateGraphStore = function (graph) {
-//    store = $.extend(true, {}, graph);
-//}
-
 const createDataGraphObjects = function (data) {
     const { graph: init_graph, data: nodeData } = data;
     dataStore = new DataStore(nodeData);
     currentGraph = new Graph(init_graph, dataStore, width, height);
-
-    //TBR
-    //graph = init_graph;
-    //graph.properties = {};
 }
 
 const initGraph = function (data) {
     prepareCanvas();
-    //TBR
-    //updateGraphStore(graph);
     createDataGraphObjects(data);
     drawNetwork(data);
     updateForces();
@@ -590,7 +558,7 @@ const brushended = function() {
 }
 
 //On shift key event
-const keydown = function() {
+const keydown = function () {
     shiftKey = d3.event.ctrlKey;
 
     if (shiftKey) {
@@ -624,10 +592,10 @@ const keyup = function() {
 }
 
 const deselectAllNodes = function() {
-    node.each(function (d) {
-        d.selected = false;
-        d.previouslySelected = false;
-    });
+    //node.each(function (d) {
+    //    d.selected = false;
+    //    d.previouslySelected = false;
+    //});
     nodeGroups.classed("selected", function (d) {
         return d.selected = d.previouslySelected = false;
     });
@@ -644,8 +612,8 @@ const zoomed = function() {
     transformX = x;
     transformY = y;
     scaleK = k;
-    gDraw.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
-    gBrushHolder.attr("transform", "translate(" + transformX + "," + transformY + ") scale(" + scaleK + ")");
+    gDraw.attr("transform", `translate(${transformX},${transformY}) scale(${scaleK})`);
+    //gBrushHolder.attr("transform", `translate(${transformX},${transformY})`);
 }
 
 
@@ -662,14 +630,6 @@ const selectionZoomed = function () {
 
 //Update graph simulation forces
 const updateForces = function(reset = true) {
-
-    node.each(function (d) {
-        d.fx = null;
-        d.fy = null;
-    });
-    
-    
-
     updateCenterForce();
     updateChargeForce();
     updateCollideForce();
@@ -791,8 +751,6 @@ const simulationEnd = function () {
     
     //return;
     //}
-    link.style("display", "block");
-    nodeGroups.style("display", "block");
 
     //const rootSvgSize = svg.node().getBoundingClientRect();
     //const gDrawSize = gDraw.node().getBoundingClientRect();
@@ -810,10 +768,21 @@ const simulationEnd = function () {
 
 const startSimulation = function () {
     node.each(function (d) {
+        d.x = d.y = 0;
         d.fx = d.fy = null;
     });
 
     currentGraph.resetSimulation();
+}
+
+const toggleSimulationTick = function (isChecked) {
+    if (isChecked) {
+        currentGraph.updateSimulationTick(ticked);
+        return;
+    }
+    currentGraph.updateSimulationTick(null);
+    return;
+
 }
 
 const positionLink = function(d) {
@@ -877,6 +846,13 @@ const positionLink = function(d) {
 const positionNode = function (d) {
     //d.select(this.parentNode).attr("transform", positionNode);
     return "translate(" + d.x + "," + d.y + ")";
+}
+
+const resetLayout = function () {
+    d3.select("#reset-layout-btn")
+        .style("color", null)
+        .style("border-color", null);
+    startSimulation()
 }
 
 /****************************************END GRAPH NODE AND LINK POSITION******************************************/
@@ -1027,15 +1003,6 @@ const updateSelectionNodesAndLinks = function () {
 /****************************************END SELECTION NODE UPDATES******************************************/
 
 /////////////////////////////////////////METRICS//////////////////////////////////////////////////////
-
-//TBR
-//const getNodeCount = function (graph) {
-//    return graph.nodes.length;
-//}
-
-//const getLinkCount = function (graph) {
-//    return graph.links.length;
-//}
 
 const getGraphProperty = function (graph, metricDiv)
 {

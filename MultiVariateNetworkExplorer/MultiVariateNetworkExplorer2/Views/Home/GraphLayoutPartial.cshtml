@@ -1,7 +1,11 @@
 ﻿<div class="column-content controls" id="settings">
     <div class="force alpha">
-        <p><label>alpha</label> Simulation activity</p>
-        <div class="alpha_bar" onclick="resetSimulation();"><div id="alpha_value"></div></div>
+        <p><label>Simulation</label></p>
+        <label for="simulation-tick-checkbox" title="Turning off drawing simulation significantly increases performance">
+            Toggle Network Drawing Simulation
+            <input id="simulation-tick-checkbox" type="checkbox" onchange="toggleSimulationTick(this.checked)" checked />
+        </label>
+        <button class="run-btn" id="reset-layout-btn" onclick="resetLayout()">Redraw Layout</button>
     </div>
     <div class="force">
         <p><label>Center</label> Shifts the view, so the graph is centered at this location.</p>

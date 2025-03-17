@@ -207,14 +207,21 @@ const filterByCategory = function (filteredAttributeName, category, checked) {
 const handleForceEnablement = function(value, force, forceUpdateDelegate){
     currentGraph.setForcePropertyValue(force, "enabled", value)
     forceUpdateDelegate();
-    startSimulation();
+    currentGraph.stopSimulation();
+    d3.select("#reset-layout-btn")
+        .style("color", "red")
+        .style("border-color", "red");
+    //startSimulation();
 }
 
 const handleForceChange = function (value, sliderOutputId, force, property, forceUpdateDelegate) {
     d3.select('#' + sliderOutputId).text(value);
     currentGraph.setForcePropertyValue(force, property, Number(value))
     forceUpdateDelegate();
-    startSimulation();
+    currentGraph.stopSimulation();
+    d3.select("#reset-layout-btn")
+        .style("color", "red")
+        .style("border-color", "red");
 }
 
 const getNodeAttribute = function (d, attributeName) {
