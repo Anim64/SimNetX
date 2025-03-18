@@ -64,9 +64,9 @@ window.addEventListener("load", function () {
     calculateAllMetrics();
 
     prepareNodeDatalist();
-    selectionNode.each(function (d) {
-        setGroupColour(d);
-    });
+    //selectionNode.each(function (d) {
+    //    setGroupColour(d);
+    //});
 
     const { num: numAttributes = [] } = currentGraph.attributes;
     for (const attribute of numAttributes) {
@@ -90,6 +90,11 @@ window.addEventListener("load", function () {
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select", "-parameters-remodel");
     displayMetricParameters("remodel-metric-select");
+
+    
+    addSelectionDivs(selectionGraph);
+    updateSelectionNodesAndLinks();
+    setPartitionColouring("partition-colour-list");
 
 });
 

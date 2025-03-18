@@ -103,7 +103,6 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             bool hasHeaders = inputModel.Header == BooleanParameter.Yes;
             bool isDirected = inputModel.Directed == BooleanParameter.Yes;
-            bool doCommunityDetection = inputModel.CommunityDetection == BooleanParameter.Yes;
 
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == inputModel.MetricName);
             object[] metricParams = inputModel.MetricParams?.Cast<object>().ToArray();
@@ -116,7 +115,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             try
             {
                 MultiVariateNetwork multiVariateNetwork = new(filePaths, inputModel.MissingValues, inputModel.IdColumnName, inputModel.GroupColumnName, chosenConversion,
-                inputModel.Nulify ,chosenMetric, doCommunityDetection, isDirected, hasHeaders, separatorArray);
+                inputModel.Nulify ,chosenMetric, isDirected, hasHeaders, separatorArray);
 
                 GraphModel gm = new(multiVariateNetwork);
                 ApplicationModels appModel = new(gm);

@@ -144,7 +144,6 @@ const prepareInputForm = function () {
     displayAlgorithmParameters("append-convert", "-parameters-append");
 
     selectDropDownOption("InputModel_Directed", 1);
-    selectDropDownOption("InputModel_CommunityDetection", 1);
 
     const mvn_input_section = document.getElementById("mvn-input-section");
     mvn_input_section.addEventListener("click", toggleNetworkInput);

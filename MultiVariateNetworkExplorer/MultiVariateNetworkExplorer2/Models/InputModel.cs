@@ -26,8 +26,6 @@ namespace MultiVariateNetworkExplorer2.Models
         public BooleanParameter Header { get; set; }
         public BooleanParameter Directed { get; set; }
 
-        public BooleanParameter CommunityDetection { get; set; }
-
         public List<SelectListItem> YesNoList { get; } = new() 
         {
             new SelectListItem { Text = BooleanParameter.Yes.ToString(), Value = ((int)BooleanParameter.Yes).ToString(), Selected=true },

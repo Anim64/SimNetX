@@ -47,9 +47,6 @@
                 <label asp-for="InputModel.Directed"><span>Is the network directed?</span></label>
                 <select asp-for="InputModel.Directed" asp-items="Model.InputModel.YesNoList"></select>
 
-                <label asp-for="InputModel.CommunityDetection">Initialize with community detection</label>
-                <select asp-for="InputModel.CommunityDetection" asp-items="Model.InputModel.YesNoList"></select>
-
                 <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
                 <label asp-for="InputModel.ConversionAlgorithmName">Choose a conversion algorithm:</label>
                 <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>

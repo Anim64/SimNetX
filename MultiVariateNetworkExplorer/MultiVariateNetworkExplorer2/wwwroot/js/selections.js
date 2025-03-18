@@ -432,7 +432,6 @@ const requestCommunityDetection = function () {
         success: function (result) {
             deleteAllSelections();
             currentGraph.partitions = JSON.parse(result.newPartitions);
-            //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
             
             addSelectionDivs(selectionGraph);
@@ -440,12 +439,6 @@ const requestCommunityDetection = function () {
             updateSelectionNodesAndLinks();
 
             setPartitionColouring("partition-colour-list");
-
-            //updateHeadingColour(node);
-
-            
-            //updateSelectionForces();
-
         },
         error: function (xhr, ajaxOptions, thrownError) {
             console.log(xhr);

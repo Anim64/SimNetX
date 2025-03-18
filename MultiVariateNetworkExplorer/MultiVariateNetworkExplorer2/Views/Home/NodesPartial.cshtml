@@ -1,4 +1,4 @@
-﻿
+﻿@model MultiVariateNetworkExplorer2.Models.ApplicationModels
 <section class="column right-col" id="rightpanel">
         <div class="navigation">
             <div class="tab-nav">
@@ -91,21 +91,6 @@
                 <input type="button" onclick="addNewSelection();" value="Add New Selection" />
                 <input type="button" onclick="deleteAllSelections(currentGraph);" value="Delete All Selections" />
             </div>
-            <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true">
-                @if (Model.GraphModel.Mvn.Partition != null)
-                {
-                    foreach (var selection in Model.GraphModel.Mvn.Partition.Values.Distinct())
-                    {
-                        <div class="selection-panel" id="@("selection_panel_" + selection)" onclick="selectNodesBySelection('@selection',currentGraph)">
-                            <h4 class="panel-title">
-                                @("Selection " + selection)
-                            </h4>
-                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Add Selected Nodes To This Group" onclick="addNodesToSelection(event, '@selection.ToString()')"><i class="fa fa-plus-square"></i></button>
-                            <button class="btn btn-danger btn-sm rounded-0" type="button" data-toggle="tooltip" data-placement="top" title="Delete" onclick="deleteSelection(event, '@selection.ToString()')"><i class="fa fa-trash"></i></button>
-                        </div>
-                    }
-                }
-
-            </div>
+            <div class="selection-list" id="list-selections" role="tablist" aria-multiselectable="true"></div>
         </div>
 </section>

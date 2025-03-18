@@ -53,7 +53,7 @@ namespace MultiVariateNetworkLibrary
             this.Directed = false;
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric,  bool grouping, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric, bool directed = false, bool header = false, params char[] separator)
         {
             this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, groupColumn, header, separator);
 
@@ -61,38 +61,17 @@ namespace MultiVariateNetworkLibrary
             this.Partition = this.RealClasses = null;
             this.ConversionAlg = convertAlg;
             this.Metric = chosenMetric;
-            
-            //if (!string.IsNullOrEmpty(groupColumn))
-            //{
-            //    groupColumn = groupColumn.RemoveDiacritics().RemoveSpecialCharacters();
-            //    this.RealClasses = new Dictionary<string, string>();
-
-            //    bool isParsable = int.TryParse(groupColumn, out int result);
-            //    var columnList = isParsable ? this.VectorData["Attribute" + groupColumn] : this.VectorData[groupColumn];
-            //    for (int i = 0; i < columnList.DataCount; i++)
-            //    {
-            //        string id = this.VectorData.IdColumn[i].ToString();
-            //        string value = columnList[i].ToString();
-            //        this.RealClasses[id] = value;
-            //    }
-            //}
 
             this.VectorData.FindAttributeExtremesAndValues();
             this.Network = paths.Count() > 1 ? 
                 Network.ReadFromFile(paths.ElementAt(1), header, directed, separator) :
                 convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, doNulify); ;
-
-            if(grouping && this.Partition == null)
-            {
-                this.FindCommunities();
-                //PartitionsToFile();
-            }
+            this.FindCommunities();
         }
 
         public void FindCommunities()
         {
-            Dictionary<string, string> partition = Community.BestPartition(this.Network);
-            this.Partition = partition;
+            this.Partition = Community.BestPartition(this.Network);
         }
 
         public void FindCommunities(Network network)
