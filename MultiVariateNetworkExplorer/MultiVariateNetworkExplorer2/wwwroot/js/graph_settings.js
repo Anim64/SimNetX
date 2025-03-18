@@ -98,12 +98,13 @@ const filterByValue = function (input, filteredAttributeName, filterCondition, m
     
 
     for (const [id, l] of Object.entries(storeLinks)) { 
-        const { source, target } = l;
+        const { source, target, value } = l;
         if (!(filterNodeList.includes(source) || filterNodeList.includes(target)) && l.filtered) {
             const returningLink = {
                 "id": id,
                 "source": source,
-                "target": target
+                "target": target,
+                "value": value
             };
             graphLinks.push(returningLink);
             dataStore.removeLinkAttribute(id, linkFilteredName)
@@ -629,28 +630,37 @@ const updateGradientLegendAxis = function (attributeSelectId) {
         .call(axisLeg);
 }
 
-const addGradientListColour = function (legendDivId, value, idPrefix, colourListId) {
+const addGradientListColour = function (legendDivId, label, colour, colourListId) {
     const colourList = d3.select(`#${colourListId}`);
-    const inputColour = addListColour(value, idPrefix, colourList);
+    const idPrefix = colourList.selectAll("li").size();
+    if (idPrefix >= 6) {
+        return;
+    }
+    const inputColour = addListColour(label, colour, idPrefix, colourList);
     inputColour
         .on("change", function () { updateGradientColour(legendDivId, colourListId); });
     updateGradientLegend(legendDivId, colourListId);
 }
 
-const addListColour = function (value, idPrefix, colourList) {
-    const valueWithoutWhitespaces = removeSpacesAndCommas(value);
-    const id = `${idPrefix}-colour-${valueWithoutWhitespaces}`;
+const addListColour = function (label, colour, idPrefix, colourList) {
+    const labelWithoutWhitespaces = removeSpacesAndCommas(label);
+    const id = `${idPrefix}-colour-${labelWithoutWhitespaces}`;
     const newDistinctColourRow = colourList.append("li")
-        .append("div")
+    const newDistinctColourRowDiv = newDistinctColourRow.append("div")
         .classed("colour-row-list", true);
-    newDistinctColourRow.append("label")
-        .attr("title", value)
+    newDistinctColourRowDiv.append("label")
+        .attr("title", label)
         .attr("for", id)
-        .html(value);
-    return newDistinctColourRow.append("input")
+        .html(label);
+    const newColorRowInput = newDistinctColourRowDiv.append("input")
         .attr("type", "color")
         .attr("id", id)
-        .property("value", groupColours(value));
+        .property("value", colour);
+    newDistinctColourRow.on("click", function () {
+        newColorRowInput.node().click();
+    })
+
+    return newColorRowInput
 
 }
 
@@ -666,7 +676,7 @@ const randomColour = function (brightness) {
 
 const randomizeListColours = function (colourListId) {
     d3.selectAll(`#${colourListId} input`)
-        .prop(value, randomColour(0));
+        .property("value", function () { return randomColour(0); });
 }
 
 
@@ -684,7 +694,7 @@ const changeAttributeCategoryColouringList = function (attributeSelectId, colour
 
     colourList.html("");
     for (const value of attributeDistinctValues) {
-        addListColour(value, "category", colourList);
+        addListColour(value, groupColours(value), "category", colourList);
     }
 }
 
@@ -741,6 +751,11 @@ const setPartitionColouring = function (colourListId) {
 
     nodeVisualProperties.colouring.lastColouringType = "partition";
 
+    d3.selectAll(".selection-panel")
+        .style("background-color", function (d) {
+            return colourObject[d.id];
+        });
+
     node.style("fill", function (d) {
         const { id } = d;
         const partition = currentGraph.getPartition(id);
@@ -765,8 +780,14 @@ const setPartitionColouring = function (colourListId) {
 
     });
 
-    const boxplots = d3.selectAll("#partition-metric-boxplot-graph-container svg");
-    updateBoxplotColour(boxplots, colourObject);
+    const attributeBoxplots = d3.selectAll("#partition-metric-attribute-boxplot-graph-container svg");
+    updateBoxplotColour(attributeBoxplots, colourObject);
+
+    const partitionBoxplots = d3.selectAll("#partition-metric-partition-boxplot-graph-container svg");
+    partitionBoxplots.each(function (d) {
+        updateBoxplotColour(d3.select(this), colourObject[d.id]);
+    })
+    
 }
 
 const contructColourObjectFromList = function (colourListId) {
@@ -800,7 +821,9 @@ const changeClassColouringFromSettings = function (attributeSelectId, colourList
 const setClassColouring = function (attributeName, colourObject, colourNodes) {
     const rects = d3.selectAll("#partition-metric-mcc-graph-container rect");
 
-    rects.style("fill", (d) => { return colourObject[d.className]; });
+    rects.style("fill", (d) => {
+        return colourObject[d.x];
+    });
 
     if (colourNodes) {
         node.style("fill", function (d) {
@@ -833,9 +856,9 @@ const setClassColouring = function (attributeName, colourObject, colourNodes) {
 const setDefaultNodeColour = function (nodes, colour) {
     nodes.style("fill", function (d) {
         const { id } = d;
-        //const lightness = fontLightness(colour);
-        //const text = $('#' + id + '_node_text');
-        //text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
+        const lightness = fontLightness(colour);
+        const text = $('#' + id + '_node_text');
+        text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)')
         return colour;
     });
 }

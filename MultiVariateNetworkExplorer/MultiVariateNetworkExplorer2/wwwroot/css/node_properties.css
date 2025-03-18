@@ -1,15 +1,14 @@
 ﻿.nodes {
     display: block;
-   /* -ms-flex-direction: column;
+    /* -ms-flex-direction: column;
     -webkit-flex-direction: column;
     flex-direction: column;
     -webkit-justify-content: stretch;
     justify-content: stretch;*/
-    overflow-y:hidden;
-
+    overflow-y: hidden;
     --node-nav-height: 75%;
     --node-select-input-height: 20%;
-    --node-select-padding: 0.3rem;
+    --node-select-padding: 1rem;
     color: black;
 }
 
@@ -54,6 +53,7 @@
     flex-direction: column;
     height: 4rem;
     padding: 0 var(--node-select-padding);
+    padding-top: 0.5rem;
 }
 
 .node-select-input {

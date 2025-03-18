@@ -15,6 +15,8 @@ class Graph {
         this._properties = {};
         this._attributes = input_graph.attributes;
         this._classes = input_graph.classes;
+        this._metric = input_graph.metric;
+        this._conversionAlg = input_graph.conversionAlg;
         
 
         this._links = input_graph.links;
@@ -141,6 +143,22 @@ class Graph {
         return this._classes;
     }
 
+    get metric() {
+        return this._metric;
+    }
+
+    set metric(value) {
+        this._metric = value;
+    }
+
+    get conversionAlg() {
+        return this._conversionAlg;
+    }
+
+    set conversionAlg(value) {
+        this._conversionAlg = value;
+    }
+
     setProperties(name, value) {
         this._properties[name] = value;
     }
@@ -155,7 +173,7 @@ class Graph {
     }
 
     addLink(sourceId, targetId, value) {
-        const newLink = {}
+        const newLink = {};
     }
 
     getNodeDataValue(id, attribute) {
@@ -428,7 +446,6 @@ class Graph {
                 const resultYCoord = height - (height * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)));
                 return resultYCoord;
             });
-        const i = 0;
     }
 
     updateYForceProperty(attributeName) {

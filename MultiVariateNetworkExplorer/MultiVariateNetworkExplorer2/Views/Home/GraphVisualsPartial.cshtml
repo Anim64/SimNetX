@@ -20,7 +20,7 @@
                 <label for="network-colour-input" title="Node colour">Node colour</label>
                 <input type="color" id="network-colour-input" value="#FFFFFF">
             </div>
-            <button onclick="changeNetworkNodeColour('network-colour-input')">Run</button>
+            <button class="run-btn" onclick="changeNetworkNodeColour('network-colour-input')">Run</button>
         </div>
 
         <div class="force" id="label-settings">
@@ -82,35 +82,17 @@
                 </svg>
             </div>
             <ol type="1" class="colour-list scrollbar-thin" id="numerical-colour-list">
-                <button onclick="addGradientListColour('attribute-node-colouring-preview', 'FFFFFF', 'gradient', 'numerical-colour-list')">
+                <button onclick="addGradientListColour('attribute-node-colouring-preview', '', '#FFFFFF', 'numerical-colour-list')">
                     Add New Colour
                 </button>
-                <li>
-                    <div class="colour-row-list">
-                        <label class="colouring" for="low-value-colour"></label>
-                        <input type="color" id="low-value-colour" value="#0000FF" onchange="updateGradientColour('attribute-node-colouring', 'attribute-node-colouring-preview', 'numerical-colour-list')">
-                    </div>
-                </li>
-                <li>
-                    <div class="colour-row-list">
-                        <label class="colouring" for="high-value-colour"></label>
-                        <input type="color" id="high-value-colour" value="#FF9933" onchange="updateGradientColour('attribute-node-colouring', 'attribute-node-colouring-preview', 'numerical-colour-list')">
-                    </div>
-                </li>
-                <li>
-                    <div class="colour-row-list">
-                        <label class="colouring" for="high-value-colour"></label>
-                        <input type="color" id="high-value-colour" value="#FFFFFF" onchange="updateGradientColour('attribute-node-colouring', 'attribute-node-colouring-preview', 'numerical-colour-list')">
-                    </div>
-                </li>
             </ol>
             
             @* <button onclick="saveAttributeGradientColouring('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Save</button> *@
-            <button onclick="changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'numerical-colour-list')">Run</button>
+            <button class="run-btn" onclick="changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'numerical-colour-list')">Run</button>
         </div>
 
         <div class="force" id="categorical-colour-setting">
-            <p><label>Attribute Node Colouring</label>Modify colour of nodes based on its attribute value</p>
+            <p><label>Category Node Colouring</label>Modify colour of nodes based on its attribute value</p>
             <label class="attribute-selection-label" for="attribute-node-colouring">
                 Choose Attribute:
                 <select id="categorical-attribute-node-colouring" class="attribute-select attribute-select-border" 
@@ -125,14 +107,14 @@
             <ol type="1" class="colour-list scrollbar-thin" id="categorical-colour-list"></ol>
             <button onclick="randomizeListColours('categorical-colour-list')">Randomize Colours</button>
             @* <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button> *@
-            <button onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
+            <button class="run-btn" onclick="changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list')">Run</button>
         </div>
         <div class="force" id="partition-colour-setting">
             <p><label>Partition Colours</label>Modify colour of nodes based on its assigned partition</p>
             <ol type="1" class="colour-list scrollbar-thin" id="partition-colour-list"></ol>
             <button onclick="randomizeListColours('partition-colour-list')">Randomize Colours</button>
             @* <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button> *@
-            <button onclick="setPartitionColouring('partition-colour-list')">Run</button>
+            <button class="run-btn" onclick="setPartitionColouring('partition-colour-list')">Run</button>
         </div>
        
         <div class="force" id="class-colour-setting">
@@ -140,7 +122,7 @@
             <ol type="1" class="colour-list scrollbar-thin" id="class-colour-list"></ol>
             <button onclick="randomizeListColours('class-colour-list')">Randomize Colours</button>
             @* <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button> *@
-            <button onclick="changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', true)">Run</button>
+            <button class="run-btn" onclick="changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', true)">Run</button>
         </div>
 
         <div class="force" id="background-colour-setting">
@@ -149,7 +131,7 @@
                 <label for="background-colour-input">Background colour</label>
                 <input type="color" id="background-colour-input">
             </div>
-            <button onclick="changeNetworkBackgroundColour('background-colour-input')">Run</button>
+            <button class="run-btn" onclick="changeNetworkBackgroundColour('background-colour-input')">Run</button>
         </div>
 
         <div class="force">

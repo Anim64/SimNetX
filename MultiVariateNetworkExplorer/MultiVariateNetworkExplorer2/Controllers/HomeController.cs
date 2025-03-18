@@ -222,7 +222,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
 
-            //TODO Return only transformed columns and then assign then into global json graph
+            // TODO: Return only transformed columns and then assign then into global json graph
             Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, doNulify, excludedAttributesList);
             return Json(new { newVectorData = jAttributeTransform.HasValues ? 
                 nodeAttributes.ToD3Json().ToString() : 

@@ -96,79 +96,14 @@ const nodeVisualProperties = {
     }
 }
 
-//TBR
-//Properties of force simulation
-//let forceProperties = {
-//    center: {
-//        x: 0.5,
-//        y: 0.5
-//    },
-
-//    charge: {
-//        enabled: true,
-//        strength: -80,
-//        distanceMin: 1,
-//        distanceMax: 2000
-//    },
-
-//    collide: {
-//        enabled: true,
-//        strength: 0.7,
-//        radius: 8,
-//        iterations: 1
-//    },
-
-//    forceX: {
-//        enabled: true,
-//        strength: 0.1,
-//        x: 0.5,
-//        attribute: ""
-//    },
-
-//    forceY: {
-//        enabled: true,
-//        strength: 0.1,
-//        y: 0.5,
-//        attribute: ""
-//    },
-
-//    link: {
-//        enabled: true,
-//        distance: 75,
-//        iterations: 1
-//    },
-//    sizing: {
-//        enabled: false,
-//        attribute: ""
-//    },
-//    colouring: {
-//        network: "#FFFFFF",
-//        background: "#000000"
-//    },
-
-//    attributeColouring: {
-//        enabled: false,
-//        attribute: "",
-//        lowValue: "#0000FF",
-//        highValue: "#FF0000"
-//    },
-//    labels: {
-//        enabled: true,
-//        attribute: "id"
-//    }
-//};
-
-
-
-
 const prepareLinks = function() {
     //Create line or curves in SVG
-    //const { links } = graph;
+    
     link = gDraw.append("g")
         .attr("class", "links")
         .selectAll("path")
         .data(currentGraph.links)
-        .enter().append("path")
+        .enter().append("path");
 
     link.append("title")
         .text(function (l) {
@@ -200,6 +135,7 @@ const prepareNodes = function () {
 
     currentGraph.updateSimulationTick(ticked);
     currentGraph.updateSimulationEnd(simulationEnd);
+    
 }
 
 
@@ -555,6 +491,7 @@ const brushended = function() {
     }
 
     brushing = false;
+    drawSelectedNodesHistogram();
 }
 
 //On shift key event
@@ -569,10 +506,10 @@ const keydown = function () {
         brushMode = true;
 
         if (!gBrush) {
-            gBrush = gBrushHolder.append('g')
-            gBrush.call(brush);
-        }
+        gBrush = gBrushHolder.append('g')
+        gBrush.call(brush);
     }
+}
 }
 
 //On shift key event
@@ -599,7 +536,40 @@ const deselectAllNodes = function() {
     nodeGroups.classed("selected", function (d) {
         return d.selected = d.previouslySelected = false;
     });
+
+    const { num: numAttributes = [] } = currentGraph.attributes;
+    for (const attribute of numAttributes) {
+        const containerDivId = `${attribute}-histogram-container`;
+        const attributeValues = currentGraph.getAllAttributeValues(attribute);
+
+        hist(containerDivId, attributeValues, attribute, 300, 100);
+
+    }
     
+}
+
+const drawSelectedNodesHistogram = function () {
+    const selectedNodes = nodeGroups.filter(d => d.selected);
+    if (selectedNodes.size() <= 0) {
+        return;
+    }
+
+    if (selectedNodes.size() === 1) {
+        const { id, index } = selectedNodes.node().__data__;
+        toggleNodeDetails(id, index);
+        return;
+    }
+
+    const { num: numAttributes = [] } = currentGraph.attributes;
+    for (const attribute of numAttributes) {
+        const containerDivId = `${attribute}-histogram-container`;
+        const attributeValues = [];
+        selectedNodes.each(function (d) {
+            attributeValues.push(currentGraph.getNodeDataValue(d.id, attribute));
+        });
+
+        hist(containerDivId, attributeValues, attribute, 300, 100);
+    }
 }
 
 /************************************************END BRUSHING **********************************************/
@@ -680,6 +650,8 @@ const updateLinkForce = function () {
 //    //simulation.start();
 //    simulation.alpha(1).restart();
 //}
+
+
 
 /******************************************END GRAPH SIMULATION ***********************************************/
 
@@ -1030,7 +1002,7 @@ const calculateMetricAsync = function (current_graph, metricDiv) {
         const nodeDetailElement = document.getElementById('node-detail-container')
         const nodeId = nodeDetailElement.getAttribute('data-id');
         const metricDisplayElement = nodeDetailElement.querySelector('#display-' + workerName);
-        if (metricDisplayElement !== null) {
+        if (metricDisplayElement !== null && nodeId != null) {
             metricDisplayElement.value = currentGraph.getPropertyValue(nodeId, workerName);
 
         }
@@ -1044,10 +1016,10 @@ const calculateAllMetrics = function () {
     for (let metricDiv of syncMetricsDivs) {
         getGraphProperty(graph, metricDiv);
     }
-    //const asyncMetricsDivs = document.querySelectorAll('.network-metric-async-content');
-    //for (let metricDiv of asyncMetricsDivs) {
-    //    calculateMetricAsync(graph, metricDiv);
-    //}
+    const asyncMetricsDivs = document.querySelectorAll('.network-metric-async-content');
+    for (let metricDiv of asyncMetricsDivs) {
+        calculateMetricAsync(graph, metricDiv);
+    }
 }
 
 /****************************************END METRICS******************************************/

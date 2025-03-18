@@ -10,11 +10,12 @@ html {
     --parameter-label-bg-color: rgba(70,70,70, 0.7);
     --parameter-input-and-select-bg-color: rgba(85,85,85, 0.7);
     --main-background-color: rgb(80, 80, 80);
+    --default-network-background: rgb(100, 100, 100);
 }
 
 body {
     font-family: "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-    background-color: rgb(80, 80, 80);
+    background-color: var(--main-background-color);
     padding-top: 0;
     height: 100%;
     margin: 0;
@@ -41,6 +42,10 @@ body {
     flex-direction: row;
     -webkit-justify-content: flex-start;
     justify-content: flex-start;
+}
+
+.tab-nav{
+    min-width: 20px;
 }
 
 .tab-link {
@@ -78,15 +83,15 @@ body {
     border: 2px solid var(--border-color);
     border-bottom: none;
     z-index: 10;
-    -moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
+    /*-moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
     -webkit-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
-    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);
+    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color), -1px 0 1px var(--shadow-color), -2px 0 2px var(--shadow-color), -4px 0 4px var(--shadow-color), -8px 0 8px var(--shadow-color), -16px 0 16px var(--shadow-color), -32px 0 32px var(--shadow-color);*/
 }
 
 .navigation > .tab-nav:first-child > .tab-active {
-    -moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
+    /*-moz-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
     -webkit-box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
-    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);
+    box-shadow: 1px 0 1px var(--shadow-color), 2px 0 2px var(--shadow-color), 4px 0 4px var(--shadow-color), 8px 0 8px var(--shadow-color), 16px 0 16px var(--shadow-color), 32px 0 32px var(--shadow-color);*/
 }
 
 .min-vh-90{
@@ -161,6 +166,24 @@ input[type=color]::-moz-color-swatch {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     border: 0.125rem solid black;
+}
+
+.inline-space-evenly {
+    display: flex;
+    -webkit-justify-content: space-evenly;
+    justify-content: space-between;
+    
+}
+.inline-space-evenly>* {
+    margin: 0 0.25rem;
+}
+
+.inline-space-evenly:first-child {
+    margin-left: 0.5rem !important;
+}
+
+.inline-space-evenly:last-child {
+    margin-right: 0.5rem !important;
 }
 
 .active-block {

@@ -14,6 +14,8 @@ const selectNodesBySelection = function(selectionId, graphRef) {
         d.previouslySelected = d.selected;
         return d.selected = true;
     });
+
+    drawSelectedNodesHistogram();
 }
 
 const changeGroupColour = function(input, selectionId, graphRef) {
@@ -93,7 +95,7 @@ const addSelectionDiv = function (selectionData) {
         .attr('class', 'panel-title')
         .attr('contenteditable', 'true')
         .attr('onclick', 'stopClickPropagation(event)')
-        .html(`Selection ${selectionId}`);
+        .html(`Selection \"${selectionId}\""`);
 
     /*panel.style('background-color', groupColours(selectionId));*/
 
@@ -120,7 +122,7 @@ const addSelectionDiv = function (selectionData) {
         .attr('class', 'fa fa-trash');
 
     const partitionColourList = d3.select("#partition-colour-list");
-    const color = addListColour(selectionId, "partition", partitionColourList)
+    const color = addListColour(selectionId, groupColors(value), "partition", partitionColourList)
         .property("value");
     panel.style("background-color", color);
 }
@@ -141,7 +143,7 @@ const addSelectionDivs = function (selectionGraph) {
         .attr('class', 'panel-title')
         .attr('contenteditable', 'true')
         .on('click', () => { stopClickPropagation(d3.event); })
-        .html((d) => { return `Selection ${d.id}`; });
+        .html((d) => { return `Selection \"${d.id}\"`; });
 
     /*panel.style('background-color', groupColours(selectionId));*/
 
@@ -170,54 +172,9 @@ const addSelectionDivs = function (selectionGraph) {
     const partitionColourList = d3.select("#partition-colour-list").html("");
 
     panels.style("background-color", function (d) {
-        return addListColour(d.id, "partition", partitionColourList)
+        return addListColour(d.id, groupColours(d.id), "partition", partitionColourList)
             .property("value");
     })
-}
-
-const createPartitionMccGraphs = function () {
-    const classAttribute = document.getElementById("partition-metric-mcc-attribute-select").value;
-    const mccObject = matthewsCorrelationCoeficient(classAttribute);
-    const clusterMetricContainer = d3.select("#partition-metric-mcc-graph-container").html("");
-    const clusterDivs = d3.selectAll("#list-selections div");
-    if (clusterDivs.size() > 0) {
-        clusterDivs
-            .each(function (d) {
-                clusterMetricDiv = clusterMetricContainer.append("div");
-                //addMccTable(clusterMetricDiv, d.id, mccObject);
-                addMccPlot(clusterMetricDiv, d.id, mccObject);
-            });
-
-        const distinctClasses = currentGraph.getDistinctValues(classAttribute);
-        const classColourList = d3.select("#class-colour-list").html("");
-        for (const realClass of distinctClasses) {
-            addListColour(realClass, "class", classColourList);
-        }
-        changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
-    }
-    
-    
-}
-
-const addMccTable = function (clusterMetricDiv, selectionId, mccObject) {
-    const mccTableDiv = clusterMetricDiv
-        .append("div")
-        .attr("class", "col-2-table");
-
-    for (const mccPair of mccObject[selectionId]) {
-        const { className, value } = mccPair;
-        mccTableDiv.append("span")
-            .text(className + ": " + value.toFixed(2))
-            .style("border", "0.1rem solid white")
-    }
-}
-
-const addMccPlot = function (clusterMetricDiv, selectionId, mccObject) {
-    const barplotID = `barplot-mcc-${selectionId}`;
-    clusterMetricDiv.append("div")
-        .attr("id", barplotID)
-        .style("position", "relative");
-    barplot(barplotID, mccObject[selectionId], -1, 1, 300, 250, selectionId);
 }
 
 
@@ -453,74 +410,6 @@ const assignAttributePartitions = function (attributeSelect, currentGraphRef) {
     //setDefaultNodeAndLinkColour(node, link);
 }
 
-
-const matthewsCorrelationCoeficient = function (classAttributeName) {
-    const distinctPartitions = currentGraph.getDistinctPartitions();
-    const distinctClasses = currentGraph.getDistinctValues(classAttributeName);
-
-    if (!distinctClasses || !distinctPartitions) {
-        return null;
-    }
-
-
-    const confusionMatrices = {};
-    for (const partition of distinctPartitions) {
-        confusionMatrices[partition] = {};
-        const partitionObject = confusionMatrices[partition];
-        for (const className of distinctClasses) {
-            partitionObject[className] = {
-                TP: 0,
-                FN: 0,
-                TN: 0,
-                FP: 0
-            };
-        }
-    }
-
-    for (const [node, nodePartition] of Object.entries(currentGraph.partitions)) {
-        const nodeRealClass = currentGraph.getNodeDataValue(node, classAttributeName);
-
-        for (const partition in confusionMatrices) {
-            if (partition === nodePartition) {
-                for (const className in confusionMatrices[partition]) {
-                    if (className === nodeRealClass) {
-                        confusionMatrices[partition][className].TP += 1;
-                        continue;
-                    }
-                    confusionMatrices[partition][className].FP += 1;
-                }
-                continue;
-            }
-
-            for (const className in confusionMatrices[partition]) {
-                if (className === nodeRealClass) {
-                    confusionMatrices[partition][className].FN += 1;
-                    continue;
-                }
-                confusionMatrices[partition][className].TN += 1;
-            }
-
-        }
-    }
-
-    const mccObject = {};
-    for (const partition of distinctPartitions) {
-        mccObject[partition] = [];
-        const partitionArray = mccObject[partition];
-        for (const className of distinctClasses) {
-            const { TP, FP, FN, TN } = confusionMatrices[partition][className];
-
-            const mccNumerator = (TN * TP) - (FN * FP);
-            const mccDenominator = Math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN));
-            const mcc = mccNumerator / mccDenominator;
-            partitionArray.push({ "className": className, value: mcc });
-        }
-    }
-
-
-    return mccObject;
-
-}
 //Request for community detection on server
 const requestCommunityDetection = function () {
     //const graph_string = JSON.stringify(graph);
@@ -528,13 +417,13 @@ const requestCommunityDetection = function () {
     const links_string = JSON.stringify(currentGraph.links, stringifyCommunityDetectionLinkReplacer);
     
     $.ajax({
-        url: '/Home/GraphCommunityDetection',
+        url: /*'/mvne/Home/GraphCommunityDetection'*/ 'GraphCommunityDetection', 
         type: 'POST',
-        //dataType: 'json',
+        dataType: 'json',
         // It is important to set the content type
         // request header to application/json because
         // that's how the client will send the request
-        //contentType: 'application/json',
+        contentType: "application/x-www-form-urlencoded",
         data: {
             nodes: nodes_string,
             links: links_string
@@ -545,6 +434,7 @@ const requestCommunityDetection = function () {
             currentGraph.partitions = JSON.parse(result.newPartitions);
             //store.partitions = graph.partitions;
             selectionGraph = JSON.parse(result.newSelections);
+            
             addSelectionDivs(selectionGraph);
 
             updateSelectionNodesAndLinks();
@@ -558,7 +448,11 @@ const requestCommunityDetection = function () {
 
         },
         error: function (xhr, ajaxOptions, thrownError) {
-            alert(thrownError);
+            console.log(xhr);
+            console.log(ajaxOptions);
+            console.log(thrownError);
         }
     });
+
+    return false;
 }

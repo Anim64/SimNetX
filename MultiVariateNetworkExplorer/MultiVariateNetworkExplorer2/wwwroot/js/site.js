@@ -42,6 +42,11 @@ const clearElement = function (id) {
     document.getElementById(id).innerHTML = "";
 }
 
+const switchElement = function (groupClass, activeId, diplayType) {
+    $(`.${groupClass}`).css("display", "none");
+    document.getElementById(activeId).style.display = diplayType;
+}
+
 window.addEventListener("load", function () {
     $('.collapse.in').prev('.panel-heading').addClass('active');
     $('#accordion')
@@ -66,12 +71,18 @@ window.addEventListener("load", function () {
     const { num: numAttributes = [] } = currentGraph.attributes;
     for (const attribute of numAttributes) {
         const containerDivId = `${attribute}-histogram-container`;
+        const attributeValues = currentGraph.getAllAttributeValues(attribute);
 
-        hist(containerDivId, currentGraph, attribute, 300, 250);
+        hist(containerDivId, attributeValues, attribute, 300, 100);
         
     }
 
-    updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
+    const gradientColourListId = 'numerical-colour-list';
+    const initialGradientColourCount = 3;
+    const gradientColourList = ['#0000FF', '#FF9933', '#FFFFFF'];
+    for (let i = 0; i < initialGradientColourCount; i++) {
+        addGradientListColour('attribute-node-colouring-preview', '', gradientColourList[i], gradientColourListId);
+    }
     updateGradientLegendAxis('attribute-node-colouring');
     changeAttributeCategoryColouringList('categorical-attribute-node-colouring', 'categorical-colour-list');
 

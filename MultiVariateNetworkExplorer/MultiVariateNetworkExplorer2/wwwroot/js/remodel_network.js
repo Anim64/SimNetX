@@ -206,20 +206,9 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
 
     $.ajax({
-        url: /*'/mvne/Home/RemodelNetwork'*/ 'RemodelNetwork',
+        url: 'RemodelNetwork',
         type: 'POST',
-        //dataType: 'json',
-        // It is important to set the content type
-        // request header to application/json because
-        // that's how the client will send the request
-        /*contentType: 'application/json',*/
-        //data: JSON.stringify({
-        //    "nodes": dataStore.nodeData,
-        //    "attributes": currentGraph.attributes,
-        //    "attributeTransform": attributeTransform,
-        //    "networkRemodelParams": networkRemodelParams,
-        //    "excludedAttributes": excludedAttributes
-        //}),
+        
         data: {
             nodes: nodes_string,
             attributes: attributes_string,
@@ -227,7 +216,6 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             networkRemodelParams: network_remodel_params_string,
             excludedAttributes: excluded_attributes_string
         },
-        //cache: false,
         success: function (result) {
             if (result.newVectorData != "") {
                 const newVectorData = JSON.parse(result.newVectorData);
@@ -237,10 +225,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             }
             const newNet = JSON.parse(result.newNetwork);
             currentGraph.links = newNet;
-            //store.links = [...newNet];//$.extend(true, {}, newNet);//newNet.map(a => { return { ...a }; });
-
+            currentGraph.metric = networkRemodelParams.metric;
+            currentGraph.conversionAlg = networkRemodelParams.algorithm;
 
             currentGraph.updateLinkIndeces();
+
             updateNodesAndLinks();
             requestCommunityDetection(currentGraph);
             calculateAllMetrics();

@@ -138,7 +138,7 @@ const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
         const bins = histogram.getElementsByTagName("rect");
         d3.selectAll(bins)
             .style("fill", function (d) {
-                if (d.x0 <= attributeValue && d.x1 >= attributeValue) {
+                if (d.x0 <= attributeValue && d.x1 > attributeValue) {
                     return "red";
                 }
                 return "#ffeead";
