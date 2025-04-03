@@ -9,7 +9,7 @@
 const openTab = function (event, contentId, divId, contentClass) {
     const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
     for (const tabcontent of tabcontents) {
-        tabcontent.style.display = "none";
+        tabcontent.classList.remove("active-block");
     }
 
     const tablinks = document.getElementById(divId).querySelectorAll(".tab-link");
@@ -17,7 +17,7 @@ const openTab = function (event, contentId, divId, contentClass) {
         tablink.className = tablink.className.replace(" tab-active", "");
     }
 
-    document.getElementById(contentId).style.display = "block";
+    document.getElementById(contentId).classList.add("active-block");
     event.currentTarget.className += " tab-active";
 }
 
@@ -48,14 +48,14 @@ const switchElement = function (groupClass, activeId, diplayType) {
 }
 
 window.addEventListener("load", function () {
-    $('.collapse.in').prev('.panel-heading').addClass('active');
-    $('#accordion')
-        .on('show.bs.collapse', function (a) {
-            $(a.target).prev('.panel-heading').addClass('active');
-        })
-        .on('hide.bs.collapse', function (a) {
-            $(a.target).prev('.panel-heading').removeClass('active');
-        });
+    //$('.collapse.in').prev('.panel-heading').addClass('active');
+    //$('#accordion')
+    //    .on('show.bs.collapse', function (a) {
+    //        $(a.target).prev('.panel-heading').addClass('active');
+    //    })
+    //    .on('hide.bs.collapse', function (a) {
+    //        $(a.target).prev('.panel-heading').removeClass('active');
+    //    });
 
     document.addEventListener('click', closeAllToolbarPanels);
     //initiateEventHandlers();
@@ -64,9 +64,6 @@ window.addEventListener("load", function () {
     calculateAllMetrics();
 
     prepareNodeDatalist();
-    //selectionNode.each(function (d) {
-    //    setGroupColour(d);
-    //});
 
     const { num: numAttributes = [] } = currentGraph.attributes;
     for (const attribute of numAttributes) {

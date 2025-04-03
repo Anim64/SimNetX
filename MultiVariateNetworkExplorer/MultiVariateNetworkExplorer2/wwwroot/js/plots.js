@@ -84,7 +84,7 @@ const appendHistogramBins = function (svg, bins, height, xAxis, yAxis) {
 
             return height - yAxis(d.length);
         })
-        .style("fill", "#ffeead");
+        .style("fill", "black"/*"#ffeead"*/);
 
     return svg;
 }
@@ -102,7 +102,7 @@ const barplot = function (containerDivId, data, yMin, yMax, svgWidth, svgHeight,
     const plotContainer = getPlotContainer(containerDivId);
     const barplotSvg = createGraphSvg(plotContainer, svgWidth, svgHeight, barplotMargin, id)
 
-    const axisColour = "white";
+    const axisColour = "black";
     appendGraphXAxis(barplotSvg, xAxis, 0, barplotHeight, axisColour, true);
     appendGraphYLeftAxis(barplotSvg, yAxis, 0, 0, undefined, axisColour);
     appendLine(barplotSvg, 0, barplotWidth, yAxis(0), yAxis(0), axisColour);
@@ -195,7 +195,7 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, idPrefix ,id
     boxplotSvg
         .datum({ 'id': id });
 
-    const axisColour = "white";
+    const axisColour = "black";
     appendGraphXAxis(boxplotSvg, xAxis, 0, boxplotHeight, axisColour, false);
     appendGraphYLeftAxis(boxplotSvg, yAxis, 0, 0, undefined, axisColour);
     appendGraphYRightAxis(boxplotSvg, yAxis, boxplotWidth, 0, axisColour);
@@ -316,7 +316,7 @@ const createBoxplotTooltipMouseEnter = function (tooltip) {
 
 const createBoxplotTooltipMouseleave = function (tooltip) {
     const mouseleave = function (d) {
-        d3.select(this).selectAll("*").style("stroke", "white");
+        d3.select(this).selectAll("*").style("stroke", "black"/*white*/);
         tooltip
             .style("opacity", 0);
     }

@@ -185,7 +185,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             break;
         case 'GaussKernel':
             const metricParams = networkRemodelParams["metric"]["params"];
-            const sigma = parseFloat(document.getElementById('sigma').value);
+            const sigma = parseFloat(document.getElementById('remodel_sigma').value);
             metricParams.push(sigma);
             break;
     }

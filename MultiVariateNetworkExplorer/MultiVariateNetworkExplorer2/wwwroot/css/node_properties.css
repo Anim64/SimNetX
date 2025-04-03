@@ -1,10 +1,4 @@
 ﻿.nodes {
-    display: block;
-    /* -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    -webkit-justify-content: stretch;
-    justify-content: stretch;*/
     overflow-y: hidden;
     --node-nav-height: 75%;
     --node-select-input-height: 20%;

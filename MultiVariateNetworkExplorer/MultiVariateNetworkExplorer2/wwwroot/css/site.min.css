@@ -202,71 +202,6 @@ input[type=color]::-moz-color-swatch {
 
 
 
-.attributes {
-    padding: 0 0.5rem;
-    font-size: 90%;
-    color: black;
-    display: block;
-}
-
-.attributes h4 {
-    margin: 1rem 0.5rem;
-    width: 100%;
-    -webkit-text-decoration: underline;
-    text-decoration: underline;
-}
-
-.attributes > div {
-    background-color: #eee;
-    border-radius: 3px;
-    padding: 0.5rem 1rem;
-    margin: 5px 0;
-}
-
-
-.numeric h4 {
-    color: crimson;
-}
-
-.numeric div[id$="slider"] {
-    margin: 0 5% 1em;
-    width: 90%;
-}
-
-.numeric input[type="number"] {
-    margin: 0 5% 1em;
-    width: 90%;
-}
-
-.categorical {
-    overflow-y: scroll;
-    max-height: 300px;
-}
-
-
-.categorical h4 {
-    color: forestgreen;
-    
-}
-
-.checkboxes {
-    margin: 0 5% 1em;
-    width: 90%;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-}
-
-.checkboxes input[type=checkbox]{
-    align-self: center;
-}
-
-.categorical input[type="checkbox"] {
-    margin: 0 5% 1em;
-}
-
-
-
-
 
 .controls {
     padding: 0 5px;
@@ -772,7 +707,6 @@ input[type=color]::-moz-color-swatch {
 #networkGraph {
     height: 100%;
     background-color: #1A1A1A;
-    display: block;
 }
 
 
@@ -822,6 +756,10 @@ svg {
     pointer-events: all;
     stroke: #fff;
     stroke-width: 1.5px;
+}
+
+.node-group text{
+    fill: black;
 }
 
 
@@ -1226,12 +1164,6 @@ svg {
 }
 
 .nodes {
-    display: block;
-    /* -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    -webkit-justify-content: stretch;
-    justify-content: stretch;*/
     overflow-y: hidden;
     --node-nav-height: 75%;
     --node-select-input-height: 20%;

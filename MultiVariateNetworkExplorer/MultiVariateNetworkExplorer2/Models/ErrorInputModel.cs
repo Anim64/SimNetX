@@ -7,7 +7,6 @@
         public string MissingValues { get; set; } = string.Empty;
 
         public string IdColumn { get; set; } = string.Empty;
-        public string GroupColumn { get; set; } = string.Empty;
 
     }
 }

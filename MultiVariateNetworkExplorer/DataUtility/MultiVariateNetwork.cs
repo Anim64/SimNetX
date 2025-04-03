@@ -53,19 +53,17 @@ namespace MultiVariateNetworkLibrary
             this.Directed = false;
         }
 
-        public MultiVariateNetwork(IEnumerable<string> paths, string missingvalues, string idColumn, string groupColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric, bool directed = false, bool header = false, params char[] separator)
+        public MultiVariateNetwork(string path, string missingvalues, string idColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric, bool header = false, params char[] separator)
         {
-            this.VectorData = new DataFrame(paths.ElementAt(0), missingvalues, idColumn, groupColumn, header, separator);
+            this.VectorData = new DataFrame(path, missingvalues, idColumn, header, separator);
 
-            this.Directed = directed;
+            this.Directed = false;
             this.Partition = this.RealClasses = null;
             this.ConversionAlg = convertAlg;
             this.Metric = chosenMetric;
 
             this.VectorData.FindAttributeExtremesAndValues();
-            this.Network = paths.Count() > 1 ? 
-                Network.ReadFromFile(paths.ElementAt(1), header, directed, separator) :
-                convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, doNulify); ;
+            this.Network = convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, doNulify); ;
             this.FindCommunities();
         }
 

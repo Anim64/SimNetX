@@ -143,8 +143,6 @@ const prepareInputForm = function () {
     displayMetricParameters("append-metric");
     displayAlgorithmParameters("append-convert", "-parameters-append");
 
-    selectDropDownOption("InputModel_Directed", 1);
-
     const mvn_input_section = document.getElementById("mvn-input-section");
     mvn_input_section.addEventListener("click", toggleNetworkInput);
     for (const form of mvn_input_section.querySelectorAll("form")) {
@@ -169,11 +167,10 @@ const prepareInputForm = function () {
 
     });
 
-    $("#mvn-append-form").submit(function (e) {
-        const current_graph_input = e.currentTarget.querySelector("#currentGraph");
-        current_graph_input.value = JSON.stringify(store);
-        //console.log(current_graph_input.value);
-    });
+    //$("#mvn-append-form").submit(function (e) {
+    //    const current_graph_input = e.currentTarget.querySelector("#currentGraph");
+    //    current_graph_input.value = JSON.stringify(store);
+    //});
 
 }
 

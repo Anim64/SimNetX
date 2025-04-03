@@ -3,7 +3,6 @@
     "outputFileName": "wwwroot/css/site.min.css",
     "inputFiles": [
       "wwwroot/css/site.css",
-      "wwwroot/css/attributes.css",
       "wwwroot/css/controls.css",
       "wwwroot/css/graph.css",
       "wwwroot/css/metrics.css",
@@ -15,7 +14,7 @@
       "wwwroot/css/cluster-metrics.css"
     ],
     "minify": {
-      "enabled": true,
+      "enabled": false,
       "renameLocals": true
     }
   },
@@ -35,15 +34,12 @@
       "wwwroot/js/remodel_network.js",
       "wwwroot/js/plots.js",
       "wwwroot/js/statistics.js",
-      "wwwroot/js/toolbar.js",
-      "wwwroot/js/element-generator.js",
+      //"wwwroot/js/element-generator.js",
       "wwwroot/js/DataStore.js",
       "wwwroot/js/partition-metrics.js"
-      //"wwwroot/js/graph.js"
-
     ],
     "minify": {
-      "enabled": true,
+      "enabled": false,
       "renameLocals": false
     },
     "sourceMap": false
@@ -52,11 +48,10 @@
   {
     "outputFileName": "wwwroot/js/graph.min.js",
     "inputFiles": [
-      "wwwroot/js/graph-drawing.js",
-      "wwwroot/js/graph.js"
+      "wwwroot/js/graph-drawing.js"
     ],
     "minify": {
-      "enabled": true,
+      "enabled": false,
       "renameLocals": false
     }
 

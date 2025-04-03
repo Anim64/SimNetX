@@ -11,20 +11,17 @@ namespace MultiVariateNetworkExplorer2.Models
 {
     public class InputModel
     {
-        public List<IFormFile> Files { get; set; }
+        public IFormFile File { get; set; }
         public string Separators { get; set; }
         public string MissingValues { get; set; }
         public string ConversionAlgorithmName { get; set; }
         public List<double> ConversionAlgorithmParams { get; set; }
         public string MetricName { get; set; }
-
         public bool Nulify { get; set; }
         public List<double> MetricParams { get; set; }
-        public string GroupColumnName { get; set; }
         public string IdColumnName { get; set; }
 
         public BooleanParameter Header { get; set; }
-        public BooleanParameter Directed { get; set; }
 
         public List<SelectListItem> YesNoList { get; } = new() 
         {

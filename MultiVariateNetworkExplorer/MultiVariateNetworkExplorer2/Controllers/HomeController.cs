@@ -35,25 +35,20 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
         [Authorize]
-        private bool GraphErrorHandling(out ErrorInputModel eim, List<IFormFile> files, string separators, string missingvalues,
-             string groupColumn, string idColumn)
-
+        private bool GraphErrorHandling(out ErrorInputModel eim, IFormFile file, string separators, string missingvalues,
+              string idColumn)
         {
             eim = new ErrorInputModel();
-            if (files.Count == 0)
+            if (file is null)
             {
 
                 eim.ErrorMessage = "Please insert your data file";
                 eim.Separators = separators;
                 eim.MissingValues = missingvalues;
                 eim.IdColumn = idColumn;
-                eim.GroupColumn = groupColumn;
-
                 return false;
             }
-
             return true;
-
         }
 
         [Authorize]
@@ -66,43 +61,32 @@ namespace MultiVariateNetworkExplorer.Controllers
         }
 
        [HttpPost, Authorize]
-        //public async Task<IActionResult> LoadGraph(List<IFormFile> files, string separators, string missingvalues,
-        //    string convert, double[] algsParams, string metric, double[] metricParams, string groupColumn, string idColumn, decimal epsilonRadius, decimal kNNmin, BooleanParameter directed = BooleanParameter.False,
-        //    BooleanParameter header = BooleanParameter.False, BooleanParameter grouping = BooleanParameter.False)
         public async Task<IActionResult> LoadGraph([FromForm] InputModel inputModel)
         {
 
-            if (!GraphErrorHandling(out ErrorInputModel eim, inputModel.Files, inputModel.Separators, inputModel.MissingValues
-                ,inputModel.GroupColumnName, inputModel.IdColumnName))
+            if (!GraphErrorHandling(out ErrorInputModel eim, inputModel.File, inputModel.Separators, inputModel.MissingValues
+                , inputModel.IdColumnName))
             {
                 TempData["ErrorMessage"] = "Input files were not loaded correctly.";
                 return Redirect(HttpContext.Request.Headers["Referer"].ToString());
             }
 
-            long size = inputModel.Files.Sum(f => f.Length);
-            var filePaths = new List<string>();
-
-            foreach (var formFile in inputModel.Files)
+            
+            var filePath = Path.GetTempFileName();
+            
+            if (filePath.Length <= 0)
             {
-                if (formFile.Length <= 0)
-                {
-                    TempData["ErrorMessage"] = "The input file was empty. Please check if you have inserted the correct file.";
-                    return Redirect(HttpContext.Request.Headers["Referer"].ToString());
-                }
-
-                var filePath = Path.GetTempFileName();
-                filePaths.Add(filePath);
-                using (var stream = System.IO.File.Create(filePath))
-                {
-                    await formFile.CopyToAsync(stream);
-                }
+                TempData["ErrorMessage"] = "The input file was empty. Please check if you have inserted the correct file.";
+                return Redirect(HttpContext.Request.Headers["Referer"].ToString());
+            }
+            using (var stream = System.IO.File.Create(filePath))
+            {
+                await inputModel.File.CopyToAsync(stream);
             }
 
             char[] separatorArray = string.IsNullOrEmpty(inputModel.Separators) ? " ".ToCharArray() : inputModel.Separators.Trim().ToCharArray();
 
-
             bool hasHeaders = inputModel.Header == BooleanParameter.Yes;
-            bool isDirected = inputModel.Directed == BooleanParameter.Yes;
 
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == inputModel.MetricName);
             object[] metricParams = inputModel.MetricParams?.Cast<object>().ToArray();
@@ -114,8 +98,8 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             try
             {
-                MultiVariateNetwork multiVariateNetwork = new(filePaths, inputModel.MissingValues, inputModel.IdColumnName, inputModel.GroupColumnName, chosenConversion,
-                inputModel.Nulify ,chosenMetric, isDirected, hasHeaders, separatorArray);
+                MultiVariateNetwork multiVariateNetwork = new(filePath, inputModel.MissingValues, inputModel.IdColumnName, chosenConversion,
+                inputModel.Nulify ,chosenMetric, hasHeaders, separatorArray);
 
                 GraphModel gm = new(multiVariateNetwork);
                 ApplicationModels appModel = new(gm);

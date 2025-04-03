@@ -78,7 +78,6 @@
 #networkGraph {
     height: 100%;
     background-color: #1A1A1A;
-    display: block;
 }
 
 
@@ -128,6 +127,10 @@ svg {
     pointer-events: all;
     stroke: #fff;
     stroke-width: 1.5px;
+}
+
+.node-group text{
+    fill: black;
 }
 
 

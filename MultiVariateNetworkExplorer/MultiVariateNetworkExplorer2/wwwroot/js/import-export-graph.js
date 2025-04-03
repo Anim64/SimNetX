@@ -1,8 +1,6 @@
 ﻿//////////SAVE GRAPH///////////
 
 
-
-
 const serializeNumericFilters = function (filterDiv) {
     const numericFilters = filterDiv.getElementsByClassName('numeric');
 
@@ -211,11 +209,11 @@ const saveGraph = function (fileName) {
 const loadNetwork = async function (fileName) {
 
     //DELETE RETURN LATER TO ENABLE FUNCTION!!!!!!
-    return;
+    
     var reader = new FileReader();
     reader.onload = function (e) {
         deleteGraphElementsAndControls();
-        
+        return;
         //var json = JSON.parse(e.target.result);
         //forceProperties = json.forceProperties;
         //filters = json.filters;

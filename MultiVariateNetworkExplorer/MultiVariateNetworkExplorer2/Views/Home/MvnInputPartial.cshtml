@@ -4,15 +4,10 @@
     <form method="post" asp-action="LoadGraph" asp-controller="Home" enctype="multipart/form-data" id="mvn-input-form" name="mvn-input-form" onsubmit="return validateNewNetworkForm(this);">
         <div class="file-buttons">
             <div class="file-button">
-                <input class="inputfile" type="file" id="fileVector" name="InputModel.Files" data-caption="{filePath}"/>
+                <input class="inputfile" type="file" id="fileVector" name="InputModel.File" data-caption="{filePath}"/>
                 <label for="fileVector"><strong>Choose a file with vector data</strong></label>
                 <span class="text-tooltip">Tooltip</span>
                 
-            </div>
-            <div class="file-button">
-                <input class="inputfile" type="file"  id="fileNetwork" name="InputModel.Files" data-caption="{filePath}" />
-                <label for="fileNetwork"><strong>Choose a file with network</strong></label>
-                <span class="text-tooltip">Tooltip</span>
             </div>
         </div>
         <div class="parameters">
@@ -21,22 +16,19 @@
                 <span>Data parameters</span>
             </div>
             <div class="collapsible-parameters-content">
-                <label asp-for="InputModel.Header"><span>Does the vector data file contain headers?</span></label>
+                <label asp-for="InputModel.Header"><span>Headers In File?</span></label>
                 <select asp-for="InputModel.Header" asp-items="Model.InputModel.YesNoList"></select>
 
-                <label asp-for="InputModel.Separators">Enter the data separating characters(separated by SPACE):</label>
+                <label asp-for="InputModel.Separators">Separator character:</label>
                 @Html.TextBoxFor(m => m.InputModel.Separators)
                 
                 <label asp-for="InputModel.MissingValues">
-                    <span>Enter the character representing missing data (leave empty if no character is used)</span>
+                    <span>Missing Data String</span>
                 </label>
                 <input type="text" asp-for="InputModel.MissingValues" value="na" placeholder="eg: -, --, NA etc."/>
 
-                <label asp-for="InputModel.IdColumnName">Enter the column name or number with ids (optional)</label>
+                <label asp-for="InputModel.IdColumnName">Id column name (optional)</label>
                 @Html.TextBoxFor(m => m.InputModel.IdColumnName)
-
-                <label asp-for="InputModel.GroupColumnName">Enter the column name or number with groups (optional)</label>
-                @Html.TextBoxFor(m => m.InputModel.GroupColumnName)
             </div>
 
             <div class="collapsible-parameters-btn">
@@ -44,9 +36,6 @@
                 <span>Network Construction Parameters</span>
             </div>
             <div class="collapsible-parameters-content" id="conversion-collapsible-content">
-                <label asp-for="InputModel.Directed"><span>Is the network directed?</span></label>
-                <select asp-for="InputModel.Directed" asp-items="Model.InputModel.YesNoList"></select>
-
                 <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
                 <label asp-for="InputModel.ConversionAlgorithmName">Choose a conversion algorithm:</label>
                 <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>
@@ -89,7 +78,6 @@
         </div>
         <div class="submit-buttons">
             <input type="submit" class="submit-btn" value="Upload" />
-            @*<input type="button" class="clear-btn" value="Clear" />*@
         </div>
         <p id="new-network-error-para" class="error-display"></p>
     </form>

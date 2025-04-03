@@ -106,7 +106,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="missingvalues"></param>
     /// <param name="header"></param>
     /// <param name="separator"></param>
-    public DataFrame(string fileName, string missingvalues, string idColumn, string classColumn, bool header = false, params char[] separator)
+    public DataFrame(string fileName, string missingvalues, string idColumn, bool header = false, params char[] separator)
     {
         Data = new Dictionary<string, IColumn>();
         DataCount = 0;
@@ -114,7 +114,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
         CatAttrValues = new Dictionary<string, List<string>>();
 
-        this.ReadFromFile(fileName, missingvalues, classColumn, header, separator);
+        this.ReadFromFile(fileName, missingvalues, header, separator);
 
         if (string.IsNullOrEmpty(idColumn))
         {
@@ -471,7 +471,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="emptyAtrributeCount"></param>
     /// <param name="nullIndeces"></param>
     /// <param name="averages"></param>
-    private void PrepareColumns(string[] headers, string[] vector, string missingValues, string classColumn, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
+    private void PrepareColumns(string[] headers, string[] vector, string missingValues, Dictionary<string, int> emptyAtrributeCount, Dictionary<string, List<int>> nullIndeces, 
         Dictionary<string, double> averages)
     {
         int columnCount = headers.Length;
@@ -482,7 +482,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             nullIndeces[header] = new List<int>();
             averages[header] = 0;
 
-            if (header == classColumn || header == IdColumnName)
+            if (header == IdColumnName)
             {
                 this.Data[header] = new ColumnString();
                 this.Data[header].AddData(vectorValue);
@@ -627,7 +627,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="filename"></param>
     /// <param name="header"></param>
     /// <param name="separator"></param>
-    public void ReadFromFile(string filename, string missingvalues, string classColumn, bool header = false, params char[] separator)
+    public void ReadFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
     {
         Dictionary<string, int> emptyAtrributeCount = new Dictionary<string, int>();
         Dictionary<string, List<int>> nullIndeces = new Dictionary<string, List<int>>();
@@ -644,7 +644,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             {
                         
                 headers = PrepareHeaders(sr, header, line, ref vector, separator);
-                PrepareColumns(headers, vector, missingvalues, classColumn, emptyAtrributeCount, nullIndeces, averages);
+                PrepareColumns(headers, vector, missingvalues, emptyAtrributeCount, nullIndeces, averages);
                 DataCount++;
 
                 //Load Data to Frame

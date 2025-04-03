@@ -15,11 +15,12 @@ const generateNodeDetails = function (graph) {
     const { numAttributes, catAttributes } = graph.attributes;
     for (const attribute of numAttributes) {
         generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
-        const containerDivId = attribute + "-histogram-container";
+        const containerDivId = `${attribute}-histogram-container`;
         nodeAttributesDiv.append("div")
             .attr("id", containerDivId);
 
-        hist(containerDivId, graph.nodes, attribute, 300, 250);
+        const attributeValues = graph.getAllAttributeValues(attribute)
+        hist(containerDivId, attributeValues, attribute, 300, 250);
     }
 
     for (const attribute of catAttributes) {
@@ -276,7 +277,7 @@ const deleteGraphElementsAndControls = function () {
         deleteForceAttributeList(select);
     }
 
-    deleteColourListsAndAttributes();
+    deleteVisualsListsAndAttributes();
     clearElement("attributes");
     deleteRemodelAttributes();
 }
@@ -299,7 +300,7 @@ const deleteVisualsListsAndAttributes = function () {
     }
 
     clearElement("categorical-attribute-node-colouring");
-   
+    clearElement("partition-metric-mcc-attribute-select");
     deleteForceAttributeList("attribute-node-colouring");
     deleteForceAttributeList("attribute-node-sizing");
 }
@@ -316,5 +317,7 @@ const deleteRemodelAttributes = function () {
     clearElement("remodel-network-select");
 
     clearElement("attribute-transformation-list");
-    clearElement("remodel-attribute-checkboxes");
+
+    clearElement("remodel-active-attributes-select");
+    clearElement("remodel-inactive-attributes-select");
 }

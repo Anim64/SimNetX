@@ -139,7 +139,7 @@ const addMccPlot = function (clusterMetricDiv, selectionId, mccObject, titleColo
     clusterMetricDiv.append("div")
         .attr("id", barplotID)
         .style("position", "relative");
-    barplot(barplotID, mccObject[selectionId], -1, 1, 300, 150, null,`barplot-mcc-${selectionId}`, `\"${selectionId} class MCC\"`, titleColour);
+    barplot(barplotID, mccObject[selectionId], -1, 1, 300, 150, null,`barplot-mcc-${selectionId}`, `Cluster ${selectionId} MCC`, titleColour);
 }
 
 const matthewsCorrelationCoeficient = function (classAttributeName) {
@@ -281,7 +281,7 @@ const generatePartitionAcrossAttributesBoxplots = function () {
 
             const colour = document.getElementById(`partition-colour-${partition}`).value;
             const boxplotSvg = boxplot(partitionMetricContainer, partitionStats, 600, 400,
-                'partition-metric-partition-boxplot', partition, `\"${partition}\" boxplot`, colour);
+                'partition-metric-partition-boxplot', partition, `Cluster ${partition} boxplot`, colour);
         });
     }
 
