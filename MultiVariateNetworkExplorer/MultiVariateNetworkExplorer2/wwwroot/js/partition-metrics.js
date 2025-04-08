@@ -92,7 +92,7 @@ const addSilhouettePlot = function (clusterMetricDiv, selectionId, data, barColo
     clusterMetricDiv.append("div")
         .attr("id", silhouetteID)
         .style("position", "relative");
-    barplot(silhouetteID, data, -1, 1, 300, 150, barColour, `barplot-silhouette-{selectionId}`, `\"${selectionId} Silhouette\"`, titleColour, 0);
+    barplot(silhouetteID, data, -1, 1, 300, 150, barColour, `barplot-silhouette-${selectionId}`, `\"${selectionId} Silhouette\"`, titleColour, 0);
 }
 
 //********Partition MCC barplots********

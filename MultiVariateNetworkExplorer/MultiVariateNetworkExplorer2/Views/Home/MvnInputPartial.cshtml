@@ -37,7 +37,7 @@
             </div>
             <div class="collapsible-parameters-content" id="conversion-collapsible-content">
                 <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
-                <label asp-for="InputModel.ConversionAlgorithmName">Choose a conversion algorithm:</label>
+                <label asp-for="InputModel.ConversionAlgorithmName">Construction algorithm:</label>
                 <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>
 
                 <div class="algorithm-parameters-container">

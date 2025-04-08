@@ -53,8 +53,8 @@ const hist = function (containerDivId, data, attribute, svgWidth, svgHeight) {
 
     const plotContainer = getPlotContainer(containerDivId);
     const histogramSvg =
-        createGraphSvg(plotContainer, svgWidth,
-            svgHeight, histogramMargin, attribute);
+        createHistogramGraphSvg(plotContainer, svgWidth,
+            svgHeight, histogramMargin, attribute, `${attribute}-histogram`);
 
     
     appendGraphXAxis(histogramSvg, xAxis, 0, histogramHeight);
@@ -84,7 +84,7 @@ const appendHistogramBins = function (svg, bins, height, xAxis, yAxis) {
 
             return height - yAxis(d.length);
         })
-        .style("fill", "black"/*"#ffeead"*/);
+        .style("fill", "#ffeead");
 
     return svg;
 }
@@ -177,7 +177,7 @@ const boxplot = function (plotContainer, data, svgWidth, svgHeight, idPrefix ,id
     const xAxis = createBandAxis(data.map(d => d.key), 0, boxplotWidth, 0.1, 0.3);
     const yAxis = createLinearAxis(yMin, yMax, boxplotHeight, 0);
 
-    const boxplotSvgId = `${idPrefix}-${id}-svg`;
+    const boxplotSvgId = `${idPrefix}-${id}`;
 
     const divId = `${idPrefix}-${id}-container`;
     const plotDiv = plotContainer
@@ -334,6 +334,21 @@ const createGraphSvg = function (plotContainer, width, height, margin/*, attribu
         .attr("width", "100%"/*width + margin.left + margin.right*/)
         .attr("height", height + margin.top + margin.bottom)
         //.attr("data-attribute", attribute)
+        .attr("id", `${id}-svg`)
+        .attr("viewBox", [0, 0, width, height])
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    return histogramSvg;
+}
+
+const createHistogramGraphSvg = function (plotContainer, width, height, margin, attribute, id) {
+
+    const histogramSvg = plotContainer
+        .append("svg")
+        .attr("width", "100%"/*width + margin.left + margin.right*/)
+        .attr("height", height + margin.top + margin.bottom)
+        .attr("data-attribute", attribute)
         .attr("id", `${id}-svg`)
         .attr("viewBox", [0, 0, width, height])
         .append("g")

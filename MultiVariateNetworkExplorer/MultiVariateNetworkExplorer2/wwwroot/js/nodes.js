@@ -129,7 +129,10 @@ const toggleNodeDetails = function (nodeId, nodeIndex) {
     
 }
 
-const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
+const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv = null) {
+    if (attributeDiv === null) {
+        attributeDiv = document.getElementById("node-attributes");
+    }
     const histogramSvgs = attributeDiv.getElementsByTagName("svg");
     for (const histogram of histogramSvgs) {
         //const d3Histogram = d3.select(histogram);
@@ -143,6 +146,27 @@ const showNodeValueInHistogram = function (nodeId, nodeIndex, attributeDiv) {
                 }
                 return "#ffeead";
             });
+    }
+}
+
+const showNodeValuesInHistogram = function (nodes, attributeDiv = null) {
+    if (attributeDiv === null) {
+        attributeDiv = document.getElementById("node-attributes");
+    }
+    const histogramSvgs = attributeDiv.getElementsByTagName("svg");
+    for (const histogram of histogramSvgs) {
+        //const d3Histogram = d3.select(histogram);
+        const attributeName = histogram.getAttribute('data-attribute');
+        const bins = histogram.getElementsByTagName("rect");
+        const d3bins = d3.selectAll(bins).style("fill", "#ffeead");
+        nodes.each(function (n) {
+            const attributeValue = currentGraph.getNodeDataValue(n.id, attributeName);
+            d3bins.each(function (d) {
+                if (d.x0 <= attributeValue && d.x1 > attributeValue) {
+                    d3.select(this).style("fill",(b) => "red");
+                }
+            })
+        });
     }
 }
 

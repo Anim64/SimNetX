@@ -556,20 +556,22 @@ const drawSelectedNodesHistogram = function () {
 
     if (selectedNodes.size() === 1) {
         const { id, index } = selectedNodes.node().__data__;
-        toggleNodeDetails(id, index);
+        nodeHeadingClick(id, index);
         return;
     }
 
-    const { num: numAttributes = [] } = currentGraph.attributes;
-    for (const attribute of numAttributes) {
-        const containerDivId = `${attribute}-histogram-container`;
-        const attributeValues = [];
-        selectedNodes.each(function (d) {
-            attributeValues.push(currentGraph.getNodeDataValue(d.id, attribute));
-        });
+    showNodeValuesInHistogram(selectedNodes);
+    //TODO to be removed
+    //const { num: numAttributes = [] } = currentGraph.attributes;
+    //for (const attribute of numAttributes) {
+    //    const containerDivId = `${attribute}-histogram-container`;
+    //    const attributeValues = [];
+    //    selectedNodes.each(function (d) {
+    //        attributeValues.push(currentGraph.getNodeDataValue(d.id, attribute));
+    //    });
 
-        hist(containerDivId, attributeValues, attribute, 300, 100);
-    }
+    //    hist(containerDivId, attributeValues, attribute, 300, 100);
+    //}
 }
 
 /************************************************END BRUSHING **********************************************/
