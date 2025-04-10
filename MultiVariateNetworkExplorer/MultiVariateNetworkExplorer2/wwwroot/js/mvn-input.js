@@ -33,20 +33,16 @@ const addFileButtonsEventListeners = function () {
 
     for (const input of inputs) {
         const label = input.nextElementSibling;
-        const labelTextElement = label.firstElementChild;
-        const labelVal = labelTextElement.innerHTML;
         const labelTooltip = label.nextElementSibling;
 
         input.addEventListener('change', function (e) {
             let fileName = '';
             fileName = e.target.value.split('\\').pop();
             if (fileName) {
-                labelTextElement.innerText = fileName;
+                label.innerText = fileName;
                 labelTooltip.innerHTML = fileName;
                 label.style.backgroundColor = "green";
             }
-            else
-                labelTextElement.innerText = labelVal;
         });
 
         
@@ -60,6 +56,43 @@ const addFileButtonsEventListeners = function () {
             labelTooltip.style.visibility = "hidden";
         });
     }
+}
+
+const dropFileHandler = function (e) {
+    e.preventDefault();
+    const changeEvent = new Event("change");
+    if (e.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        [...e.dataTransfer.items].forEach((item, i) => {
+            // If dropped items aren't files, reject them
+            if (item.kind === "file") {
+                const file = item.getAsFile();
+                fileName = file.name;
+                if (fileName) {
+                    e.target.innerHTML = fileName;
+                    e.target.nextElementSibling.innerHTML = fileName;
+                    e.target.previousElementSibling.files = e.dataTransfer.files;
+                    e.target.style.backgroundColor = "green";
+                }
+            }
+        });
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        [...e.dataTransfer.files].forEach((file, i) => {
+            fileName = file.name;
+            if (fileName) {
+                e.target.innerHTML = fileName;
+                e.target.nextElementSibling.innerHTML = fileName;
+                e.target.previousElementSibling.files = e.dataTransfer.files;
+                e.target.style.backgroundColor = "green";
+            }
+        });
+    }
+}
+
+const dragOverFileHandler = function (e) {
+    e.preventDefault();
+    
 }
 
 const selectFocusIn = function (select_element) {

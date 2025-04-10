@@ -5,7 +5,7 @@
         <div class="file-buttons">
             <div class="file-button">
                 <input class="inputfile" type="file" id="fileVector" name="InputModel.File" data-caption="{filePath}"/>
-                <label for="fileVector"><strong>Choose a file with vector data</strong></label>
+                <label ondrop="dropFileHandler(event)" ondragover="dragOverFileHandler(event)"  for="fileVector">Choose a file with vector data</label>
                 <span class="text-tooltip">Tooltip</span>
                 
             </div>
@@ -160,7 +160,7 @@
                         <label for="sigma">Choose a standard deviation</label>
                         <input type="number" id="sigma" name="metricParams" step="0.001" min="0" value="1" />
                     </div>
-                    @Html.LabelFor(m => m.InputModel.Nulify, "Nulify?")
+                    @Html.LabelFor(m => m.InputModel.Nulify, "Automatic threshold")
                     @Html.CheckBoxFor(m => m.InputModel.Nulify)
                     
                 </div>

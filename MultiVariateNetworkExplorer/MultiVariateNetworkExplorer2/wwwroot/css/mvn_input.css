@@ -98,7 +98,8 @@
 
 
         .inputfile:hover + label,
-        .inputfile + label:active {
+        .inputfile + label:active,
+        .inputfile:{
             /*background-color: darken(#f15d22, 10%);*/
             -moz-filter: saturate(2.5);
             -webkit-filter: saturate(2.5);

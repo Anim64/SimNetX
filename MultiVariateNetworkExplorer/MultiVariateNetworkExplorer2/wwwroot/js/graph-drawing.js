@@ -992,7 +992,7 @@ const calculateMetricAsync = function (current_graph, metricDiv) {
     metricDivSpan.innerHTML = "Calculating...";
 
     const workerName = metricDiv.getAttribute('data-value');
-    const worker = new Worker(jsPath + workerName + '_worker.js?v=5');
+    const worker = new Worker(jsPath + workerName + '_worker.js');
     const data = {
         'graph': currentGraph.graph
     };

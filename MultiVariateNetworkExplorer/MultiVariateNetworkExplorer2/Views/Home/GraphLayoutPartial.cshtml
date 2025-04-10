@@ -7,7 +7,7 @@
         </label>
         <button class="run-btn" id="reset-layout-btn" onclick="resetLayout()">Redraw Layout</button>
     </div>
-    <div class="force">
+    @* <div class="force">
         <p><label>Center</label> Shifts the view, so the graph is centered at this location.</p>
         <label>
             x
@@ -19,7 +19,7 @@
             <output id="center_YSliderOutput">.5</output>
             <input type="range" min="0" max="1" value=".5" step="0.01" oninput="handleForceChange(this.value, 'center_YSliderOutput', 'center', 'y', updateCenterForce);">
         </label>
-    </div>
+    </div> *@
 
     <div class="force">
         <p><label><input type="checkbox" id="charge_EnabledCheckbox" checked onchange="handleForceEnablement(this.checked, 'charge', updateChargeForce);"> Charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
