@@ -441,9 +441,10 @@ const requestCommunityDetection = function () {
             setPartitionColouring("partition-colour-list");
         },
         error: function (xhr, ajaxOptions, thrownError) {
-            console.log(xhr);
-            console.log(ajaxOptions);
-            console.log(thrownError);
+            if (xhr.status === 401) {
+                window.location.href = '/Login/Login';
+            }
+            alert(thrownError);
         }
     });
 

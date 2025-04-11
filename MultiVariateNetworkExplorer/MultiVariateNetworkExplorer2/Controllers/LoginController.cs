@@ -56,11 +56,18 @@ namespace MultiVariateNetworkExplorer2.Controllers
 
                     var principal = new ClaimsPrincipal(identity);
 
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-                    loginModel.ReturnUrl ??= "~/Home/Graph";
-
-                    return LocalRedirect(loginModel.ReturnUrl);
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        principal,
+                        new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddYears(100)
+                        }
+                        );
+                    
+                    return RedirectToAction("Graph", "Home");
+                    
                 }
             }
 
@@ -73,7 +80,7 @@ namespace MultiVariateNetworkExplorer2.Controllers
             //SignOutAsync is Extension method for SignOut    
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             //Redirect to home page    
-            return LocalRedirect("/");
+            return RedirectToAction("Index", "Login");
         }
 
         private string HashPassword(string password, out byte[] salt)

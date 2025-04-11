@@ -237,6 +237,9 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 
         },
         error: function (xhr, ajaxOptions, thrownError) {
+            if (xhr.status === 401) {
+                window.location.href = '/Login/Login';
+            }
             alert(thrownError);
         }
     });
