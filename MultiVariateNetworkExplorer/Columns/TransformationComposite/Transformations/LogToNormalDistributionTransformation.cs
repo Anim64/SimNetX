@@ -10,7 +10,7 @@ namespace Columns.TransformationComposite.Transformations
     {
         public void ApplyTransformation(ColumnDouble column)
         {
-            column.Map(Math.Log);
+            column.Map(columnValue => { return Math.Log(Math.Abs(columnValue) + 1); });
         }
     }
 }

@@ -25,34 +25,37 @@
                         @if (!Model.GraphModel.Mvn.IsEmpty())
                         {
                             <div id="node-attributes">
-                                @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-                                {
-                                    <div class="node-property-group">
-                                        <label title="@(numAttribute)" for="@("display-" + numAttribute)">
-                                            @(
-                                                numAttribute + ":"
-                                                )
-                                        </label>
-                                        <input type="text" id="@("display-" + numAttribute)" value="" data-attribute="@(
-                                    $"{numAttribute}"
-                                    )" readonly />
-                                    </div>
-                                    <div id="@(numAttribute + "-histogram-container")"></div>
-                                }
-
-                                @foreach (string catAttribute in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
-                                {
-                                    <div class="node-property-group">
-                                        <label title="@(catAttribute)" for="@("display-" + catAttribute)">
-                                            @(
-                                                catAttribute + ":"
-                                                )
-                                        </label>
-                                        <input type="text" id="@("display-" + catAttribute)" value="" data-attribute="@(
-                                        $"{catAttribute}"
+                                <div id="node-attributes-numerical">
+                                    @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
+                                    {
+                                        <div class="node-property-group">
+                                            <label title="@(numAttribute)" for="@("display-" + numAttribute)">
+                                                @(
+                                                    numAttribute + ":"
+                                                    )
+                                            </label>
+                                            <input type="text" id="@("display-" + numAttribute)" value="" data-attribute="@(
+                                        $"{numAttribute}"
                                         )" readonly />
-                                    </div>
-                                }
+                                        </div>
+                                        <div id="@(numAttribute + "-histogram-container")"></div>
+                                    }
+                                </div>
+                                <div id="node-attributes-categorical">
+                                    @foreach (string catAttribute in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
+                                    {
+                                        <div class="node-property-group">
+                                            <label title="@(catAttribute)" for="@("display-" + catAttribute)">
+                                                @(
+                                                    catAttribute + ":"
+                                                    )
+                                            </label>
+                                            <input type="text" id="@("display-" + catAttribute)" value="" data-attribute="@(
+                                            $"{catAttribute}"
+                                            )" readonly />
+                                        </div>
+                                    }
+                                </div>
                             </div>
                             <div id="node-centralities">
                                 <div class="node-property-group">

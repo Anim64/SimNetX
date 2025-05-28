@@ -188,9 +188,11 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
 
-            await nodeAttributes.ApplyJsonTransformationAsync(jAttributeTransform);
+            List<string> newTransformedColumnNames = await nodeAttributes.ApplyJsonTransformationAsync(jAttributeTransform);
+            JArray jNewTransformedColumnNames = new(newTransformedColumnNames);
 
             List<string> excludedAttributesList = jExcludedAttributes.ToObject<List<string>>();
+
 
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
@@ -207,7 +209,9 @@ namespace MultiVariateNetworkExplorer.Controllers
 
             // TODO: Return only transformed columns and then assign then into global json graph
             Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, doNulify, excludedAttributesList);
-            return Json(new { newVectorData = jAttributeTransform.HasValues ? 
+            return Json(new {
+                newTransformedColumnNames = jNewTransformedColumnNames.ToString(),
+                newVectorData = jAttributeTransform.HasValues ? 
                 nodeAttributes.ToD3Json().ToString() : 
                 JValue.CreateNull().ToString(), 
                 newNetwork = remodeledNetwork.LinksToD3Json().ToString() }); 

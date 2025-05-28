@@ -58,7 +58,7 @@
                 Choose Attribute:
                 <select id="attribute-node-colouring" class="attribute-select attribute-select-border" 
                 name="attribute-node-colouring" onchange="updateGradientLegendAxis(this.id)">
-                    <optgroup label="Numeric Attributes">
+                    <optgroup label="Attributes">
                         @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                         {
                             <option value="@key">@key</option>

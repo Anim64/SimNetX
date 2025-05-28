@@ -47,6 +47,15 @@ namespace Columns.Types
             Data = new List<double?>(size);
         }
 
+        public ColumnDouble(ColumnDouble copyColumn)
+        {
+            Data = new List<double?>(copyColumn.DataCount);
+            foreach(double? value in copyColumn)
+            {
+                Data.Add(value);
+            }
+        }
+
         public void AddData(object value)
         {
             if (!IsNumber(value))

@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Resources;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Columns.Enums.ColumnEnums;
@@ -199,6 +200,11 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         return this.Data.Count == 0;
     }
 
+    public bool ContainsColumn(string columnName)
+    {
+        return this.Data.ContainsKey(columnName);
+    }
+
     public Dictionary<int, double> RowAverages(IEnumerable<int> rowIndeces = null)
     {
         Dictionary<int, double> result = new Dictionary<int, double>();
@@ -342,38 +348,74 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
     }
 
-    public async Task ApplyJsonTransformationAsync(JObject jAttributeTransform)
+    public async Task<List<string>> ApplyJsonTransformationAsync(JObject jAttributeTransform)
     {
-        await Task.Run(() =>
+        return await Task.Run(() =>
         {
-            foreach (var attribute in jAttributeTransform)
-            {
-                ColumnDouble columnValue = (ColumnDouble)this[attribute.Key];
-
-                List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
-                TransformComposite transforms = new TransformComposite();
-
-                foreach (var transform in attributeTransforms)
+                List<string> newTransformedColumnNames = new List<string>();
+                foreach (var attribute in jAttributeTransform)
                 {
-                    ITransformComponent component = transform switch
-                    {
-                        "normalize" => new NormalizeTransformation(),
-                        "rescale" => new RescaleTransformation(),
-                        "standardize" => new StandardizeTransformation(),
-                        "distribute" => new LogToNormalDistributionTransformation(),
-                        _ => null,
-                    };
+                    ColumnDouble columnValues = (ColumnDouble)this[attribute.Key];
+                    ColumnDouble transformedColumn = new ColumnDouble(columnValues);
 
-                    if (component is not null)
-                    {
-                        transforms.Add(component);
-                    }
-                }
+                    List<string> attributeTransforms = attribute.Value.ToObject<List<string>>();
+                    TransformComposite transforms = new TransformComposite();
+                    StringBuilder transformedColumnNameSB = new StringBuilder(attribute.Key).Append('-');
 
-                transforms.ApplyTransformation(columnValue);
-            };
+                        foreach (var transform in attributeTransforms)
+                        {
+                            ITransformComponent component = null;
+                            switch (transform)
+                            {
+                                case "normalize":
+                                    {
+                                        component = new NormalizeTransformation();
+                                        transformedColumnNameSB.Append('n');
+                                        break;
+                                    }
+                                case "rescale":
+                                    {
+                                        component = new RescaleTransformation();
+                                        transformedColumnNameSB.Append('r');
+                                        break;
+                                    }
+                                case "standardize":
+                                    {
+                                        component = new StandardizeTransformation();
+                                        transformedColumnNameSB.Append('s');
+                                        break;
+                                    }
+                                case "distribute":
+                                    {
+                                        component = new LogToNormalDistributionTransformation();
+                                        transformedColumnNameSB.Append('l');
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        break;
+                                    }
 
-            this.ColumnAverages(inplace: true);
+                            }
+
+                            if (component is not null)
+                            {
+                                transforms.Add(component);
+                            }
+                        }
+                
+                        string newTransformedColumnName = transformedColumnNameSB.ToString();
+                        if (!this.ContainsColumn(newTransformedColumnName))
+                        {
+                            transforms.ApplyTransformation(transformedColumn);
+                            this.AddColumn(newTransformedColumnName, transformedColumn);
+                            newTransformedColumnNames.Add(newTransformedColumnName);
+                        }
+                
+                };
+
+                this.ColumnAverages(inplace: true);
+                return newTransformedColumnNames;
         });
             
     }
@@ -731,6 +773,11 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     public void AddColumn(string header, Type columnType)
     {
         this.Data.Add(header, (IColumn)Activator.CreateInstance(columnType));
+    }
+
+    public void AddColumn(string header, IColumn column)
+    {
+        this.Data.Add(header, column);
     }
 
     /// <summary>

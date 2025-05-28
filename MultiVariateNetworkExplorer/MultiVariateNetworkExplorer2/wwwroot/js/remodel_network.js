@@ -154,6 +154,55 @@ const transferSelectedOptions = function(fromSelectId, toSelectId){
     toSelect.append(fromSelectedOptions);
 }
 
+const addNewAttributeControls = function (featureName) {
+    const targetSelects = [
+        { selector: "#project-x-attributes>optgroup[label=Attributes]" },
+        { selector: "#project-y-attributes>optgroup[label=Attributes]" },
+        { selector: "#remodel-active-attributes-select"},
+        { selector: "#node-label-select>optgroup[label=Attributes]" },
+        { selector: "#attribute-node-colouring>optgroup[label=Attributes]" },
+        { selector: "#attribute-node-sizing>optgroup[label=Attributes]" }
+    ];
+
+    for (const { selector, title } of targetSelects) {
+        const option = d3.create("option")
+            .property("value", featureName)
+            .attr("title", featureName)
+            .html(featureName);
+
+        d3.select(selector).append(() => option.node());
+    }
+
+    addNumericalFeatureDisplay(featureName);
+}
+
+const addNumericalFeatureDisplay = function (featureName) {
+    const featureDiv = d3.select("#node-attributes-numerical");
+
+    const nodeFeatureGroup = featureDiv.append("div");
+    nodeFeatureGroup.append("label")
+        .attr("title", featureName)
+        .attr("for", `display-${featureName}`)
+        .html(`${featureName}:`)
+
+    nodeFeatureGroup.append("input")
+        .attr("type", "text")
+        .attr("id", `display-${featureName}`)
+        .property("value", "")
+        .attr("data-attribute", featureName)
+        .attr("readonly", true);
+
+    //Histogram
+    const containerDivId = `${featureName}-histogram-container`;
+    featureDiv.append("div")
+        .attr("id", `${featureName}-histogram-container`);
+
+    const featureValues = currentGraph.getAllAttributeValues(featureName);
+
+    hist(containerDivId, featureValues, featureName, 300, 100);
+        
+}
+
 const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelectId, nulifyId) {
     const selectedAlgorithm = document.getElementById(algorithmSelectId).value;
     const selectedMetric = document.getElementById(metricSelectId).value;
@@ -219,9 +268,13 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
         success: function (result) {
             if (result.newVectorData != "") {
                 const newVectorData = JSON.parse(result.newVectorData);
-                //currentGraph.nodes = newVectorData;
-                dataStore.nodes = newVectorData;
-                //updateNodes();
+                dataStore.nodeData = newVectorData;
+
+                const newTransformedColumnNames = JSON.parse(result.newTransformedColumnNames);
+                currentGraph.attributes.num.push(...newTransformedColumnNames);
+                for (const columnName of newTransformedColumnNames) {
+                    addNewAttributeControls(columnName);
+                }
             }
             const newNet = JSON.parse(result.newNetwork);
             currentGraph.links = newNet;
@@ -230,7 +283,8 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 
             currentGraph.updateLinkIndeces();
 
-            updateNodesAndLinks();
+            updateLinks();
+            //updateNodesAndLinks();
             requestCommunityDetection(currentGraph);
             calculateAllMetrics();
             startSimulation();
