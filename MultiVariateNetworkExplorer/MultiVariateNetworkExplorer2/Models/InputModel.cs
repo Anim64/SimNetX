@@ -23,6 +23,8 @@ namespace MultiVariateNetworkExplorer2.Models
 
         public BooleanParameter Header { get; set; }
 
+        public List<AttributeInfoModel> Attributes { get; set; }
+
         public List<SelectListItem> YesNoList { get; } = new() 
         {
             new SelectListItem { Text = BooleanParameter.Yes.ToString(), Value = ((int)BooleanParameter.Yes).ToString(), Selected=true },
@@ -41,9 +43,11 @@ namespace MultiVariateNetworkExplorer2.Models
             new SelectListItem { Text = "Cosine Similarity", Value = "CosineSimilarity" },
             new SelectListItem { Text = "Pearson Correlation", Value = "PearsonCorrelation" },
             new SelectListItem { Text = "Spearman Correlation", Value = "SpearmanCorrelation" },
+            new SelectListItem { Text = "Gower Similarity", Value = "GowerSimilarity" },
             new SelectListItem { Text = "Cooccurance", Value = "CooccuranceSimilarity" },
             new SelectListItem { Text = "Jaccard", Value = "JaccardSimilarity" },
             new SelectListItem { Text = "Euclidean Distance", Value = "EuclideanKernel" }
+            
         };
 
     }

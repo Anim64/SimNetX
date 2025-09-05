@@ -313,6 +313,16 @@ class Graph {
         return serializedGraph;
     }
 
+    max(attributeName) {
+        return d3.max(Object.values(this._data.nodeData), function (d) {
+            return d[attributeName];
+        });
+    }
+
+    min(attributeName) {
+        return d3.min(Object.values(this._data.nodeData), d => d[attributeName]);
+    }
+
     updateForces(reset = true) {
         this.updateCenterForce();
         this.updateChargeForce();

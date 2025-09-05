@@ -241,6 +241,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataUtility\MultiVariateNetwork.csproj" />
+    <ProjectReference Include="..\ServerModels\ServerModels.csproj" />
   </ItemGroup>
 
 

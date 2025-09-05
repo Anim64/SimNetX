@@ -3,9 +3,6 @@
 
 // Write your JavaScript code.
 
-
-
-
 const openTab = function (event, contentId, divId, contentClass) {
     const tabcontents = document.getElementById(divId).querySelectorAll(contentClass);
     for (const tabcontent of tabcontents) {

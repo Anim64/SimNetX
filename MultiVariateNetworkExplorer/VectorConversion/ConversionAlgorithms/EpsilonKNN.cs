@@ -22,22 +22,22 @@ namespace VectorConversion.VectorDataConversion
 
         
        
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, bool doNulify = false, IEnumerable<string> exclude = null)
+        public Network ConvertToNetwork(ColumnString idColumn, Matrix<double> similarityMatrix)
         {
-            ColumnString idColumn = vectorData.IdColumn;
+            
             Network result = new(idColumn);
-            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData, doNulify, exclude);
+         
 
 
-            for (int i = 0; i < kernelMatrix.Rows; i++)
+            for (int i = 0; i < similarityMatrix.Rows; i++)
             {
                 Dictionary<int, double> dict = new();
 
-                for (int j = i; j < kernelMatrix.Cols; j++)
+                for (int j = i; j < similarityMatrix.Cols; j++)
                 {
                     if (i != j)
                     {
-                        dict[j] = kernelMatrix[i, j];
+                        dict[j] = similarityMatrix[i, j];
                     }
 
                 }

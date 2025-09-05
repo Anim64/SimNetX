@@ -2,84 +2,98 @@
 
 <section class="mvn-input" id="mvn-input-section">
     <form method="post" asp-action="LoadGraph" asp-controller="Home" enctype="multipart/form-data" id="mvn-input-form" name="mvn-input-form" onsubmit="return validateNewNetworkForm(this);">
-        <div class="file-buttons">
-            <div class="file-button">
-                <input class="inputfile" type="file" id="fileVector" name="InputModel.File" data-caption="{filePath}"/>
-                <label ondrop="dropFileHandler(event)" ondragover="dragOverFileHandler(event)"  for="fileVector">Choose a file with vector data</label>
-                <span class="text-tooltip">Tooltip</span>
+        <div id="input-dataset-info">
+            <h2>Select Dataset</h2>
+            <div class="file-buttons">
+                <div class="file-button">
+                    <input class="inputfile" type="file" id="fileVector" name="InputModel.File" data-caption="{filePath}"/>
+                    <label ondrop="dropFileHandler(event)" ondragover="dragOverFileHandler(event)"  for="fileVector">Choose a file with vector data</label>
+                    <span class="text-tooltip">Tooltip</span>
                 
+                </div>
             </div>
-        </div>
-        <div class="parameters">
-            <div class="collapsible-parameters-btn">
-                <i class='fa fa-chevron-up'></i>
-                <span>Data parameters</span>
-            </div>
-            <div class="collapsible-parameters-content">
-                <label asp-for="InputModel.Header"><span>Headers In File?</span></label>
-                <select asp-for="InputModel.Header" asp-items="Model.InputModel.YesNoList"></select>
+            <div class="parameters">
+                <div class="collapsible-parameters-btn">
+                    <i class='fa fa-chevron-up'></i>
+                    <span>Data parameters</span>
+                </div>
+                <div class="collapsible-parameters-content">
+                    <label asp-for="InputModel.Header"><span>Headers In File?</span></label>
+                    <select asp-for="InputModel.Header" asp-items="Model.InputModel.YesNoList"></select>
 
-                <label asp-for="InputModel.Separators">Separator character:</label>
-                @Html.TextBoxFor(m => m.InputModel.Separators)
+                    <label asp-for="InputModel.Separators">Separator character:</label>
+                    @Html.TextBoxFor(m => m.InputModel.Separators)
                 
-                <label asp-for="InputModel.MissingValues">
-                    <span>Missing Data String</span>
-                </label>
-                <input type="text" asp-for="InputModel.MissingValues" value="na" placeholder="eg: -, --, NA etc."/>
+                    <label asp-for="InputModel.MissingValues">
+                        <span>Missing Data String</span>
+                    </label>
+                    <input type="text" asp-for="InputModel.MissingValues" value="na" placeholder="eg: -, --, NA etc."/>
 
-                <label asp-for="InputModel.IdColumnName">Id column name (optional)</label>
-                @Html.TextBoxFor(m => m.InputModel.IdColumnName)
-            </div>
-
-            <div class="collapsible-parameters-btn">
-                <i class='fa fa-chevron-up'></i>
-                <span>Network Construction Parameters</span>
-            </div>
-            <div class="collapsible-parameters-content" id="conversion-collapsible-content">
-                <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
-                <label asp-for="InputModel.ConversionAlgorithmName">Construction algorithm:</label>
-                <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>
-
-                <div class="algorithm-parameters-container">
-                    <div class="algorithm-parameters" id="lrnet-parameters">
-
-                        <label asp-for="InputModel.ConversionAlgorithmParams[0]">Choose a reduction coefficient</label>
-                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[0]" min="0.1" step="0.1" max="10" value="1"/>
-
-                        <label asp-for="InputModel.ConversionAlgorithmParams[1]">Choose a minimal number of neighbours</label>
-                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[1]" min="0" max="20" step="1" value="1" />
-                    </div>
-
-                    <div class="algorithm-parameters" id="epsilonknn-parameters">
-                        <label asp-for="InputModel.ConversionAlgorithmParams[0]">Choose a radius</label>
-                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[0]" step="0.00001" min="0" max="1" value="1" />
-
-                        <label asp-for="InputModel.ConversionAlgorithmParams[1]">Choose a minimal number of neighbours</label>
-                        <input type="number" asp-for="InputModel.ConversionAlgorithmParams[1]" min="0" value="1" />
-                    </div>
+                    <label asp-for="InputModel.IdColumnName">Id column name (optional)</label>
+                    @Html.TextBoxFor(m => m.InputModel.IdColumnName)
                 </div>
 
-                <h4 id="metric-parameters-headline">Metric Parameters</h4>
-                <label asp-for="InputModel.MetricName">Choose a metric:</label>
-                <select asp-for="InputModel.MetricName" asp-items="Model.InputModel.MetricList" onchange=" displayMetricParameters(this.id)"></select>
-
-                <div class="metric-parameters-container">
-                    <div class="metric-parameters" id="gauss-parameters">
-                        <label asp-for="InputModel.MetricParams[0]">Choose a standard deviation</label>
-                        <input type="number" asp-for="InputModel.MetricParams[0]" step="0.001" min="0" value="1" />
-                    </div>
+                <div class="collapsible-parameters-btn">
+                    <i class='fa fa-chevron-up'></i>
+                    <span>Network Construction Parameters</span>
                 </div>
+                <div class="collapsible-parameters-content" id="conversion-collapsible-content">
+                    <h4 id="algorithm-parameters-headline">Algorithm Parameters</h4>
+                    <label asp-for="InputModel.ConversionAlgorithmName">Construction algorithm:</label>
+                    <select asp-for="InputModel.ConversionAlgorithmName" asp-items="Model.InputModel.AlgorithmList" onchange="displayAlgorithmParameters(this.id, '-parameters')"></select>
 
-                @Html.LabelFor(m => m.InputModel.Nulify, "Nulify?")
-                @Html.CheckBoxFor(m => m.InputModel.Nulify)
+                    <div class="algorithm-parameters-container">
+                        <div class="algorithm-parameters" id="lrnet-parameters">
 
-                <input type="hidden" id="current-graph" name="current-graph" />
+                            <label asp-for="InputModel.ConversionAlgorithmParams[0]">Choose a reduction coefficient</label>
+                            <input type="number" asp-for="InputModel.ConversionAlgorithmParams[0]" min="0.1" step="0.1" max="10" value="1"/>
+
+                            <label asp-for="InputModel.ConversionAlgorithmParams[1]">Choose a minimal number of neighbours</label>
+                            <input type="number" asp-for="InputModel.ConversionAlgorithmParams[1]" min="0" max="20" step="1" value="1" />
+                        </div>
+
+                        <div class="algorithm-parameters" id="epsilonknn-parameters">
+                            <label asp-for="InputModel.ConversionAlgorithmParams[0]">Choose a radius</label>
+                            <input type="number" asp-for="InputModel.ConversionAlgorithmParams[0]" step="0.00001" min="0" max="1" value="1" />
+
+                            <label asp-for="InputModel.ConversionAlgorithmParams[1]">Choose a minimal number of neighbours</label>
+                            <input type="number" asp-for="InputModel.ConversionAlgorithmParams[1]" min="0" value="1" />
+                        </div>
+                    </div>
+
+                    <h4 id="metric-parameters-headline">Metric Parameters</h4>
+                    <label asp-for="InputModel.MetricName">Choose a metric:</label>
+                    <select asp-for="InputModel.MetricName" asp-items="Model.InputModel.MetricList" onchange=" displayMetricParameters(this.id)"></select>
+
+                    <div class="metric-parameters-container">
+                        <div class="metric-parameters" id="gauss-parameters">
+                            <label asp-for="InputModel.MetricParams[0]">Choose a standard deviation</label>
+                            <input type="number" asp-for="InputModel.MetricParams[0]" step="0.001" min="0" value="1" />
+                        </div>
+                    </div>
+
+                    @Html.LabelFor(m => m.InputModel.Nulify, "Nulify?")
+                    @Html.CheckBoxFor(m => m.InputModel.Nulify)
+
+                    <input type="hidden" id="current-graph" name="current-graph" />
+                </div>
+            </div>
+            <div class="submit-buttons">
+                <input type="button" class="submit-btn" value="Next" onclick="loadDataset(); "/>
+            </div>
+            <p id="new-network-error-para" class="error-display"></p>
+        </div>
+        <div id="input-attribute-info" style="display:none">
+            <h2>Review Attributes</h2>
+            <table id="attribute-table">
+                <thead><tr><th>Name</th><th>Type</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="submit-buttons">
+                <input type="button" class="submit-btn" value="Back" onclick="switchFormPart('input-attribute-info', 'input-dataset-info')"/>
+                <input type="submit" class="submit-btn" value="Upload" />
             </div>
         </div>
-        <div class="submit-buttons">
-            <input type="submit" class="submit-btn" value="Upload" />
-        </div>
-        <p id="new-network-error-para" class="error-display"></p>
     </form>
 
     <form method="post" asp-action="LoadAndAppendNodes" asp-controller="Home" enctype="multipart/form-data" id="mvn-append-form" onsubmit="return validateAppendNetworkForm(this)">

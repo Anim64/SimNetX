@@ -892,7 +892,7 @@ svg {
 
 
 .file-buttons {
-    width: 70%;
+    width: 100%;
     display: flex;
     -webkit-justify-content: center;
     justify-content: center;
@@ -912,6 +912,7 @@ svg {
     -webkit-flex-grow: 1;
     flex-grow: 1;
     position: relative; 
+    text-align:center;
 }
 
 
@@ -1094,17 +1095,28 @@ svg {
     align-self: center;
 }
 
+#input-attribute-info{
+    max-height:400px;
+    overflow-y:scroll;
+}
+
 
 
 .submit-buttons {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    display: flex;
     width: 100%;
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-justify-content: center;
+    justify-content: center;
 }
 
 .submit-btn {
-    width: 100%;
-    margin: 2rem auto 0 auto;
+    min-width: 15%;
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
+    margin: 2rem 0.5rem 0 0.5rem;
     border: 0.1rem solid lightblue;
     -moz-border-radius: 0.6rem;
     -webkit-border-radius: 0.6rem;
@@ -1116,10 +1128,6 @@ svg {
     font-family: 'Poppins', sans-serif;
     font-size: inherit;
     font-weight: 600;
-    -ms-grid-row: 1 / 2;
-    grid-row: 1 / 2;
-    -ms-grid-column: 4 / 8;
-    grid-column: 4 / 8;
 }
 
     .submit-btn:hover {
@@ -1164,7 +1172,8 @@ svg {
     text-align: justify;
 }
 
-.nodes {
+.node-attributes {
+    display: none;
     overflow-y: hidden;
     --node-nav-height: 75%;
     --node-select-input-height: 20%;

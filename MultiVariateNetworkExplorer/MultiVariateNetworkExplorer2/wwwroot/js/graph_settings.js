@@ -282,8 +282,10 @@ const setAttributeNodeSizing = function (selectElement) {
         let getValueFunction = null;
 
         if (optgroup === "Attributes") {
-            attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
-            attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            //attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
+            //attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+            attributeMax = currentGraph.max(attributeName);
+            attributeMin = currentGraph.min(attributeName);
             getValueFunction = getNodeAttribute;
             
         }
@@ -302,7 +304,7 @@ const setAttributeNodeSizing = function (selectElement) {
                 return d.r = defaultRadius / 2;
             }
 
-            const resultRadius = (defaultRadius * 2) * ((parseFloat(attributeValue) - attributeMin) / (attributeMax - attributeMin)) + 1;
+            const resultRadius = (defaultRadius * 2) * ((attributeValue - attributeMin) / (attributeMax - attributeMin)) + 1;
             return d.r = resultRadius;
         });
 
@@ -343,9 +345,9 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
     let attributeMin = null;
     let getValueFunction = null;
 
-    if (optgroup === "Numeric Attributes") {
-        attributeMax = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("max"));
-        attributeMin = parseFloat($("#" + attributeName + "-sliderOutputMin").attr("min"));
+    if (optgroup === "Attributes") {
+        attributeMax = currentGraph.max(attributeName);
+        attributeMin = currentGraph.min(attributeName);
         getValueFunction = getNodeAttribute;
     }
 

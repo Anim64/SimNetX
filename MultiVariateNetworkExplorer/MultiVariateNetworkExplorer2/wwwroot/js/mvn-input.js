@@ -271,3 +271,54 @@ const validateAppendNetworkForm = function (form) {
 
     return isValid;
 }
+
+const switchFormPart = function (partId1, partId2) {
+    document.getElementById(partId1).style.display = "none";
+    document.getElementById(partId2).style.display = "block";
+}
+
+const loadDataset = function () {
+    const form = document.getElementById("mvn-input-form");
+    validateNewNetworkForm(form);
+    const fileInput = document.getElementById("fileVector");
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        const text = e.target.result;
+
+        // Here you parse the file content (CSV for example)
+        const lines = text.split("\n").slice(0, 6); // preview first 5 rows
+
+        const separator = document.getElementById("InputModel_Separators").value;
+        const headers = lines[0].split(separator);
+
+        // Auto-detect attribute types (simple example: numeric vs categorical)
+        const tbody = document.querySelector("#attribute-table tbody");
+        tbody.innerHTML = "";
+        headers.forEach((col, idx) => {
+            const sampleValues = lines.slice(1).map(l => l.split(separator)[idx]);
+            const isNumeric = sampleValues.every(v => !isNaN(parseFloat(v)));
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                  <input type="hidden" name="InputModel.Attributes[${idx}].Name" value="${col}" />
+                  ${col}
+                </td>
+                <td>
+                  <select name="InputModel.Attributes[${idx}].Type">
+                    <option value="Numeric" ${isNumeric ? "selected" : ""}>Numeric</option>
+                    <option value="Categorical" ${!isNumeric ? "selected" : ""}>Categorical</option>
+                  </select>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Switch UI
+        switchFormPart("input-dataset-info", "input-attribute-info");
+    };
+
+    reader.readAsText(file);
+}

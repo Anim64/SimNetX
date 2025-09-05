@@ -5,6 +5,7 @@ using Columns.Types;
 using DataFrameLibrary.DataFrameExceptions;
 using Matrix;
 using Newtonsoft.Json.Linq;
+using ServerModels;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -107,7 +108,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
     /// <param name="missingvalues"></param>
     /// <param name="header"></param>
     /// <param name="separator"></param>
-    public DataFrame(string fileName, string missingvalues, string idColumn, bool header = false, params char[] separator)
+    public DataFrame(string fileName, List<AttributeInfoModel> attributes, string missingvalues, string idColumn, bool header = false, params char[] separator)
     {
         Data = new Dictionary<string, IColumn>();
         DataCount = 0;
@@ -115,7 +116,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         NumAtrrExtremes = new Dictionary<string, ColumnExtremesStruct>();
         CatAttrValues = new Dictionary<string, List<string>>();
 
-        this.ReadFromFile(fileName, missingvalues, header, separator);
+        this.ReadFromFile(fileName, attributes, missingvalues, header, separator);
 
         if (string.IsNullOrEmpty(idColumn))
         {
@@ -470,6 +471,17 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
             
     }
+    private void PrepareHeaders(List<AttributeInfoModel> attributes)
+    {
+        for (int i = 0; i < attributes.Count; i++)
+        {
+            attributes[i].Name = attributes[i].Name
+                .RemoveDiacritics()
+                .Trim()
+                .RemoveSpecialCharacters()
+                .HandleInvalidStartingChar();
+        }
+    }
 
     private string[] GetHeadersFromFile(StreamReader sr, bool hasHeaders, params char[] separators)
     {
@@ -552,6 +564,20 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
 
             this.Data[header] = new ColumnString();
             this.Data[header].AddData(vectorValue);
+        }
+    }
+
+    private void PrepareColumns(List<AttributeInfoModel> attributes)
+    {
+        foreach (var attribute in attributes)
+        {
+            if(attribute.Type == "Numeric")
+            {
+                this.Data[attribute.Name] = new ColumnDouble();
+                continue;
+            }
+
+            this.Data[attribute.Name] = new ColumnString();
         }
     }
 
@@ -737,6 +763,93 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
             throw new EmptyFileException(resourceManager.GetString("EmptyFile"));
         }
     }
+
+    public void ReadFromFile(string filename, List<AttributeInfoModel> attributes, string missingvalues, bool header = false, params char[] separator)
+    {
+        PrepareHeaders(attributes);
+        PrepareColumns(attributes);
+        Dictionary<string, double> averages = new Dictionary<string, double>();
+        foreach (var attribute in attributes)
+        {
+            averages[attribute.Name] = 0;
+        }
+        using (StreamReader sr = new StreamReader(filename))
+        {
+            string[] vector = null;
+            string line = null;
+
+            if (header)
+            {
+                sr.ReadLine();
+            }
+
+
+            //Load Data to Frame
+            while ((line = sr.ReadLine()) != null)
+            {
+
+                line = line.Trim();
+                if (line == "")
+                {
+                    continue;
+                }
+
+                vector = line.Split(separator);
+
+                for (int i = 0; i < attributes.Count; i++)
+                {
+                    string vectorValue = vector[i];
+                    string attrName = attributes[i].Name;
+                    string type = attributes[i].Type;
+                    if (string.IsNullOrEmpty(vectorValue) || vectorValue == missingvalues)
+                    {
+                        this.Data[attrName].AddData(null);
+                        continue;
+                    }
+
+                    if (attributes[i].Type == "Numeric")
+                    {
+
+                        bool isParsable = double.TryParse(vector[i].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double value);
+                        this.Data[attrName].AddData(isParsable ? value : null);
+                        averages[attrName] += value;
+                        continue;
+                    }
+
+                    this.Data[attrName].AddData(vectorValue);
+                }
+
+                DataCount++;
+            }
+            foreach (var attribute in this)
+            {
+                if (attribute.Value.DataCount <= 0)
+                {
+                    this.RemoveColumn(attribute.Key);
+                }
+            }
+
+            foreach (var attribute in averages.Keys)
+            {
+                averages[attribute] /= DataCount;
+            }
+
+            this.Averages = averages;
+            FindAttributeExtremesAndValues();
+
+            if (IdColumnName is not null)
+            {
+                IdColumn = this[IdColumnName].ToColumnString();
+                IdColumn.Map(Utils.RemoveDiacritics);
+                IdColumn.Map(Utils.RemoveSpecialCharacters);
+                this.RemoveColumn(IdColumnName);
+            }
+
+            return;
+        }
+    }
+      
+        
 
     public void ReadAndAppendFromFile(string filename, string missingvalues, bool header = false, params char[] separator)
     {

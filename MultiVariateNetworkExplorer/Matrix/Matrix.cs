@@ -1,4 +1,7 @@
-﻿namespace Matrix
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+
+namespace Matrix
 {
     public class Matrix<T>
     {
@@ -38,6 +41,11 @@
                 res[i] = this.matrix[i + row * Rows];
             }
             return res;
+        }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this.matrix);
         }
 
     }

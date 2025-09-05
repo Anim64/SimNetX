@@ -1,8 +1,11 @@
 ﻿using CommunityDetection;
 using DataFrameLibrary;
+using Matrix;
 using Metrics;
 using NetworkLibrary;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ServerModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +19,7 @@ namespace MultiVariateNetworkLibrary
 
         private static readonly string jsonNodesName = "nodes";
         private static readonly string jsonLinksName = "links";
+        private static readonly string jsonSimilarityMatrixName = "simMat";
         private static readonly string jsonPartitionsName = "partitions";
         private static readonly string jsonRealClassesName = "classes";
         private static readonly string jsonAttributesName = "attributes";
@@ -25,7 +29,7 @@ namespace MultiVariateNetworkLibrary
 
         public DataFrame VectorData { get; set; }
         public Network Network { get; set; }
-
+        public Matrix<double> SimilarityMatrix { get; set; }
         public Dictionary<string, string> Partition { get; set; }
 
         public Dictionary<string, string> RealClasses { get; set; }
@@ -53,9 +57,9 @@ namespace MultiVariateNetworkLibrary
             this.Directed = false;
         }
 
-        public MultiVariateNetwork(string path, string missingvalues, string idColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric, bool header = false, params char[] separator)
+        public MultiVariateNetwork(string path, List<AttributeInfoModel> attributes, string missingvalues, string idColumn, IVectorConversion convertAlg, bool doNulify, IMetric chosenMetric, bool header = false, params char[] separator)
         {
-            this.VectorData = new DataFrame(path, missingvalues, idColumn, header, separator);
+            this.VectorData = new DataFrame(path, attributes, missingvalues, idColumn, header, separator);
 
             this.Directed = false;
             this.Partition = this.RealClasses = null;
@@ -63,7 +67,8 @@ namespace MultiVariateNetworkLibrary
             this.Metric = chosenMetric;
 
             this.VectorData.FindAttributeExtremesAndValues();
-            this.Network = convertAlg.ConvertToNetwork(this.VectorData, chosenMetric, doNulify); ;
+            this.SimilarityMatrix = chosenMetric.GetMetricMatrix(this.VectorData, doNulify);
+            this.Network = convertAlg.ConvertToNetwork(this.VectorData.IdColumn, SimilarityMatrix);
             this.FindCommunities();
         }
 
@@ -116,6 +121,17 @@ namespace MultiVariateNetworkLibrary
             JObject jLinkData = this.Network.ToD3Json();
             JArray jLinks = this.Network.LinksToD3Json();
 
+            JArray jSimilarityMatrix = new();
+            for (int i = 0; i < this.SimilarityMatrix.Rows; i++)
+            {
+                JArray inner = new JArray();
+                for (int j = 0; j < this.SimilarityMatrix.Cols; j++)
+                {
+                    inner.Add(this.SimilarityMatrix[i, j]);
+                }
+                jSimilarityMatrix.Add(inner);
+            }
+
             JObject jAttributes = this.VectorData.AttributesToD3Json();
             JObject jPartition = new();
             JObject jRealClasses = new();
@@ -150,6 +166,7 @@ namespace MultiVariateNetworkLibrary
             {
                 [jsonNodesName] = jNodes,
                 [jsonLinksName] = jLinks,
+                [jsonSimilarityMatrixName] = jSimilarityMatrix,
                 [jsonPartitionsName] = jPartition,
                 [jsonRealClassesName] = jRealClasses,
                 [jsonAttributesName] = jAttributes,

@@ -1,4 +1,5 @@
-﻿.nodes {
+﻿.node-attributes {
+    display: none;
     overflow-y: hidden;
     --node-nav-height: 75%;
     --node-select-input-height: 20%;

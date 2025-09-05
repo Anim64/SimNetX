@@ -9,4 +9,8 @@
     <ProjectReference Include="..\DataUtility\MultiVariateNetwork.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestLouvain\" />
+  </ItemGroup>
+
 </Project>

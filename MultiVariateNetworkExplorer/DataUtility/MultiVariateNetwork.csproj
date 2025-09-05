@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityDetection\CommunityDetection.csproj" />
+    <ProjectReference Include="..\ServerModels\ServerModels.csproj" />
     <ProjectReference Include="..\VectorConversion\VectorConversion.csproj" />
   </ItemGroup>
 

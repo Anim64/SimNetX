@@ -224,6 +224,173 @@ const drawNetwork = function (data) {
     prepareText();
 }
 
+// --- Helpers ---
+function euclidean(a, b) {
+    return Math.sqrt(a.reduce((sum, v, i) => sum + (v - b[i]) ** 2, 0));
+}
+
+function averageLinkageDist(clusterA, clusterB, data) {
+    let sum = 0, count = 0;
+    clusterA.indices.forEach(i => {
+        clusterB.indices.forEach(j => {
+            sum += euclidean(data[i], data[j]);
+            count++;
+        });
+    });
+    return sum / count;
+}
+
+// --- Hierarchical Clustering (average linkage, Euclidean) ---
+function hclustOrder(data) {
+    // Initialize clusters (each data point as a cluster node)
+    let clusters = data.map((_, i) => ({
+        indices: [i],
+        left: null,
+        right: null,
+        dist: 0
+    }));
+
+    while (clusters.length > 1) {
+        let minDist = Infinity, a = 0, b = 1;
+
+        // Find closest pair
+        for (let i = 0; i < clusters.length; i++) {
+            for (let j = i + 1; j < clusters.length; j++) {
+                const d = averageLinkageDist(clusters[i], clusters[j], data);
+                if (d < minDist) {
+                    minDist = d; a = i; b = j;
+                }
+            }
+        }
+
+        // Merge clusters
+        const newCluster = {
+            indices: clusters[a].indices.concat(clusters[b].indices),
+            left: clusters[a],
+            right: clusters[b],
+            dist: minDist
+        };
+
+        clusters = clusters.filter((_, idx) => idx !== a && idx !== b);
+        clusters.push(newCluster);
+    }
+
+    // Final root
+    const root = clusters[0];
+
+    // Leaf traversal to extract order
+    function getLeafOrder(node) {
+        if (!node.left && !node.right) {
+            return node.indices;
+        } else {
+            return [].concat(getLeafOrder(node.left), getLeafOrder(node.right));
+        }
+    }
+
+    return getLeafOrder(root);
+}
+
+const drawHeatmap = function (data) {
+    const { simMat } = data.graph;
+
+    const rows = simMat.length;
+    const cols = simMat[0].length;
+
+    // Row order
+    const rowOrder = hclustOrder(simMat);
+
+    // Column order (just cluster transposed matrix)
+    const transpose = m => m[0].map((_, j) => m.map(row => row[j]));
+    const colOrder = hclustOrder(transpose(simMat));
+
+    const flatData = [];
+    rowOrder.forEach((ri, i) => {
+        colOrder.forEach((cj, j) => {
+            flatData.push({ row: i, col: j, value: simMat[ri][cj] });
+        });
+    });
+
+    const margin = { top: 40, right: 80, bottom: 40, left: 60 };
+    const svg = d3.select("#networkHeatmap svg");
+    
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
+
+    
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // scales
+    const x = d3.scaleBand()
+        .domain(d3.range(cols))
+        .range([0, width])
+        .padding(0.05);
+
+    const y = d3.scaleBand()
+        .domain(d3.range(rows))
+        .range([0, height])
+        .padding(0.05);
+
+    const color = d3.scaleSequential()
+        .interpolator(d3.interpolateViridis)
+        .domain([0, 1]); // adjust if your data range is different
+
+    // draw heatmap cells
+    g.selectAll("rect")
+        .data(/*simMat.flatMap((row, i) => row.map((val, j) => ({ row: i, col: j, value: val })))*/flatData)
+        .enter().append("rect")
+        .attr("x", d => x(d.col))
+        .attr("y", d => y(d.row))
+        .attr("width", x.bandwidth())
+        .attr("height", y.bandwidth())
+        .attr("fill", d => color(d.value));
+
+    //// X axis
+    //g.append("g")
+    //    .attr("transform", `translate(0,${height})`)
+    //    .call(d3.axisBottom(x).tickFormat(d => `Col ${d + 1}`));
+
+    //// Y axis
+    //g.append("g")
+    //    .call(d3.axisLeft(y).tickFormat(d => `Row ${d + 1}`));
+
+    // color legend
+    const defs = svg.append("defs");
+    const gradient = defs.append("linearGradient")
+        .attr("id", "legend-gradient")
+        .attr("x1", "0%").attr("y1", "100%")
+        .attr("x2", "0%").attr("y2", "0%");
+
+    const stops = d3.range(0, 1.01, 0.1);
+    stops.forEach(s => {
+        gradient.append("stop")
+            .attr("offset", `${s * 100}%`)
+            .attr("stop-color", color(s));
+    });
+
+    const legendHeight = 200, legendWidth = 15;
+    const legendX = width + margin.right / 2;
+
+    // gradient bar
+    svg.append("rect")
+        .attr("x", margin.left + legendX)
+        .attr("y", margin.top)
+        .attr("width", legendWidth)
+        .attr("height", legendHeight)
+        .style("fill", "url(#legend-gradient)");
+
+    // legend axis
+    const legendScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([legendHeight, 0]);
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left + legendX + legendWidth}, ${margin.top})`)
+        .call(d3.axisRight(legendScale).ticks(5));
+
+}
+
 const createDataGraphObjects = function (data) {
     const { graph: init_graph, data: nodeData } = data;
     dataStore = new DataStore(nodeData);
@@ -234,6 +401,7 @@ const initGraph = function (data) {
     prepareCanvas();
     createDataGraphObjects(data);
     drawNetwork(data);
+    drawHeatmap(data);
     updateForces();
     setDefaultNodeAndLinkColour(node, link);
 }

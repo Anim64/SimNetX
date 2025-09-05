@@ -22,17 +22,14 @@ namespace VectorConversion.VectorDataConversion
             this.K = k;
         }
 
-        public Network ConvertToNetwork(DataFrame vectorData, IMetric metric, bool doNulify = false, IEnumerable<string> exclude = null)
+        public Network ConvertToNetwork(ColumnString idColumn, Matrix<double> similarityMatrix)
         {
-            ColumnString idColumn = vectorData.IdColumn;
             Network resultNet = new(idColumn);
-            Matrix<double> kernelMatrix = metric.GetMetricMatrix(vectorData, doNulify, exclude);
             Dictionary<int, uint> localDegrees = new();
             Dictionary<int, uint> localSignificances = new();
 
-
             FillDegreeAndSignificance(resultNet, localDegrees, localSignificances);
-            CalculateDegreeAndSignificance(resultNet, kernelMatrix, localDegrees, localSignificances);
+            CalculateDegreeAndSignificance(resultNet, similarityMatrix, localDegrees, localSignificances);
             Dictionary<int, double> xRepreBases = CalculateXRepresentativenessBase(localDegrees, localSignificances);
             Dictionary<int, double> localRepresentativeness = CalculateLocalRepresentativeness(xRepreBases);
             Dictionary<int, uint> ks = CalculateRepresentativeNeighbourK(localDegrees, localRepresentativeness);
@@ -43,13 +40,13 @@ namespace VectorConversion.VectorDataConversion
                 List<int> neighbours = new();
                 for (int j = 0; j < resultNet.Count; j++)
                 {
-                    if (kernelMatrix[objectI, j] > 0 && objectI != j)
+                    if (similarityMatrix[objectI, j] > 0 && objectI != j)
                     {
                         neighbours.Add(j);
                     }
                 }
                 neighbours = neighbours
-                    .OrderByDescending(j => kernelMatrix[objectI, j])
+                    .OrderByDescending(j => similarityMatrix[objectI, j])
                     .ToList();
 
                 int finalK = Math.Min((int)Math.Max(k.Value, this.K), neighbours.Count);
@@ -65,7 +62,7 @@ namespace VectorConversion.VectorDataConversion
                     string jNodeId = idColumn[neighbourId];
                     resultNet.SetIndirectedEdge(iNodeId, jNodeId, 1);
 
-                    if (kernelMatrix[objectI, neighbourId] < lastSimilarity)
+                    if (similarityMatrix[objectI, neighbourId] < lastSimilarity)
                     {
                         count++;
                     }
@@ -86,7 +83,7 @@ namespace VectorConversion.VectorDataConversion
             }
         }
 
-        private void CalculateDegreeAndSignificance(Network resultNet, Matrix<double> kernelMatrix, 
+        private void CalculateDegreeAndSignificance(Network resultNet, Matrix<double> similarityMatrix, 
             Dictionary<int, uint> localDegrees, Dictionary<int, uint> localSignificances)
         {
             for (int i = 0; i < resultNet.Count; i++)
@@ -96,7 +93,7 @@ namespace VectorConversion.VectorDataConversion
 
                 for (int j = 0; j < resultNet.Count; j++)
                 {
-                    double similarity = kernelMatrix[i, j];
+                    double similarity = similarityMatrix[i, j];
                     if (similarity > 0 && i != j)
                     {
                         localDegrees[i]++;

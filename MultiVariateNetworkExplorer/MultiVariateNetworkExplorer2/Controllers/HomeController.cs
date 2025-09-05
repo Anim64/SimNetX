@@ -20,6 +20,7 @@ using NetworkLibrary;
 using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using VectorConversion;
+using static Metrics.Enums.MetricEnums;
 using static Metrics.Enums.ParameterEnums;
 
 namespace MultiVariateNetworkExplorer.Controllers
@@ -96,9 +97,15 @@ namespace MultiVariateNetworkExplorer.Controllers
             var conversionAlgorithmParams = inputModel.ConversionAlgorithmParams.Cast<object>().ToArray();
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, conversionAlgorithmParams);
 
+            List<ServerModels.AttributeInfoModel> domainAttributeModel = new List<ServerModels.AttributeInfoModel>();
+            foreach (var attribute in inputModel.Attributes)
+            {
+                domainAttributeModel.Add(new ServerModels.AttributeInfoModel(attribute.Name, attribute.Type));
+            }
+
             try
             {
-                MultiVariateNetwork multiVariateNetwork = new(filePath, inputModel.MissingValues, inputModel.IdColumnName, chosenConversion,
+                MultiVariateNetwork multiVariateNetwork = new(filePath, domainAttributeModel, inputModel.MissingValues, inputModel.IdColumnName, chosenConversion,
                 inputModel.Nulify ,chosenMetric, hasHeaders, separatorArray);
 
                 GraphModel gm = new(multiVariateNetwork);
@@ -157,8 +164,8 @@ namespace MultiVariateNetworkExplorer.Controllers
                 TempData["ErrorMessage"] = dfe.Message;
                 return View("Graph", gme);
             }
-
-            currentMvn.Network = chosenConversion.ConvertToNetwork(currentMvn.VectorData, chosenMetric);
+            Matrix<double> similarityMatrix = chosenMetric.GetMetricMatrix(currentMvn.VectorData, false);
+            currentMvn.Network = chosenConversion.ConvertToNetwork(currentMvn.VectorData.IdColumn, similarityMatrix);
 
             for(int i = currentMvn.Partition.Count; i < currentMvn.VectorData.DataCount; i++)
             {
@@ -187,34 +194,36 @@ namespace MultiVariateNetworkExplorer.Controllers
             //JArray jExcludedAttributes = (JArray)data["excludedAttributes"];
 
             DataFrame nodeAttributes = DataFrame.FromD3Json(jNodes, jAttributes);
+            
 
             List<string> newTransformedColumnNames = await nodeAttributes.ApplyJsonTransformationAsync(jAttributeTransform);
             JArray jNewTransformedColumnNames = new(newTransformedColumnNames);
 
             List<string> excludedAttributesList = jExcludedAttributes.ToObject<List<string>>();
 
-
+            //Resolve metric
             JToken jMetric = jNetworkRemodelParams["metric"];
             Type metricType = typeof(IMetric).Assembly.GetTypes().Single(t => t.Name == jMetric["name"].ToString());
             object[] metricParams = jMetric["params"].ToObject<object[]>();
             bool doNulify = jMetric["nulify"].ToObject<bool>();
             IMetric chosenMetric = (IMetric)Activator.CreateInstance(metricType, metricParams);
 
+            //Resolve construction algorithm
             JToken jAlgorithm = jNetworkRemodelParams["algorithm"];
             Type conversionType = typeof(IVectorConversion).Assembly.GetTypes().Single(t => t.Name == jAlgorithm["name"].ToString());
             object[] algorithmParams = jAlgorithm["params"].ToObject<object[]>();
-            
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
-
+            Matrix<double> similarityMatrix = chosenMetric.GetMetricMatrix(nodeAttributes, doNulify, excludedAttributesList);
             // TODO: Return only transformed columns and then assign then into global json graph
-            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes, chosenMetric, doNulify, excludedAttributesList);
+            Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes.IdColumn, similarityMatrix);
             return Json(new {
                 newTransformedColumnNames = jNewTransformedColumnNames.ToString(),
                 newVectorData = jAttributeTransform.HasValues ? 
                 nodeAttributes.ToD3Json().ToString() : 
                 JValue.CreateNull().ToString(), 
-                newNetwork = remodeledNetwork.LinksToD3Json().ToString() }); 
+                newNetwork = remodeledNetwork.LinksToD3Json().ToString(), 
+                similarityMatrix = similarityMatrix.ToString()}); 
             
         }
 

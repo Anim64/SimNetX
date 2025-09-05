@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Columns\Columns.csproj" />
     <ProjectReference Include="..\Matrix\Matrix.csproj" />
+    <ProjectReference Include="..\ServerModels\ServerModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>
