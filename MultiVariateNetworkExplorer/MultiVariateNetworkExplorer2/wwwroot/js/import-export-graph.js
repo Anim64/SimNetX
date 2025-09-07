@@ -174,22 +174,23 @@ const serializeVisuals = function () {
 const serializeNetworkAndSettings = function () {
     const serializedCurrentGraph = currentGraph.serialize();
     const serializedSelectionGraph = serializeGraph(selectionGraph);
-    const filters = serializeFilters();
-    const visuals = serializeVisuals();
+    //const filters = serializeFilters();
+    //const visuals = serializeVisuals();
 
     const currentGraphObject = {
         "graph": serializedCurrentGraph,
         "selectionGraph": serializedSelectionGraph,
-        "filters": filters,
-        "filterNodeList": filterNodeList,
-        "visuals": visuals,
+        //"filters": filters,
+        //"filterNodeList": filterNodeList,
+       
         //"nodeVisualProperties": nodeVisualProperties
     }
 
 
     const stateJson = {
         "currentGraph": currentGraphObject,
-        /*"data": dataStore.serialize()*/
+        "data": dataStore.serialize(),
+        "visualSettings": visualSettings
     }
 
     return stateJson;
@@ -212,41 +213,38 @@ const loadNetwork = async function (fileName) {
     
     var reader = new FileReader();
     reader.onload = function (e) {
-        deleteGraphElementsAndControls();
-        return;
-        //var json = JSON.parse(e.target.result);
-        //forceProperties = json.forceProperties;
-        //filters = json.filters;
-        //filterNodeList = json.filterNodeList;
-        //graph = json.graph;
-        //store = json.store;
+        clearGraphElementsAndControls();
+       
+        var json = JSON.parse(e.target.result);
+        const graphs = json.currentGraph;
+        const graph = graphs.graph;
+        const clusterGraph = graphs.selectionGraph;
+        const data = json.data;
+        const visuals = json.visualSettings;
+
+        currentGraph.deserialize(graph);
+        dataStore.deserialize(data);
+        selectionGraph = clusterGraph;
+        visualSettings = visuals;
+
+        prepareCanvas()
+        drawNetwork();
+        //drawHeatmap(data);
+        updateForces();
+        setDefaultNodeAndLinkColour(node, link);
 
 
-        
-        //selectionGraph = json.selectionGraph;
-        //drawSelectionNetwork(selectionGraph);
-        //selectionGraph.nodes.forEach(function (d) {
-        //    addSelectionDiv(d);
-        //});
+        selectionGraph.nodes.forEach(function (d) {
+           addSelectionDiv(d);
+        });
 
-        //generateGraphControlAndElements(store, forceProperties, filters);
-        //gDraw.html("");
-        //drawNetwork(graph);
-        //updateForces(false);
-        //simulationEnd();
+        generateGraphControlsAndElements();
 
 
         //// TODO: Load Metrics from json file
         //calculateAllMetrics();
 
         
-
-        
-        //if (!forceProperties.attributeColouring.enabled) {
-        //    setDefaultNodeAndLinkColour(node, link);
-        //}
-
-        //updateHeadingColour(graph.nodes);
 
         
         

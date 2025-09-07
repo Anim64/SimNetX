@@ -1,6 +1,5 @@
-﻿const generateGraphControlAndElements = function (graph, forceProperties, filters) {
-    generateGraphElements(graph);
-    generateGraphControls(graph, forceProperties, filters);
+﻿const generateGraphControlsAndElements = function () {
+    generateLayoutControls();
 }
 
 
@@ -60,59 +59,50 @@ const generateNodeHeadings = function (graph) {
     
 }
 
-const generateGraphControls = function (graph, forceProperties, filters) {
-    const { x, y } = forceProperties.center;
+const generateLayoutControls = function () {
+    const { x, y } = currentGraph.forces.center;
     updateForceControlValue("center_XSliderOutput", x);
     updateForceControlValue("center_YSliderOutput", y);
 
-    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
+    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = currentGraph.forces.charge;
     updateForceState("charge_EnabledCheckbox", chargeEnabled);
     updateForceControlValue("charge_StrengthSliderOutput", chargeStrength);
     updateForceControlValue("charge_distanceMinSliderOutput", distanceMin);
     updateForceControlValue("charge_distanceMaxSliderOutput", distanceMax);
 
-    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
+    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = currentGraph.forces.collide;
     updateForceState("collide_EnabledCheckbox",collideEnabled);
     updateForceControlValue("collide_StrengthSliderOutput", collideStrength);
     updateForceControlValue("collide_radiusSliderOutput", radius);
     updateForceControlValue("collide_iterationsSliderOutput", collideIterations);
 
-    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
+    const { enabled: linksEnabled, distance, iterations: linkIterations } = currentGraph.forces.link;
     updateForceState("link_EnabledCheckbox", linksEnabled);
     updateForceControlValue("link_DistanceSliderOutput", distance);
     updateForceControlValue("link_IterationsSliderOutput", linkIterations);
 
     const { attributes } = graph;
-    const { numAttributes, catAttributes } = attributes;
-    const allAttributes = [...new Set([...numAttributes, ...catAttributes])];
-    const { attribute: xAttribute } = forceProperties.forceX;
-    updateForceAttributeList("project-x-attributes", numAttributes, xAttribute);
+    const { numAttributes } = attributes;
+    const { attribute: xAttribute } = currentGraph.forces.forceX;
+    updateAttributeList("project-x-attributes", numAttributes, xAttribute);
 
-    const { attribute: yAttribute } = forceProperties.forceY;
-    updateForceAttributeList("project-y-attributes", numAttributes, yAttribute);
+    const { attribute: yAttribute } = currentGraph.forces.forceY;
+    updateAttributeList("project-y-attributes", numAttributes, yAttribute);
+}
 
-    const { enabled: labelEnabled, attribute: labelAttribute } = forceProperties.labels;
-    //updateForceState("label_EnabledCheckbox", labelEnabled);
-    const labelForceSelect = updateForceAttributeList("node-label-select", allAttributes, labelAttribute);
-    setNodeLabel(labelForceSelect);
+const generateVisualControls = function () {
+    document.getElementById("network-colour-input").value = visualSettings.monoColour;
+    const { num: features, cat: labels } = currentGraph.attributes;
+    const allAttributes = [...features, ...labels];
 
-    const { attribute: sizingAttribute } = forceProperties.sizing;
-    const sizingForceSelect = updateForceAttributeList("attribute-node-sizing", numAttributes, sizingAttribute);
-    setAttributeNodeSizing(sizingForceSelect);
+    updateAttributeList("node-label-select", allAttributes, visualSettings.currentLabel);
 
-    const { network, background } = forceProperties.colouring;
-    updateColourControl("network-colour-input", network);
-    updateColourControl("background-colour-input", background);
-    changeNetworkBackgroundColour(background);
+    updateAttributeList("attribute-node-colouring", features, visualSettings.gradientColour.currentFeature);
 
 
-    const { attribute: colouringAttribute, lowValue, highValue } = forceProperties.attributeColouring;
-    const colouringForceSelect = updateColouringForceAttributeList("attribute-node-colouring", attributes, colouringAttribute);
-    updateColouringColourInputs(lowValue, highValue);
-    setAttributeNodeColouring(colouringForceSelect);
-
-    generateAttributeFilters(filters);
-    generateRemodelAttributes(graph);
+    updateGradientColourList(attribute - node - colouring);
+    updateGradientLegendAxis("attribute-node-colouring");
+    updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
 
 }
 
@@ -128,7 +118,7 @@ const updateForceState = function (forceCheckboxId, state) {
     forceCheckbox.checked = state;
 }
 
-const updateForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
+const updateAttributeList = function (forceSelectId, attributes, chosenAttribute) {
     const forceSelect = d3.select("#" + forceSelectId);
     const attributeOptGroup = forceSelect.select('optgroup[label=Attributes]');
     for (const attribute of attributes) {
@@ -265,59 +255,76 @@ const generateRemodelAttributes = function (graph) {
     }
 }
 
-const deleteGraphElementsAndControls = function () {
+const clearGraphElementsAndControls = function () {
+    //Layout elements
+    clearLayoutElements();
+    //Visual elements
+    clearVisualElements();
+    //Remodel elements
+    clearRemodelElements();
+    //Network canvas
+    clearNetworkCanvas();
+    //Cluster statistics
+    clearClusterStatistics();
+    //Nodes, histograms
+    clearNodeSection();
+    //Cluster detection attribute
+    clearClusterAttributeSelect();
+
+    //Clusters
     deleteAllSelections();
-    deleteNodeDetailsAttributes();
-    deleteNodeHeadings();
+    
 
-    const clearedSelects = ["project-x-attributes", "project-y-attributes", "node-label-select",
-        , "attribute-node-colouring"];
-
-    for (const select of clearedSelects) {
-        deleteForceAttributeList(select);
-    }
-
-    deleteVisualsListsAndAttributes();
-    clearElement("attributes");
-    deleteRemodelAttributes();
 }
 
-const deleteNodeDetailsAttributes = function () {
-    clearElement("node-attributes");
-    clearElement("neighbors-nav");
+const clearLayoutElements = function () {
+    deleteForceAttributeList("project-x-attributes");
+    deleteForceAttributeList("project-y-attributes");
 }
 
-const deleteNodeHeadings = function () {
-    document.getElementById("node-list-input").value = "";
-    clearElement("node-list");
-}
-
-const deleteVisualsListsAndAttributes = function () {
-
-    const colourListIDs = ["categorical-colour-list", "class-colour-list"];
-    for (const listID of colourListIDs) {
-        clearElement(listID);
-    }
-
-    clearElement("categorical-attribute-node-colouring");
-    clearElement("partition-metric-mcc-attribute-select");
+const clearVisualElements = function () {
+    deleteForceAttributeList("node-label-select");
     deleteForceAttributeList("attribute-node-colouring");
+    clearElement("categorical-attribute-node-colouring");
     deleteForceAttributeList("attribute-node-sizing");
+}
+
+const clearRemodelElements = function () {
+    clearElement("remodel-active-attributes-select");
+    clearElement("remodel-inactive-attributes-select");
+}
+
+const clearNetworkCanvas = function () {
+    d3.select("#networkGraph svg").html("");
+    d3.select("#networkHeatmap svg").html("");
+}
+
+const clearClusterStatistics = function () {
+    clearElement("partition-metric-mcc-attribute-select");
+    clearElement("partition-metric-mcc-graph-container");
+    clearElement("partition-metric-partition-boxplot-graph-container");
+    clearElement("partition-metric-attribute-boxplot-graph-container");
+}
+
+const clearNodeSection = function () {
+    //Node search list
+    clearElement("node-list");
+    //Node features
+    clearElement("node-attributes-numerical");
+    //Node labels
+    clearElement("node-attributes-categorical");
+    //Node neighbours
+    clearElement("node-grid");
+}
+
+const clearClusterAttributeSelect = function () {
+    const clusterDetectionAttributeSelect = document.getElementById("partitions-selection-attributes");
+    clusterDetectionAttributeSelect.length = 1;
+    clusterDetectionAttributeSelect.selectedIndex = 0;
 }
 
 const deleteForceAttributeList = function (forceSelectId) {
     d3.select("#" + forceSelectId).selectAll('optgroup[label]:not([label="Centralities"])').html("");
 }
 
-const deleteRemodelAttributes = function () {
-    for (const attribute in attributeTransform) {
-        delete attributeTransform[attribute];
-    }
-    excludedAttributes.length = 0;
-    clearElement("remodel-network-select");
 
-    clearElement("attribute-transformation-list");
-
-    clearElement("remodel-active-attributes-select");
-    clearElement("remodel-inactive-attributes-select");
-}

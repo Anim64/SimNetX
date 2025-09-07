@@ -23,6 +23,7 @@
     "inputFiles": [
       "wwwroot/js/mvn-input.js",
       "wwwroot/js/toolbar.js",
+      "wwwroot/js/graph_visuals.js",
       "wwwroot/js/graph_settings.js",
       "wwwroot/js/algorithms.js",
       "wwwroot/js/site.js",

@@ -56,8 +56,9 @@
             <p><label>Attribute Node Colouring</label>Modify colour of nodes based on its attribute value</p>
             <label class="attribute-selection-label" for="attribute-node-colouring">
                 Choose Attribute:
-                <select id="attribute-node-colouring" class="attribute-select attribute-select-border" 
-                name="attribute-node-colouring" onchange="updateGradientLegendAxis(this.id)">
+                <select id="attribute-node-colouring" class="attribute-select attribute-select-border"
+                        name="attribute-node-colouring" onchange="updateGradientColourList(this.id); 
+                        updateGradientLegendAxis(this.id); updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');">
                     <optgroup label="Attributes">
                         @foreach (var key in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
                         {
@@ -66,7 +67,7 @@
                     </optgroup>
                     <optgroup label="Centralities">
                         <option value="degree">Degree</option>
-                        <option value="closeness">Closeness</option>
+                        <option value="clustering_coefficient">Clustering Coefficient</option>
                     </optgroup>
                 </select>
             </label>
@@ -81,10 +82,11 @@
                     <rect class="gradient-colouring-legend" x="10" y="45" height="15" width="400"></rect>
                 </svg>
             </div>
+            <button onclick="addGradientListColour('attribute-node-colouring-preview', '', '#FFFFFF', 'numerical-colour-list'); updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');">
+                Add New Colour
+            </button>
             <ol type="1" class="colour-list scrollbar-thin" id="numerical-colour-list">
-                <button onclick="addGradientListColour('attribute-node-colouring-preview', '', '#FFFFFF', 'numerical-colour-list')">
-                    Add New Colour
-                </button>
+                
             </ol>
             
             @* <button onclick="saveAttributeGradientColouring('attribute-node-colouring', 'low-value-colour', 'high-value-colour')">Save</button> *@
@@ -115,14 +117,6 @@
             <button onclick="randomizeListColours('partition-colour-list')">Randomize Colours</button>
             @* <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button> *@
             <button class="run-btn" onclick="setPartitionColouring('partition-colour-list')">Run</button>
-        </div>
-       
-        <div class="force" id="class-colour-setting">
-            <p><label>Class Colouring</label>Modify colour of nodes based on its chosen class attribute</p>
-            <ol type="1" class="colour-list scrollbar-thin" id="class-colour-list"></ol>
-            <button onclick="randomizeListColours('class-colour-list')">Randomize Colours</button>
-            @* <button onclick="saveAttributeCategoryColouring('categorical-attribute-node-colouring', 'categorical-colour-list')">Save</button> *@
-            <button class="run-btn" onclick="changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', true)">Run</button>
         </div>
 
         <div class="force" id="background-colour-setting">

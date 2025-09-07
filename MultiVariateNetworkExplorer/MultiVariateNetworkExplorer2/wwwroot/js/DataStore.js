@@ -49,4 +49,9 @@ class DataStore {
 
         return serializedData;
     }
+
+    deserialize(json) {
+        this._nodeData = json.nodeData;
+        this._linkData = json.linkData;
+    }
 }

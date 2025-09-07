@@ -8,6 +8,7 @@ class Graph {
         forceX: "forceX",
         forceY: "forceY"
     }
+
     constructor(input_graph, dataStore, view_width, view_height) {
         
         this._data = dataStore;
@@ -145,6 +146,10 @@ class Graph {
 
     get metric() {
         return this._metric;
+    }
+
+    get properties() {
+        return this._properties;
     }
 
     set metric(value) {
@@ -301,16 +306,31 @@ class Graph {
             "partitions": this._partitions,
             "classes": this._classes,
             "attributes": this._attributes,
+            "metric": this._metric,
+            "conversionAlg": this._conversionAlg,
             "linkedByIndex": this._linkedByIndex,
             "forces": this._forces
         };
 
-        //for (const link of serializedGraph.links) {
-        //    link.source = link.source.id;
-        //    link.target = link.target.id;
-        //}
+        for (const link of serializedGraph.links) {
+            link.source = link.source.id;
+            link.target = link.target.id;
+        }
 
         return serializedGraph;
+    }
+
+    deserialize(json) {
+        this._nodes = json.nodes;
+        this._properties = json.properties;
+        this._attributes = json.attributes;
+        this._classes = json.classes;
+        this._metric = json.metric;
+        this._conversionAlg = json.conversionAlg;
+        this._links = json.links;
+        this._linkedByIndex = json.linkedByIndex;
+        this._partitions = json.partitions;
+        this._forces = json.forces;
     }
 
     max(attributeName) {

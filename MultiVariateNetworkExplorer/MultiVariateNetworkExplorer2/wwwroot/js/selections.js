@@ -179,40 +179,7 @@ const addSelectionDivs = function (selectionGraph) {
 
 
 
-const hexToRgb = function (hex) {
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
-        return r + r + g + g + b + b;
-    });
 
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-const fontLightness = function (newColour) {
-    const threshold = 0.5;
-    let rgbRepresentation = newColour;
-    if (typeof newColour !== 'object') {
-        rgbRepresentation = hexToRgb(newColour);
-    }
-    const { r, g, b } = rgbRepresentation;
-
-    const lumaRed = r * 0.2126;
-    const lumaGreen = g * 0.7152;
-    const lumaBlue = b * 0.0722;
-
-    const lumaSum = lumaRed + lumaGreen + lumaBlue;
-    const perceivedLightness = lumaSum / 255;
-
-    const finalLightness = (perceivedLightness - threshold) * -10000000;
-
-    return finalLightness;
-}
 
 
 //Move nodes to different selection

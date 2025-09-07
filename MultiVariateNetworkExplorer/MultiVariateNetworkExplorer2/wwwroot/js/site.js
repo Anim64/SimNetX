@@ -71,21 +71,10 @@ window.addEventListener("load", function () {
         
     }
 
-    const gradientColourListId = 'numerical-colour-list';
-    const initialGradientColourCount = 3;
-    const gradientColourList = ['#0000FF', '#FF9933', '#FFFFFF'];
-    for (let i = 0; i < initialGradientColourCount; i++) {
-        addGradientListColour('attribute-node-colouring-preview', '', gradientColourList[i], gradientColourListId);
-    }
-    updateGradientLegendAxis('attribute-node-colouring');
-    changeAttributeCategoryColouringList('categorical-attribute-node-colouring', 'categorical-colour-list');
-
-
     updateRemodelOptionsHeader("remodel-attribute-panel-header", "remodel-network-select");
     displayAlgorithmParameters("remodel-algorithm-select", "-parameters-remodel");
     displayMetricParameters("remodel-metric-select");
 
-    
     addSelectionDivs(selectionGraph);
     updateSelectionNodesAndLinks();
     setPartitionColouring("partition-colour-list");

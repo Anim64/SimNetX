@@ -218,7 +218,7 @@ const prepareCanvas = function () {
 
 
 //Draw graph of the network
-const drawNetwork = function (data) {
+const drawNetwork = function () {
     prepareLinks();
     prepareNodes();
     prepareText();
@@ -400,10 +400,11 @@ const createDataGraphObjects = function (data) {
 const initGraph = function (data) {
     prepareCanvas();
     createDataGraphObjects(data);
-    drawNetwork(data);
+    drawNetwork();
     drawHeatmap(data);
     updateForces();
     setDefaultNodeAndLinkColour(node, link);
+    initVisualSettings();
 }
 
 
@@ -1176,6 +1177,23 @@ const calculateMetricAsync = function (current_graph, metricDiv) {
             metricDisplayElement.value = currentGraph.getPropertyValue(nodeId, workerName);
 
         }
+
+        gradientColourList = ['#0000FF', '#FF9933', '#FFFFFF'];
+        const colourObject = [];
+        const centralityMax = currentGraph.getPropertyAttributeValue(workerName, "max");
+        const centralityMin = currentGraph.getPropertyAttributeValue(workerName, "min");
+        const centralityRange = centralityMax - centralityMin;
+
+        for (const [i, colour] of gradientColourList.entries()) {
+            const valueThreshold = centralityMin + (centralityRange * (i * (1.0 / (gradientColourList.length - 1))));
+            colourObject.push({
+                value: valueThreshold,
+                colour: colour
+            });
+        }
+
+        visualSettings.gradientColour.centralities[workerName] = colourObject;
+        
 
     }
     
