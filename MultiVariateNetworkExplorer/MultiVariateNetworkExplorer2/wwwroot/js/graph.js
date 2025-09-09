@@ -9,7 +9,7 @@ class Graph {
         forceY: "forceY"
     }
 
-    constructor(input_graph, dataStore, view_width, view_height) {
+    constructor(input_graph, simMat, dataStore, view_width, view_height) {
         
         this._data = dataStore;
         this._nodes = input_graph.nodes;
@@ -18,6 +18,7 @@ class Graph {
         this._classes = input_graph.classes;
         this._metric = input_graph.metric;
         this._conversionAlg = input_graph.conversionAlg;
+        this._similarityMatrix = simMat;
         
 
         this._links = input_graph.links;
@@ -124,6 +125,10 @@ class Graph {
         return this._attributes;
     }
 
+    get similarityMatrix() {
+        return this._similarityMatrix;
+    }
+
     get simulation() {
         return this._simulation;
     }
@@ -154,6 +159,10 @@ class Graph {
 
     set metric(value) {
         this._metric = value;
+    }
+
+    set simialrityMatrix(value) {
+        this._similarityMatrix = value;
     }
 
     get conversionAlg() {

@@ -190,7 +190,8 @@ const serializeNetworkAndSettings = function () {
     const stateJson = {
         "currentGraph": currentGraphObject,
         "data": dataStore.serialize(),
-        "visualSettings": visualSettings
+        "visualSettings": visualSettings,
+        "remodelSettings": currentRemodelSettings
     }
 
     return stateJson;
@@ -217,15 +218,15 @@ const loadNetwork = async function (fileName) {
        
         var json = JSON.parse(e.target.result);
         const graphs = json.currentGraph;
-        const graph = graphs.graph;
-        const clusterGraph = graphs.selectionGraph;
-        const data = json.data;
-        const visuals = json.visualSettings;
+        const { graph, selectionGraph: clusterGraph } = graphs;
+        const { data, visualSettings: visuals, remodelSettings } = json;
+        
 
         currentGraph.deserialize(graph);
         dataStore.deserialize(data);
         selectionGraph = clusterGraph;
         visualSettings = visuals;
+        currentRemodelSettings = remodelSettings;
 
         prepareCanvas()
         drawNetwork();
@@ -243,18 +244,10 @@ const loadNetwork = async function (fileName) {
 
         //// TODO: Load Metrics from json file
         //calculateAllMetrics();
-
-        
-
-        
-        
-        
     };
     reader.readAsText(fileName);
+}
 
-    
-    //alert(fileName);
-    
+const exportNetworkDataToCsv = function () {
 
-    //alert(json.graph.nodes.length);
 }

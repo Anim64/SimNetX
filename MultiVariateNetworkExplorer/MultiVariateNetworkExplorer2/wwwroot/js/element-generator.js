@@ -1,5 +1,7 @@
 ﻿const generateGraphControlsAndElements = function () {
     generateLayoutControls();
+    generateVisualControls();
+    generateRemodelSettings();
 }
 
 
@@ -95,14 +97,15 @@ const generateVisualControls = function () {
     const { num: features, cat: labels } = currentGraph.attributes;
     const allAttributes = [...features, ...labels];
 
-    updateAttributeList("node-label-select", allAttributes, visualSettings.currentLabel);
+    updateAttributeList("node-label-select", allAttributes, visualSettings.currentLabel, "Attributes");
 
-    updateAttributeList("attribute-node-colouring", features, visualSettings.gradientColour.currentFeature);
-
-
-    updateGradientColourList(attribute - node - colouring);
+    updateAttributeList("attribute-node-colouring", features, visualSettings.gradientColour.currentFeature, "Attributes");
+    updateGradientColourList("attribute-node-colouring");
     updateGradientLegendAxis("attribute-node-colouring");
     updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
+
+    updateAttributeList("categorical-attribute-node-colouring", labels, visualSettings.categoryColour.currentLabel);
+    changeAttributeCategoryColouringList("categorical-attribute-node-colouring", 'categorical-colour-list')
 
 }
 
@@ -118,9 +121,9 @@ const updateForceState = function (forceCheckboxId, state) {
     forceCheckbox.checked = state;
 }
 
-const updateAttributeList = function (forceSelectId, attributes, chosenAttribute) {
-    const forceSelect = d3.select("#" + forceSelectId);
-    const attributeOptGroup = forceSelect.select('optgroup[label=Attributes]');
+const updateAttributeList = function (forceSelectId, attributes, chosenAttribute, optgroup = null) {
+    const forceSelect = d3.select(`#${forceSelectId}`);
+    const attributeOptGroup = optgroup !== null ? forceSelect.select(`optgroup[label=${optgroup}]`) : forceSelect;
     for (const attribute of attributes) {
         attributeOptGroup.append("option")
             .property("value", attribute)
@@ -132,35 +135,42 @@ const updateAttributeList = function (forceSelectId, attributes, chosenAttribute
     return forceSelect.node();
 }
 
-const updateColouringForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
-    const forceSelect = d3.select("#" + forceSelectId);
-    const { numAttributes, catAttributes } = attributes;
-    const numericAttributeOptGroup = forceSelect.select('optgroup[label="Numeric Attributes"]');
-    for (const attribute of numAttributes) {
-        numericAttributeOptGroup.append("option")
-            .property("value", attribute)
-            .html(attribute);
+const generatePartitionColourList = function () {
+    const partitionColourList = d3.select("#partition-colour-list").html("");
+    for (const [cluster, colour] of Object.entries(visualSettings.partitionColour))
+    addListColour(cluster, colour, "partition", partitionColourList)
+        .property("value");
+}
+
+const generateRemodelSettings = function () {
+    const activeFeaturesSelect = d3.select("#remodel-active-attributes-select");
+    const inactiveFeaturesSelect = d3.select("#remodel-inactive-attributes-select");
+
+    for (const feature of currentRemodelSettings.activeFeatures) {
+        activeFeaturesSelect.append("option")
+            .property("value", feature)
+            .text(feature);
     }
 
-    //const categoricalAttributeOptGroup = forceSelect.select('optgroup[label="Categorical Attributes"]');
-    //for (const attribute of catAttributes) {
-    //    categoricalAttributeOptGroup.append("option")
-    //        .property("value", attribute)
-    //        .html(attribute);
-    //}
+    for (const feature of currentRemodelSettings.inactiveFeatures) {
+        inactiveFeaturesSelect.append("option")
+            .property("value", feature)
+            .text(feature);
+    }
 
-    forceSelect.property("value", chosenAttribute);
+    d3.select("#remodel-algorithm-select").property("value", currentRemodelSettings.algorithm);
+    const algorithmParameterInputs =
+        d3.selectAll(`#${currentRemodelSettings.algorithm.toLowerCase()}-parameters-remodel input`)
 
-    return forceSelect.node();
-}
+    d3.select("#remodel-metric-select").property("value", currentRemodelSettings.metric);
 
-const updateColouringColourInputs = function (lowColour, highColour) {
-    document.getElementById("low-value-colour").value = lowColour;
-    document.getElementById("high-value-colour").value = highColour;
-}
+    if (currentRemodelSettings.metric === "GaussKernel") {
+        const metricParameterInputs =
+            d3.select(`#gauss-parameters input`).property("value", currentRemodelSettings.metricParams[0]);
+    }
 
-const updateColourControl = function (forceColourId, colourValue) {
-    document.getElementById(forceColourId).value = colourValue;
+    d3.select("#remodel-nulify").property("checked", currentRemodelSettings.nulify);
+    
 }
 
 const generateAttributeFilters = function (filters) {
@@ -245,15 +255,7 @@ const generateAttributeFilters = function (filters) {
 
 }
 
-const generateRemodelAttributes = function (graph) {
-    const remodelAttributesSelect = d3.select("#remodel-network-select");
-    const { numAttributes} = graph.attributes;
-    for (const attribute of numAttributes) {
-        remodelAttributesSelect
-            .append("option")
-            .html(attribute);
-    }
-}
+
 
 const clearGraphElementsAndControls = function () {
     //Layout elements

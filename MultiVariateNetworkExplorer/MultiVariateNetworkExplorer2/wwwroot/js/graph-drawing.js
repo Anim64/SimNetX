@@ -392,16 +392,22 @@ const drawHeatmap = function (data) {
 }
 
 const createDataGraphObjects = function (data) {
-    const { graph: init_graph, data: nodeData } = data;
+    const { graph: init_graph, data: nodeData, simMat } = data;
     dataStore = new DataStore(nodeData);
-    currentGraph = new Graph(init_graph, dataStore, width, height);
+    currentGraph = new Graph(init_graph, simMat, dataStore, width, height);
+    currentRemodelSettings.algorithm = init_graph.conversionAlg;
+    currentRemodelSettings.algorithmParams = [1, 1];
+    currentRemodelSettings.metric = init_graph.metric;
+    if (currentRemodelSettings.metric === "GaussKernel") {
+        currentRemodelSettings.metricParams = [1];
+    }
 }
 
 const initGraph = function (data) {
     prepareCanvas();
     createDataGraphObjects(data);
     drawNetwork();
-    drawHeatmap(data);
+    drawHeatmap(currentGraph.simMat);
     updateForces();
     setDefaultNodeAndLinkColour(node, link);
     initVisualSettings();

@@ -1,5 +1,14 @@
 ﻿const attributeTransform = {}
 const excludedAttributes = [];
+const currentRemodelSettings = {
+    algorithm: "",
+    algorithmParams: [],
+    nulify: false,
+    metric: "",
+    metricParams: [],
+    activeFeatures: [],
+    inactiveFeatures: []
+}
 
 const updateRemodelOptionsHeader = function (headerId, attributeSelectId) {
     const header = document.getElementById(headerId);
@@ -213,6 +222,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             return $(this).val();
         }).get();
 
+    const tempRemodelSettings = structuredClone(currentRemodelSettings);
+
+    tempRemodelSettings.algorithm = selectedAlgorithm;
+    tempRemodelSettings.metric = selectedMetric;
+    tempRemodelSettings.nulify = nulify;
 
     const networkRemodelParams =
     {
@@ -236,6 +250,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             const metricParams = networkRemodelParams["metric"]["params"];
             const sigma = parseFloat(document.getElementById('remodel_sigma').value);
             metricParams.push(sigma);
+            tempRemodelSettings.metricParams.push(sigma);
             break;
     }
 
@@ -245,8 +260,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const algorithmParams = networkRemodelParams["algorithm"]["params"];
     for (const parameter of parameterInputs) {
         algorithmParams.push(parseFloat(parameter.value));
+        tempRemodelSettings.algorithmParams.push(parameter.value);
     }
-    
+
+    tempRemodelSettings.activeFeatures = Array.from(d3.select("#remodel-active-attributes-select").property("options"), opt => opt.value);
+    tempRemodelSettings.inactiveFeatures = Array.from(d3.select("#remodel-inactive-attributes-select").property("options"), opt => opt.value);
 
     const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
@@ -266,6 +284,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             excludedAttributes: excluded_attributes_string
         },
         success: function (result) {
+            currentRemodelSettings = tempRemodelSettings;
             if (result.newVectorData != "") {
                 const newVectorData = JSON.parse(result.newVectorData);
                 dataStore.nodeData = newVectorData;

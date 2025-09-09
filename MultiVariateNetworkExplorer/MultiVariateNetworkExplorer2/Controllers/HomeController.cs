@@ -223,7 +223,7 @@ namespace MultiVariateNetworkExplorer.Controllers
                 nodeAttributes.ToD3Json().ToString() : 
                 JValue.CreateNull().ToString(), 
                 newNetwork = remodeledNetwork.LinksToD3Json().ToString(), 
-                similarityMatrix = similarityMatrix.ToString()}); 
+                simMat = similarityMatrix.ToString()}); 
             
         }
 

@@ -145,8 +145,6 @@ const addSelectionDivs = function (selectionGraph) {
         .on('click', () => { stopClickPropagation(d3.event); })
         .html((d) => { return `Selection \"${d.id}\"`; });
 
-    /*panel.style('background-color', groupColours(selectionId));*/
-
     const panel_list_add_btn = panels.append('button')
         .attr('class', 'btn btn-danger btn-sm rounded-0')
         .attr('type', 'button')
