@@ -2,6 +2,9 @@
     generateLayoutControls();
     generateVisualControls();
     generateRemodelSettings();
+
+    generateNodeHeadings(currentGraph);
+    generateNodeDetails(currentGraph);
 }
 
 
@@ -13,7 +16,7 @@ const generateGraphElements = function (graph) {
 
 const generateNodeDetails = function (graph) {
     const nodeAttributesDiv = d3.select("#node-attributes");
-    const { numAttributes, catAttributes } = graph.attributes;
+    const { num: numAttributes, cat: catAttributes } = graph.attributes;
     for (const attribute of numAttributes) {
         generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
         const containerDivId = `${attribute}-histogram-container`;
@@ -26,6 +29,10 @@ const generateNodeDetails = function (graph) {
 
     for (const attribute of catAttributes) {
         generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
+    }
+
+    for (const centrality in graph.properties) {
+        generateNodeDetailDisplayElements(nodeAttributesDiv, centrality);
     }
 }
 
@@ -50,7 +57,7 @@ const generateNodeHeadings = function (graph) {
     const nodeHeadingsList = d3.select("#node-list");
     for (const node of graph.nodes) {
         const { id, index } = node;
-        const nodeHeading = nodeHeadingsList.append("li")
+        nodeHeadingsList.append("li")
             .classed("node-li", true)
             .attr("id", "node-li-" + node.id)
             .on("mousedown", function () { nodeHeadingClick(id, index) })
@@ -62,10 +69,6 @@ const generateNodeHeadings = function (graph) {
 }
 
 const generateLayoutControls = function () {
-    const { x, y } = currentGraph.forces.center;
-    updateForceControlValue("center_XSliderOutput", x);
-    updateForceControlValue("center_YSliderOutput", y);
-
     const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = currentGraph.forces.charge;
     updateForceState("charge_EnabledCheckbox", chargeEnabled);
     updateForceControlValue("charge_StrengthSliderOutput", chargeStrength);
@@ -83,8 +86,8 @@ const generateLayoutControls = function () {
     updateForceControlValue("link_DistanceSliderOutput", distance);
     updateForceControlValue("link_IterationsSliderOutput", linkIterations);
 
-    const { attributes } = graph;
-    const { numAttributes } = attributes;
+    const { attributes } = currentGraph;
+    const { num: numAttributes } = attributes;
     const { attribute: xAttribute } = currentGraph.forces.forceX;
     updateAttributeList("project-x-attributes", numAttributes, xAttribute);
 
@@ -93,19 +96,24 @@ const generateLayoutControls = function () {
 }
 
 const generateVisualControls = function () {
-    document.getElementById("network-colour-input").value = visualSettings.monoColour;
+    d3.select("#network-colour-input").property("value", visualSettings.monoColour)
     const { num: features, cat: labels } = currentGraph.attributes;
     const allAttributes = [...features, ...labels];
 
     updateAttributeList("node-label-select", allAttributes, visualSettings.currentLabel, "Attributes");
-
+    setNodeLabel(document.getElementById("node-label-select"));
     updateAttributeList("attribute-node-colouring", features, visualSettings.gradientColour.currentFeature, "Attributes");
     updateGradientColourList("attribute-node-colouring");
     updateGradientLegendAxis("attribute-node-colouring");
     updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
 
     updateAttributeList("categorical-attribute-node-colouring", labels, visualSettings.categoryColour.currentLabel);
-    changeAttributeCategoryColouringList("categorical-attribute-node-colouring", 'categorical-colour-list')
+    changeAttributeCategoryColouringList("categorical-attribute-node-colouring", 'categorical-colour-list');
+
+    updateAttributeList("partition-metric-mcc-attribute-select", labels, currentGraph.currentClassLabel, null);
+
+    updateAttributeList("attribute-node-sizing", features, visualSettings.currentNodeSize, "Attributes");
+    setAttributeNodeSizing(document.getElementById("attribute-node-sizing"));
 
 }
 
@@ -130,7 +138,9 @@ const updateAttributeList = function (forceSelectId, attributes, chosenAttribute
             .html(attribute);
     }
 
-    forceSelect.property("value", chosenAttribute);
+    if (chosenAttribute !== null) {
+        forceSelect.property("value", chosenAttribute);
+    }
 
     return forceSelect.node();
 }
@@ -316,7 +326,7 @@ const clearNodeSection = function () {
     //Node labels
     clearElement("node-attributes-categorical");
     //Node neighbours
-    clearElement("node-grid");
+    clearElement("neighbors-nav");
 }
 
 const clearClusterAttributeSelect = function () {

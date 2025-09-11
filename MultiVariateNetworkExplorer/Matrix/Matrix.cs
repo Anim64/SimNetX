@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text.Json.Serialization;
 
 namespace Matrix
@@ -43,9 +44,20 @@ namespace Matrix
             return res;
         }
 
-        public string ToJson()
+        public JArray ToJson()
         {
-            return JsonConvert.SerializeObject(this.matrix);
+            JArray jSimilarityMatrix = new();
+            for (int i = 0; i < this.Rows; i++)
+            {
+                JArray inner = new JArray();
+                for (int j = 0; j < this.Cols; j++)
+                {
+                    inner.Add(this[i, j]);
+                }
+                jSimilarityMatrix.Add(inner);
+            }
+
+            return jSimilarityMatrix;
         }
 
     }

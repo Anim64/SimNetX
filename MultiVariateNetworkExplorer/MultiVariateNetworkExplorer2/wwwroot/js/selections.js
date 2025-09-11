@@ -120,11 +120,6 @@ const addSelectionDiv = function (selectionData) {
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
-
-    const partitionColourList = d3.select("#partition-colour-list");
-    const color = addListColour(selectionId, groupColors(value), "partition", partitionColourList)
-        .property("value");
-    panel.style("background-color", color);
 }
 
 const addSelectionDivs = function (selectionGraph) {
@@ -168,11 +163,6 @@ const addSelectionDivs = function (selectionGraph) {
         .attr('class', 'fa fa-trash');
 
     const partitionColourList = d3.select("#partition-colour-list").html("");
-
-    panels.style("background-color", function (d) {
-        return addListColour(d.id, groupColours(d.id), "partition", partitionColourList)
-            .property("value");
-    })
 }
 
 
@@ -280,10 +270,11 @@ const addNodesToSelection = function (event, selectionId) {
 const deleteAllSelections = function () {
     currentGraph.clearPartitions();
 
+    if (selectionGraph === null) {
+        return;
+    }
     selectionGraph.nodes = [];
     selectionGraph.links = [];
-
-    updateSelectionNodesAndLinks();
 
     document.getElementById('list-selections').innerHTML = "";
     document.getElementById("partition-colour-list").innerHTML = "";
@@ -400,7 +391,8 @@ const requestCommunityDetection = function () {
             selectionGraph = JSON.parse(result.newSelections);
             
             addSelectionDivs(selectionGraph);
-
+            updatePartitionColours();
+            updatePartitionColourList();
             updateSelectionNodesAndLinks();
 
             setPartitionColouring("partition-colour-list");

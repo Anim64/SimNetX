@@ -77,6 +77,8 @@ window.addEventListener("load", function () {
 
     addSelectionDivs(selectionGraph);
     updateSelectionNodesAndLinks();
+    updatePartitionColours();
+    updatePartitionColourList();
     setPartitionColouring("partition-colour-list");
 
 });

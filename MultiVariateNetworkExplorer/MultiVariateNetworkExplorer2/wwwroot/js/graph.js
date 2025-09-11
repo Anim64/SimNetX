@@ -9,16 +9,17 @@ class Graph {
         forceY: "forceY"
     }
 
-    constructor(input_graph, simMat, dataStore, view_width, view_height) {
+    constructor(input_graph, dataStore, view_width, view_height) {
         
         this._data = dataStore;
         this._nodes = input_graph.nodes;
         this._properties = {};
         this._attributes = input_graph.attributes;
+        this._currentClassLabel = null;
         this._classes = input_graph.classes;
         this._metric = input_graph.metric;
         this._conversionAlg = input_graph.conversionAlg;
-        this._similarityMatrix = simMat;
+        this._similarityMatrix = input_graph.simMat;
         
 
         this._links = input_graph.links;
@@ -149,6 +150,14 @@ class Graph {
         return this._classes;
     }
 
+    get currentClassLabel() {
+        return this._currentClassLabel;
+    }
+
+    set currentClassLabel(value) {
+         this._currentClassLabel = value;
+    }
+
     get metric() {
         return this._metric;
     }
@@ -161,7 +170,7 @@ class Graph {
         this._metric = value;
     }
 
-    set simialrityMatrix(value) {
+    set similarityMatrix(value) {
         this._similarityMatrix = value;
     }
 
@@ -189,7 +198,9 @@ class Graph {
     addLink(sourceId, targetId, value) {
         const newLink = {};
     }
-
+    getAllNodeData(id) {
+        return this._data.getAllNodeData(id);
+    }
     getNodeDataValue(id, attribute) {
         return this._data.getNodeDataValue(id, attribute);
     }
@@ -318,7 +329,8 @@ class Graph {
             "metric": this._metric,
             "conversionAlg": this._conversionAlg,
             "linkedByIndex": this._linkedByIndex,
-            "forces": this._forces
+            "forces": this._forces,
+            "simMat": this._similarityMatrix
         };
 
         for (const link of serializedGraph.links) {
@@ -340,6 +352,7 @@ class Graph {
         this._linkedByIndex = json.linkedByIndex;
         this._partitions = json.partitions;
         this._forces = json.forces;
+        this._similarityMatrix = json.simMat;
     }
 
     max(attributeName) {
@@ -357,6 +370,7 @@ class Graph {
         this.updateChargeForce();
         this.updateCollideForce();
         this.updateLinkForce();
+        this.updateNodeForce();
 
         if (reset) {
             this.resetSimulation();
@@ -410,6 +424,10 @@ class Graph {
             })
             .iterations(linkIterations)
             .links(chosenLinks);
+    }
+
+    updateNodeForce() {
+        this._simulation.nodes(this._nodes);
     }
 
     toggleXForce(enabled) {

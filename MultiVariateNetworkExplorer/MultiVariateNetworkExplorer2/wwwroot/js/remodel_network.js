@@ -1,6 +1,6 @@
 ﻿const attributeTransform = {}
 const excludedAttributes = [];
-const currentRemodelSettings = {
+let currentRemodelSettings = {
     algorithm: "",
     algorithmParams: [],
     nulify: false,
@@ -297,13 +297,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             }
             const newNet = JSON.parse(result.newNetwork);
             currentGraph.links = newNet;
-            currentGraph.metric = networkRemodelParams.metric;
-            currentGraph.conversionAlg = networkRemodelParams.algorithm;
-
             currentGraph.updateLinkIndeces();
 
+            currentGraph.similarityMatrix = JSON.parse(result.simMat);
+            drawHeatmap(currentGraph.similarityMatrix);
             updateLinks();
-            //updateNodesAndLinks();
             requestCommunityDetection(currentGraph);
             calculateAllMetrics();
             startSimulation();

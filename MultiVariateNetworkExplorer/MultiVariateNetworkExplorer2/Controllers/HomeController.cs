@@ -215,6 +215,7 @@ namespace MultiVariateNetworkExplorer.Controllers
             IVectorConversion chosenConversion = (IVectorConversion)Activator.CreateInstance(conversionType, algorithmParams);
 
             Matrix<double> similarityMatrix = chosenMetric.GetMetricMatrix(nodeAttributes, doNulify, excludedAttributesList);
+            
             // TODO: Return only transformed columns and then assign then into global json graph
             Network remodeledNetwork = chosenConversion.ConvertToNetwork(nodeAttributes.IdColumn, similarityMatrix);
             return Json(new {
@@ -223,7 +224,7 @@ namespace MultiVariateNetworkExplorer.Controllers
                 nodeAttributes.ToD3Json().ToString() : 
                 JValue.CreateNull().ToString(), 
                 newNetwork = remodeledNetwork.LinksToD3Json().ToString(), 
-                simMat = similarityMatrix.ToString()}); 
+                simMat = similarityMatrix.ToJson().ToString()}); 
             
         }
 

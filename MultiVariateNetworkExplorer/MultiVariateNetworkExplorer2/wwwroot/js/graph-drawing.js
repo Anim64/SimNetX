@@ -291,22 +291,16 @@ function hclustOrder(data) {
 }
 
 const drawHeatmap = function (data) {
-    const { simMat } = data.graph;
+    const rows = data.length;
+    const cols = data[0].length;
 
-    const rows = simMat.length;
-    const cols = simMat[0].length;
-
-    // Row order
-    const rowOrder = hclustOrder(simMat);
-
-    // Column order (just cluster transposed matrix)
-    const transpose = m => m[0].map((_, j) => m.map(row => row[j]));
-    const colOrder = hclustOrder(transpose(simMat));
+    // Row and Column order, Matrix is symmetric
+    const rowOrder = hclustOrder(data);
 
     const flatData = [];
     rowOrder.forEach((ri, i) => {
-        colOrder.forEach((cj, j) => {
-            flatData.push({ row: i, col: j, value: simMat[ri][cj] });
+        rowOrder.forEach((cj, j) => {
+            flatData.push({ row: i, col: j, value: data[ri][cj] });
         });
     });
 
@@ -392,22 +386,24 @@ const drawHeatmap = function (data) {
 }
 
 const createDataGraphObjects = function (data) {
-    const { graph: init_graph, data: nodeData, simMat } = data;
+    const { graph: init_graph, data: nodeData } = data;
     dataStore = new DataStore(nodeData);
-    currentGraph = new Graph(init_graph, simMat, dataStore, width, height);
-    currentRemodelSettings.algorithm = init_graph.conversionAlg;
-    currentRemodelSettings.algorithmParams = [1, 1];
-    currentRemodelSettings.metric = init_graph.metric;
+    currentGraph = new Graph(init_graph, dataStore, width, height);
+    
+    currentRemodelSettings.algorithm = init_graph.conversionAlg.name;
+    currentRemodelSettings.algorithmParams = [1,1];
+    currentRemodelSettings.metric = init_graph.metric.name;
     if (currentRemodelSettings.metric === "GaussKernel") {
-        currentRemodelSettings.metricParams = [1];
+        currentRemodelSettings.metricParams = init_graph.metric.params;
     }
+    currentRemodelSettings.activeFeatures = structuredClone(currentGraph.attributes.num);
 }
 
 const initGraph = function (data) {
     prepareCanvas();
     createDataGraphObjects(data);
     drawNetwork();
-    drawHeatmap(currentGraph.simMat);
+    drawHeatmap(currentGraph.similarityMatrix);
     updateForces();
     setDefaultNodeAndLinkColour(node, link);
     initVisualSettings();
@@ -781,6 +777,7 @@ const updateForces = function(reset = true) {
     updateChargeForce();
     updateCollideForce();
     updateLinkForce();
+    updateNodeForce();
 
     if (reset) {
         startSimulation();
@@ -819,6 +816,10 @@ const updateLinkForce = function () {
     link
         .attr("stroke-width", linksEnabled ? 1 : .5)
         .attr("opacity", linksEnabled ? 1 : 0);
+}
+
+const updateNodeForce = function () {
+    currentGraph.updateNodeForce();
 }
 
 //const resetSimulation = function() {

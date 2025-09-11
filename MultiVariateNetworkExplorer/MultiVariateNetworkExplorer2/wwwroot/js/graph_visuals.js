@@ -1,8 +1,8 @@
-﻿const visualSettings = {
+﻿let visualSettings = {
     //mono, gradient, category, partition
     currentColourSetting: "partition",
-    monoColour: "white",
-    backgroundColour:"black",
+    monoColour: "#ffffff",
+    backgroundColour:"#000000",
     gradientColour: {
         currentFeature: "",
         features: {},
@@ -13,7 +13,7 @@
         labels: {}
     },
     partitionColour: {},
-    currentLabel: "",
+    currentLabel: "id",
     currentNodeSize: ""
 }
 
@@ -459,7 +459,7 @@ const changeAttributeCategoryColouringList = function (attributeSelectId, colour
     const colourList = d3.select(`#${colourListId}`);
 
     colourList.html("");
-    for (const [value, colour] of Object.entries(visualSettings.categoryColour[attributeName])) {
+    for (const [value, colour] of Object.entries(visualSettings.categoryColour.labels[attributeName])) {
         addListColour(value, colour, "category", colourList);
     }
 }
@@ -550,6 +550,23 @@ const setPartitionColouring = function (colourListId) {
         updateBoxplotColour(d3.select(this), colourObject[d.id]);
     })
 
+}
+
+const updatePartitionColours = function () {
+    for (const partition of selectionGraph.nodes) {
+        visualSettings.partitionColour[partition.id] = groupColours(partition.id);
+    }
+}
+
+const updatePartitionColourList = function () {
+    const partitionColourList = d3.select("#partition-colour-list").html("");
+    d3.select('#list-selections')
+        .selectAll("div")
+        .style("background-color", function (d) {
+            return addListColour(d.id, visualSettings.partitionColour[d.id], "partition", partitionColourList)
+                .property("value");
+        });
+    
 }
 
 //***********************************Node size section********************************************

@@ -70,7 +70,7 @@ const serializeGraph = function (graph) {
         link.target = link.target.id;
     }
 
-    return serializeGraph;
+    return serializedGraph;
 }
 
 const getColourListInputSelector = function (colourListId) {
@@ -228,18 +228,42 @@ const loadNetwork = async function (fileName) {
         visualSettings = visuals;
         currentRemodelSettings = remodelSettings;
 
-        prepareCanvas()
+        prepareCanvas();
         drawNetwork();
-        //drawHeatmap(data);
+        drawHeatmap(graph.simMat);
         updateForces();
-        setDefaultNodeAndLinkColour(node, link);
 
-
-        selectionGraph.nodes.forEach(function (d) {
-           addSelectionDiv(d);
-        });
+        addSelectionDivs(selectionGraph);
+        updatePartitionColourList();
 
         generateGraphControlsAndElements();
+
+        //mono, gradient, category, partition
+        switch (visualSettings.currentColourSetting) {
+            case "mono": {
+                changeNetworkNodeColour('network-colour-input');
+                break;
+            }
+
+            case "gradient": {
+                changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'numerical-colour-list');
+                break;
+            }
+
+            case "category": {
+                changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list');
+                break;
+            }
+
+            case "partition": {
+                setPartitionColouring('partition-colour-list');
+                break
+            }
+
+            default: {
+                setDefaultNodeAndLinkColour(node, link);
+            }
+        }
 
 
         //// TODO: Load Metrics from json file
@@ -249,5 +273,31 @@ const loadNetwork = async function (fileName) {
 }
 
 const exportNetworkDataToCsv = function () {
+    const data = currentGraph.nodes;
+    // 1. Headers
+    const headers = Object.keys(Object.values(dataStore.nodeData)[0]).concat("cluster");
+
+    // 2. Rows
+    const rows = data.map(node => {
+        const cluster = currentGraph.getPartition(node.id); // join via id
+        return Object.values(currentGraph.getAllNodeData[node.id]).concat(cluster);
+    });
+
+    // 3. Build CSV string (escape values if needed)
+    const csv = [
+        headers.join(";"),
+        ...rows.map(r => r.join(";"))
+    ].join("\n");
+
+    // 4. Create downloadable blob
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
 
 }

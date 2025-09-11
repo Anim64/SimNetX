@@ -98,6 +98,7 @@ const addSilhouettePlot = function (clusterMetricDiv, selectionId, data, barColo
 //********Partition MCC barplots********
 const createPartitionMccGraphs = function () {
     const classAttribute = document.getElementById("partition-metric-mcc-attribute-select").value;
+    currentGraph.classLabel = classAttribute;
     const mccObject = matthewsCorrelationCoeficient(classAttribute);
     const clusterMetricContainer = d3.select("#partition-metric-mcc-graph-container").html("");
     const clusterDivs = d3.selectAll("#list-selections div");
@@ -110,12 +111,12 @@ const createPartitionMccGraphs = function () {
                 addMccPlot(clusterMetricDiv, d.id, mccObject, titleColour);
             });
 
-        const distinctClasses = currentGraph.getDistinctValues(classAttribute);
-        const classColourList = d3.select("#class-colour-list").html("");
-        for (const realClass of distinctClasses) {
-            addListColour(realClass, groupColours(realClass), "class", classColourList);
-        }
-        changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
+        /*const distinctClasses = currentGraph.getDistinctValues(classAttribute);*/
+        //const classColourList = d3.select("#class-colour-list").html("");
+        //for (const realClass of distinctClasses) {
+        //    addListColour(realClass, groupColours(realClass), "class", classColourList);
+        //}
+        //changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
     }
 
 
