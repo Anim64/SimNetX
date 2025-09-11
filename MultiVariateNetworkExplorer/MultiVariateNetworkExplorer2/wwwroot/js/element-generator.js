@@ -24,7 +24,7 @@ const generateNodeDetails = function (graph) {
             .attr("id", containerDivId);
 
         const attributeValues = graph.getAllAttributeValues(attribute)
-        hist(containerDivId, attributeValues, attribute, 300, 250);
+        hist(containerDivId, attributeValues, attribute, 300, 100);
     }
 
     for (const attribute of catAttributes) {
@@ -89,10 +89,10 @@ const generateLayoutControls = function () {
     const { attributes } = currentGraph;
     const { num: numAttributes } = attributes;
     const { attribute: xAttribute } = currentGraph.forces.forceX;
-    updateAttributeList("project-x-attributes", numAttributes, xAttribute);
+    updateAttributeList("project-x-attributes", numAttributes, xAttribute, "Attributes");
 
     const { attribute: yAttribute } = currentGraph.forces.forceY;
-    updateAttributeList("project-y-attributes", numAttributes, yAttribute);
+    updateAttributeList("project-y-attributes", numAttributes, yAttribute, "Attributes");
 }
 
 const generateVisualControls = function () {
@@ -153,6 +153,7 @@ const generatePartitionColourList = function () {
 }
 
 const generateRemodelSettings = function () {
+    updateAttributeList("remodel-network-select", currentGraph.attributes.num);
     const activeFeaturesSelect = d3.select("#remodel-active-attributes-select");
     const inactiveFeaturesSelect = d3.select("#remodel-inactive-attributes-select");
 

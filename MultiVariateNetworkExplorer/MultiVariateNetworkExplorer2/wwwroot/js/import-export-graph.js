@@ -280,7 +280,8 @@ const exportNetworkDataToCsv = function () {
     // 2. Rows
     const rows = data.map(node => {
         const cluster = currentGraph.getPartition(node.id); // join via id
-        return Object.values(currentGraph.getAllNodeData[node.id]).concat(cluster);
+        const nodeData = currentGraph.getAllNodeData(node.id);
+        return Object.values(nodeData).concat(cluster);
     });
 
     // 3. Build CSV string (escape values if needed)

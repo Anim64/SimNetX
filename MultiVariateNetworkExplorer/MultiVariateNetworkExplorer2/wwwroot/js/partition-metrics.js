@@ -111,6 +111,12 @@ const createPartitionMccGraphs = function () {
                 addMccPlot(clusterMetricDiv, d.id, mccObject, titleColour);
             });
 
+        const rects = clusterMetricContainer.selectAll("rect");
+
+        rects.style("fill", (d) => {
+            return visualSettings.categoryColour.labels[classAttribute][d.x];
+        });
+
         /*const distinctClasses = currentGraph.getDistinctValues(classAttribute);*/
         //const classColourList = d3.select("#class-colour-list").html("");
         //for (const realClass of distinctClasses) {

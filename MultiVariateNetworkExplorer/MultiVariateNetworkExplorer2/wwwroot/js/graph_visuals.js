@@ -1,4 +1,5 @@
-﻿let visualSettings = {
+﻿const defaultNodeColour = "#ffffff";
+let visualSettings = {
     //mono, gradient, category, partition
     currentColourSetting: "partition",
     monoColour: "#ffffff",
@@ -199,6 +200,7 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
 
     visualSettings.currentColourSetting = "gradient";
     visualSettings.gradientColour[attributePropertyName][attributeName] = colourObject;
+    visualSettings.gradientColour.currentFeature = attributeName;
     setAttributeGradientColouring(attributeName, optgroup, getValueFunction, colourObject, attributeMin, attributeMax);
 }
 
@@ -207,8 +209,8 @@ const changeAttributeGradientColouringFromSettings = function (attributeSelectId
 const setAttributeGradientColouring = function (attributeName, optgroup, valueFunction, colourObject, attributeMin, attributeMax) {
     node.style("fill", function (d) {
         const attributeValue = valueFunction(d, attributeName);
-        if (attributeValue === "") {
-            return nodeVisualProperties.colouring.network;
+        if (attributeValue === "" || attributeValue === null) {
+            return defaultNodeColour;
         }
 
         const finalColour = getGradientColour(colourObject, attributeValue, attributeMin, attributeMax);
@@ -217,7 +219,7 @@ const setAttributeGradientColouring = function (attributeName, optgroup, valueFu
         node_text.css("fill", 'hsl(0, 0%, ' + String(lightness) + '%)');
         return rgbObjectToString(finalColour);
     });
-    link.style("stroke", nodeVisualProperties.colouring.network);
+    link.style("stroke", defaultNodeColour);
 }
 
 
@@ -522,7 +524,7 @@ const setPartitionColouring = function (colourListId) {
         const { id } = d;
         const partition = currentGraph.getPartition(id);
         if (partition === "") {
-            return nodeVisualProperties.colouring.network;
+            return defaultNodeColour;
         }
 
         const resultColour = hexToRgb(colourObject[partition]);
@@ -535,7 +537,7 @@ const setPartitionColouring = function (colourListId) {
         const { id } = l.source;
         const partition = currentGraph.getPartition(id);
         if (partition === "") {
-            return nodeVisualProperties.colouring.network;
+            return defaultNodeColour;
         }
 
         return colourObject[partition];
@@ -573,10 +575,9 @@ const updatePartitionColourList = function () {
 const setAttributeNodeSizing = function (selectElement) {
     const attributeName = selectElement.value;
     const defaultRadius = currentGraph.getForcePropertyValue(Graph.forceNames.collide, "radius");
-    nodeVisualProperties.sizing.attribute = attributeName;
+    visualSettings.currentNodeSize = attributeName;
 
     if (attributeName !== "") {
-        nodeVisualProperties.sizing.enabled = true;
         const optgroup = selectElement.options[selectElement.selectedIndex].closest('optgroup').getAttribute('label');
         let attributeMax = null;
         let attributeMin = null;
@@ -613,7 +614,7 @@ const setAttributeNodeSizing = function (selectElement) {
         return;
     }
 
-    nodeVisualProperties.sizing.enabled = false;
+    
     node.attr("r", function (d) {
         return d.r = defaultRadius;
     });

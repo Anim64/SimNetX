@@ -369,8 +369,9 @@ class Graph {
         this.updateCenterForce();
         this.updateChargeForce();
         this.updateCollideForce();
-        this.updateLinkForce();
         this.updateNodeForce();
+        this.updateLinkForce();
+        
 
         if (reset) {
             this.resetSimulation();

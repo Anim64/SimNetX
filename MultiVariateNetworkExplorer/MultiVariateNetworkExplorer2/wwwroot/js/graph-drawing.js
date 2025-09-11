@@ -776,8 +776,8 @@ const updateForces = function(reset = true) {
     updateCenterForce();
     updateChargeForce();
     updateCollideForce();
-    updateLinkForce();
     updateNodeForce();
+    updateLinkForce();
 
     if (reset) {
         startSimulation();
@@ -797,7 +797,7 @@ const updateCollideForce = function () {
     currentGraph.updateCollideForce();
 
     const radius = currentGraph.getForcePropertyValue("collide", "radius");
-    if (nodeVisualProperties.sizing.enabled) {
+    if (visualSettings.currentNodeSize !== "") {
         node.attr("r", function (d) {
             const previousRadius = currentGraph.getForcePropertyValue("collide", "radius");
             const resultRadius = ((d.r - 1) / (previousRadius)) * (radius) + 1;
