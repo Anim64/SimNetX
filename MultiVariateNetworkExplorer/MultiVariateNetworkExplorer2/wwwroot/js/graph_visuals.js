@@ -461,6 +461,18 @@ const changeAttributeCategoryColouringList = function (attributeSelectId, colour
     const colourList = d3.select(`#${colourListId}`);
 
     colourList.html("");
+
+    if (!visualSettings.categoryColour.labels[attributeName]) {
+        visualSettings.categoryColour.currentLabel = attributeName;
+        for (const label of currentGraph.attributes.cat) {
+            const labelDistinctValues = currentGraph.getDistinctValues(label);
+            visualSettings.categoryColour.labels[label] = {};
+            for (const value of labelDistinctValues) {
+                visualSettings.categoryColour.labels[label][value] = groupColours(value);
+            }
+        }
+    }
+    
     for (const [value, colour] of Object.entries(visualSettings.categoryColour.labels[attributeName])) {
         addListColour(value, colour, "category", colourList);
     }
@@ -471,7 +483,8 @@ const changeAttributeCategoryColouringFromSettings = function (attributeSelectId
     const attributeName = document.getElementById(attributeSelectId).value;
     const colourObject = contructColourObjectFromList(colourListId);
     visualSettings.currentColourSetting = "category";
-    visualSettings.categoryColour = colourObject;
+    visualSettings.categoryColour.currentLabel = attributeName;
+    visualSettings.categoryColour.labels[attributeName] = colourObject;
     
     setAttributeCategoryColouring(attributeName, colourObject);
 }

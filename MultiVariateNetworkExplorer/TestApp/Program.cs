@@ -111,17 +111,17 @@ namespace TestApp
 
 
             byte[] salt;
-            string hash = HashPassword("simnetxvsb2025", out salt);
+            string hash = HashPassword("123456", out salt);
             string saltString = Convert.ToHexString(salt);
 
-        XDocument doc = XDocument.Load("C:\\Users\\tomas\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer2\\wwwroot\\db\\xml\\users_db.xml");
+        XDocument doc = XDocument.Load("C:\\Users\\Standard\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer2\\wwwroot\\db\\xml\\users_db.xml");
             XElement newUser = new XElement("user");
             newUser.Add(new XAttribute("name", "kkubikova"));
-            newUser.Add(new XAttribute("hash", hash));
             newUser.Add(new XAttribute("salt", saltString));
+            newUser.Add(new XAttribute("hash", hash));
 
             doc.Root.Add(newUser);
-            doc.Save("C:\\Users\\tomas\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer2\\wwwroot\\db\\xml\\users_db.xml");
+            doc.Save("C:\\Users\\Standard\\source\\repos\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer\\MultiVariateNetworkExplorer2\\wwwroot\\db\\xml\\users_db.xml");
 
 
             //DataFrame v = new DataFrame();

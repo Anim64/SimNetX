@@ -343,7 +343,7 @@ input[type=color]::-moz-color-swatch {
 }
 
 .gradient-colouring-legend {
-    fill: url(./#attribute-node-colouring-preview-gradient);
+    /*fill: url(./#attribute-node-colouring-preview-gradient);*/
 }
 
 

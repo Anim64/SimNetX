@@ -1,8 +1,8 @@
 ﻿<div class="column-content controls" id="remodel">
     <div class="force">
-        <p><label>Remodel the network</label> With option to exclude some attributes</p>
+        <p><label>Reconstruct the network</label> With option to exclude some features</p>
         <label class="attribute-selection-label" for="remodel-network-select">
-            Choose Attribute:
+            Choose Feature:
             <select class="attribute-select attribute-select-border" id="remodel-network-select" onchange="updateRemodelOptionsHeader('remodel-attribute-panel-header', this.id); displayAttributeTransformation(this.value, 'attribute-transformation-list')" asp-items="@(new SelectList(Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys))"></select>
         </label>
         <div class="transformation-options">
@@ -19,8 +19,8 @@
                 {
                     <div class="transformation-option" id="@(transformationType.Item1 + "-option")" data-role="@transformationType.Item1">
                         <h5>@transformationType.Item2</h5>
-                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Attribute</button>
-                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Attributes</button>
+                        <button class="tranformation-btn" onclick="addTransformation(this, 'remodel-network-select', 'attribute-transformation-list')">Current Feature</button>
+                        <button class="tranformation-btn" onclick="addTransformationToAll(this, 'remodel-network-select', 'attribute-transformation-list')">All Features</button>
                     </div>
                 }
             }

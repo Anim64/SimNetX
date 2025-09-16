@@ -279,7 +279,9 @@ const switchFormPart = function (partId1, partId2) {
 
 const loadDataset = function () {
     const form = document.getElementById("mvn-input-form");
-    validateNewNetworkForm(form);
+    if (!validateNewNetworkForm(form)) {
+        return;
+    }
     const fileInput = document.getElementById("fileVector");
     const file = fileInput.files[0];
     const reader = new FileReader();
@@ -303,7 +305,7 @@ const loadDataset = function () {
                 return;
             }
             const sampleValues = lines.slice(1).map(l => l.split(separator)[idx]);
-            const isNumeric = sampleValues.every(v => !isNaN(parseFloat(v) || v === missingValuesString));
+            const isNumeric = sampleValues.every(v => !isNaN(parseFloat(v)) || v === missingValuesString);
 
             const row = document.createElement("tr");
             row.innerHTML = `

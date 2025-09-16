@@ -34,7 +34,7 @@ namespace MultiVariateNetworkExplorer2.Controllers
         }
 
         public IActionResult Login(string returnUrl = "~/Home/Graph")
-        {   
+        {
             LoginModel loginModel = new LoginModel();
             loginModel.ReturnUrl = returnUrl;
             return View(loginModel);
@@ -49,7 +49,8 @@ namespace MultiVariateNetworkExplorer2.Controllers
                 {
                     var claims = new List<Claim>
                     {
-                    new Claim(ClaimTypes.Name, loginModel.UserName)
+                        new Claim(ClaimTypes.NameIdentifier, loginModel.UserName),
+                        new Claim(ClaimTypes.Name, loginModel.UserName)
                     };
 
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

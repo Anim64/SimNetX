@@ -245,12 +245,12 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 
     switch (selectedMetric) {
         default:
+            tempRemodelSettings.metricParams.length = 0;
             break;
         case 'GaussKernel':
-            const metricParams = networkRemodelParams["metric"]["params"];
             const sigma = parseFloat(document.getElementById('remodel_sigma').value);
-            metricParams.push(sigma);
-            tempRemodelSettings.metricParams.push(sigma);
+            networkRemodelParams["metric"]["params"] = [sigma];
+            tempRemodelSettings.metricParams = [sigma];
             break;
     }
 
@@ -260,8 +260,9 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const algorithmParams = networkRemodelParams["algorithm"]["params"];
     for (const parameter of parameterInputs) {
         algorithmParams.push(parseFloat(parameter.value));
-        tempRemodelSettings.algorithmParams.push(parameter.value);
+        
     }
+    tempRemodelSettings.algorithmParams = algorithmParams;
 
     tempRemodelSettings.activeFeatures = Array.from(d3.select("#remodel-active-attributes-select").property("options"), opt => opt.value);
     tempRemodelSettings.inactiveFeatures = Array.from(d3.select("#remodel-inactive-attributes-select").property("options"), opt => opt.value);
@@ -291,6 +292,7 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 
                 const newTransformedColumnNames = JSON.parse(result.newTransformedColumnNames);
                 currentGraph.attributes.num.push(...newTransformedColumnNames);
+                currentRemodelSettings.activeFeatures.push(...newTransformedColumnNames);
                 for (const columnName of newTransformedColumnNames) {
                     addNewAttributeControls(columnName);
                 }

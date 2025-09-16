@@ -231,7 +231,8 @@ const loadNetwork = async function (fileName) {
         prepareCanvas();
         drawNetwork();
         drawHeatmap(graph.simMat);
-        updateForces();
+        updateForces(false);
+        ticked();
 
         addSelectionDivs(selectionGraph);
         updatePartitionColourList();

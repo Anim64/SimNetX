@@ -9,17 +9,15 @@ const displayPartitionMetric = function () {
 //*******Silhouette barplots**********
 const requestSilhouette = function () {
     //const graph_string = JSON.stringify(graph);
-    const excludedAttributes = $("#remodel-inactive-attributes-select option")
-        .map(function () {
-            return $(this).val();
-        }).get();
+    const excludedAttributes = currentRemodelSettings.inactiveFeatures;
 
 
     const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
     const partitions_string = JSON.stringify(currentGraph.partitions);
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
-    const metric_string = JSON.stringify(currentGraph.metric);
+    const metric_string = JSON.stringify({ "name": currentRemodelSettings.metric, "params": currentRemodelSettings.metricParams });
+    
 
     $.ajax({
         url: 'GetSilhouette',
@@ -35,6 +33,7 @@ const requestSilhouette = function () {
             partitions: partitions_string,
             excludedAttributes: excluded_attributes_string,
             metric: metric_string
+            
         },
         //cache: false,
         success: function (result) {
@@ -247,7 +246,7 @@ const generateAttributeAcrossPartitionsBoxplots = function () {
             partitionStats.sort(function (a, b) {
                 return ('' + a.key).localeCompare(b.key);
             });
-            boxplot(partitionMetricContainer, partitionStats, 600, 400, 'partition-metric-attribute-boxplot', attribute, `${attribute} boxplot`);
+            boxplot(partitionMetricContainer, partitionStats, 400, 300, 'partition-metric-attribute-boxplot', attribute, `${attribute} boxplot`);
         }
 
         const colourObject = contructColourObjectFromList("partition-colour-list");

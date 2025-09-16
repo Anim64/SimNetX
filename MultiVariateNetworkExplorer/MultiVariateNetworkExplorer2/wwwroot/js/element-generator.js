@@ -86,13 +86,13 @@ const generateLayoutControls = function () {
     updateForceControlValue("link_DistanceSliderOutput", distance);
     updateForceControlValue("link_IterationsSliderOutput", linkIterations);
 
-    const { attributes } = currentGraph;
-    const { num: numAttributes } = attributes;
-    const { attribute: xAttribute } = currentGraph.forces.forceX;
-    updateAttributeList("project-x-attributes", numAttributes, xAttribute, "Attributes");
+    //const { attributes } = currentGraph;
+    //const { num: numAttributes } = attributes;
+    //const { attribute: xAttribute } = currentGraph.forces.forceX;
+    //updateAttributeList("project-x-attributes", numAttributes, xAttribute, "Attributes");
 
-    const { attribute: yAttribute } = currentGraph.forces.forceY;
-    updateAttributeList("project-y-attributes", numAttributes, yAttribute, "Attributes");
+    //const { attribute: yAttribute } = currentGraph.forces.forceY;
+    //updateAttributeList("project-y-attributes", numAttributes, yAttribute, "Attributes");
 }
 
 const generateVisualControls = function () {
@@ -160,12 +160,14 @@ const generateRemodelSettings = function () {
     for (const feature of currentRemodelSettings.activeFeatures) {
         activeFeaturesSelect.append("option")
             .property("value", feature)
+            .attr("title", feature)
             .text(feature);
     }
 
     for (const feature of currentRemodelSettings.inactiveFeatures) {
         inactiveFeaturesSelect.append("option")
             .property("value", feature)
+            .attr("title", feature)
             .text(feature);
     }
 

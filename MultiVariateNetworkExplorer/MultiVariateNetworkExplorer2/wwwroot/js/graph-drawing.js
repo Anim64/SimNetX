@@ -304,11 +304,12 @@ const drawHeatmap = function (data) {
         });
     });
 
-    const margin = { top: 40, right: 80, bottom: 40, left: 60 };
+    const margin = { top: 40, right: 80, bottom: 20, left: 40 };
     const svg = d3.select("#networkHeatmap svg");
     
     const width = +svg.attr("width") - margin.left - margin.right;
-    const height = +svg.attr("height") - margin.top - margin.bottom;
+    const height = +svg.attr("height"); - margin.top - margin.bottom;
+    //svg.attr("viewBox", `0 0 ${rows + margin.left} ${rows}`);
 
     
 
@@ -319,12 +320,12 @@ const drawHeatmap = function (data) {
     const x = d3.scaleBand()
         .domain(d3.range(cols))
         .range([0, width])
-        .padding(0.05);
+        //.padding(0.05);
 
     const y = d3.scaleBand()
         .domain(d3.range(rows))
         .range([0, height])
-        .padding(0.05);
+        //.padding(0.05);
 
     const color = d3.scaleSequential()
         .interpolator(d3.interpolateViridis)
