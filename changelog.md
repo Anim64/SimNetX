@@ -1,17 +1,14 @@
-- Trademark sign previously shown after the project description in version 
-0.3.0
-
-
-
 ## [Unreleased] - 2024-08-05
 
 ### Added
 - Added partition boxplots.
+- Added attribute boxplots
 - An extended version of LRNet with two parameters.
 - An option to nulify similarity matrix while converting data to network. 
 This action sets all values that are lower than similarity matrix geometric mean to 0.
 - Histograms to node attributes to better see their distribution and their values.
 - Matthew's correlation coeficient and bar plots showing dominant real classes in clusters.
+- Histograms now show the distribution of selected nodes.
 
 ### Fixed
 - Project can be saved again to json
@@ -26,6 +23,7 @@ This action sets all values that are lower than similarity matrix geometric mean
 - The color settings and other visual settings were moved to its own tab to better 
 separate graph visual and layout settings.
 - Moved node attribute sizing to visual settings.
+- Lowered the height and unified the number of bins of histograms.
 - Changed the form structure for dataset loading for better clarity.
 
 ### Removed
