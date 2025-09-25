@@ -23,6 +23,7 @@
     "inputFiles": [
       "wwwroot/js/mvn-input.js",
       "wwwroot/js/toolbar.js",
+      "wwwroot/js/graph_visuals.js",
       "wwwroot/js/graph_settings.js",
       "wwwroot/js/algorithms.js",
       "wwwroot/js/site.js",
@@ -34,7 +35,7 @@
       "wwwroot/js/remodel_network.js",
       "wwwroot/js/plots.js",
       "wwwroot/js/statistics.js",
-      //"wwwroot/js/element-generator.js",
+      "wwwroot/js/element-generator.js",
       "wwwroot/js/DataStore.js",
       "wwwroot/js/partition-metrics.js"
     ],

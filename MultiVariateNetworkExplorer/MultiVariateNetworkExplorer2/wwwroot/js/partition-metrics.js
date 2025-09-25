@@ -9,17 +9,15 @@ const displayPartitionMetric = function () {
 //*******Silhouette barplots**********
 const requestSilhouette = function () {
     //const graph_string = JSON.stringify(graph);
-    const excludedAttributes = $("#remodel-inactive-attributes-select option")
-        .map(function () {
-            return $(this).val();
-        }).get();
+    const excludedAttributes = currentRemodelSettings.inactiveFeatures;
 
 
     const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
     const partitions_string = JSON.stringify(currentGraph.partitions);
     const excluded_attributes_string = JSON.stringify(excludedAttributes);
-    const metric_string = JSON.stringify(currentGraph.metric);
+    const metric_string = JSON.stringify({ "name": currentRemodelSettings.metric, "params": currentRemodelSettings.metricParams });
+    
 
     $.ajax({
         url: 'GetSilhouette',
@@ -35,6 +33,7 @@ const requestSilhouette = function () {
             partitions: partitions_string,
             excludedAttributes: excluded_attributes_string,
             metric: metric_string
+            
         },
         //cache: false,
         success: function (result) {
@@ -98,6 +97,7 @@ const addSilhouettePlot = function (clusterMetricDiv, selectionId, data, barColo
 //********Partition MCC barplots********
 const createPartitionMccGraphs = function () {
     const classAttribute = document.getElementById("partition-metric-mcc-attribute-select").value;
+    currentGraph.classLabel = classAttribute;
     const mccObject = matthewsCorrelationCoeficient(classAttribute);
     const clusterMetricContainer = d3.select("#partition-metric-mcc-graph-container").html("");
     const clusterDivs = d3.selectAll("#list-selections div");
@@ -110,12 +110,18 @@ const createPartitionMccGraphs = function () {
                 addMccPlot(clusterMetricDiv, d.id, mccObject, titleColour);
             });
 
-        const distinctClasses = currentGraph.getDistinctValues(classAttribute);
-        const classColourList = d3.select("#class-colour-list").html("");
-        for (const realClass of distinctClasses) {
-            addListColour(realClass, groupColours(realClass), "class", classColourList);
-        }
-        changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
+        const rects = clusterMetricContainer.selectAll("rect");
+
+        rects.style("fill", (d) => {
+            return visualSettings.categoryColour.labels[classAttribute][d.x];
+        });
+
+        /*const distinctClasses = currentGraph.getDistinctValues(classAttribute);*/
+        //const classColourList = d3.select("#class-colour-list").html("");
+        //for (const realClass of distinctClasses) {
+        //    addListColour(realClass, groupColours(realClass), "class", classColourList);
+        //}
+        //changeClassColouringFromSettings('partition-metric-mcc-attribute-select', 'class-colour-list', false);
     }
 
 
@@ -240,7 +246,7 @@ const generateAttributeAcrossPartitionsBoxplots = function () {
             partitionStats.sort(function (a, b) {
                 return ('' + a.key).localeCompare(b.key);
             });
-            boxplot(partitionMetricContainer, partitionStats, 600, 400, 'partition-metric-attribute-boxplot', attribute, `${attribute} boxplot`);
+            boxplot(partitionMetricContainer, partitionStats, 400, 300, 'partition-metric-attribute-boxplot', attribute, `${attribute} boxplot`);
         }
 
         const colourObject = contructColourObjectFromList("partition-colour-list");

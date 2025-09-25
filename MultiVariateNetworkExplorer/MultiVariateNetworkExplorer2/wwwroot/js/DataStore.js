@@ -17,6 +17,10 @@ class DataStore {
         return this._linkData;
     }
 
+    getAllNodeData(id) {
+        return this.nodeData[id];
+    }
+
     getNodeDataValue(id, attribute) {
         return this._nodeData[id][attribute];
     }
@@ -48,5 +52,10 @@ class DataStore {
         };
 
         return serializedData;
+    }
+
+    deserialize(json) {
+        this._nodeData = json.nodeData;
+        this._linkData = json.linkData;
     }
 }

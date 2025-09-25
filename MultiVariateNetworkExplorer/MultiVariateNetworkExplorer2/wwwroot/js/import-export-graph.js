@@ -70,7 +70,7 @@ const serializeGraph = function (graph) {
         link.target = link.target.id;
     }
 
-    return serializeGraph;
+    return serializedGraph;
 }
 
 const getColourListInputSelector = function (colourListId) {
@@ -174,22 +174,24 @@ const serializeVisuals = function () {
 const serializeNetworkAndSettings = function () {
     const serializedCurrentGraph = currentGraph.serialize();
     const serializedSelectionGraph = serializeGraph(selectionGraph);
-    const filters = serializeFilters();
-    const visuals = serializeVisuals();
+    //const filters = serializeFilters();
+    //const visuals = serializeVisuals();
 
     const currentGraphObject = {
         "graph": serializedCurrentGraph,
         "selectionGraph": serializedSelectionGraph,
-        "filters": filters,
-        "filterNodeList": filterNodeList,
-        "visuals": visuals,
+        //"filters": filters,
+        //"filterNodeList": filterNodeList,
+       
         //"nodeVisualProperties": nodeVisualProperties
     }
 
 
     const stateJson = {
         "currentGraph": currentGraphObject,
-        /*"data": dataStore.serialize()*/
+        "data": dataStore.serialize(),
+        "visualSettings": visualSettings,
+        "remodelSettings": currentRemodelSettings
     }
 
     return stateJson;
@@ -212,51 +214,92 @@ const loadNetwork = async function (fileName) {
     
     var reader = new FileReader();
     reader.onload = function (e) {
-        deleteGraphElementsAndControls();
-        return;
-        //var json = JSON.parse(e.target.result);
-        //forceProperties = json.forceProperties;
-        //filters = json.filters;
-        //filterNodeList = json.filterNodeList;
-        //graph = json.graph;
-        //store = json.store;
-
-
+        clearGraphElementsAndControls();
+       
+        var json = JSON.parse(e.target.result);
+        const graphs = json.currentGraph;
+        const { graph, selectionGraph: clusterGraph } = graphs;
+        const { data, visualSettings: visuals, remodelSettings } = json;
         
-        //selectionGraph = json.selectionGraph;
-        //drawSelectionNetwork(selectionGraph);
-        //selectionGraph.nodes.forEach(function (d) {
-        //    addSelectionDiv(d);
-        //});
 
-        //generateGraphControlAndElements(store, forceProperties, filters);
-        //gDraw.html("");
-        //drawNetwork(graph);
-        //updateForces(false);
-        //simulationEnd();
+        currentGraph.deserialize(graph);
+        dataStore.deserialize(data);
+        selectionGraph = clusterGraph;
+        visualSettings = visuals;
+        currentRemodelSettings = remodelSettings;
+
+        prepareCanvas();
+        drawNetwork();
+        drawHeatmap(graph.simMat);
+        updateForces(false);
+        ticked();
+
+        addSelectionDivs(selectionGraph);
+        updatePartitionColourList();
+
+        generateGraphControlsAndElements();
+
+        //mono, gradient, category, partition
+        switch (visualSettings.currentColourSetting) {
+            case "mono": {
+                changeNetworkNodeColour('network-colour-input');
+                break;
+            }
+
+            case "gradient": {
+                changeAttributeGradientColouringFromSettings('attribute-node-colouring', 'numerical-colour-list');
+                break;
+            }
+
+            case "category": {
+                changeAttributeCategoryColouringFromSettings('categorical-attribute-node-colouring', 'categorical-colour-list');
+                break;
+            }
+
+            case "partition": {
+                setPartitionColouring('partition-colour-list');
+                break
+            }
+
+            default: {
+                setDefaultNodeAndLinkColour(node, link);
+            }
+        }
 
 
         //// TODO: Load Metrics from json file
         //calculateAllMetrics();
-
-        
-
-        
-        //if (!forceProperties.attributeColouring.enabled) {
-        //    setDefaultNodeAndLinkColour(node, link);
-        //}
-
-        //updateHeadingColour(graph.nodes);
-
-        
-        
-        
     };
     reader.readAsText(fileName);
+}
 
-    
-    //alert(fileName);
-    
+const exportNetworkDataToCsv = function () {
+    const data = currentGraph.nodes;
+    // 1. Headers
+    const headers = Object.keys(Object.values(dataStore.nodeData)[0]).concat("cluster");
 
-    //alert(json.graph.nodes.length);
+    // 2. Rows
+    const rows = data.map(node => {
+        const cluster = currentGraph.getPartition(node.id); // join via id
+        const nodeData = currentGraph.getAllNodeData(node.id);
+        return Object.values(nodeData).concat(cluster);
+    });
+
+    // 3. Build CSV string (escape values if needed)
+    const csv = [
+        headers.join(";"),
+        ...rows.map(r => r.join(";"))
+    ].join("\n");
+
+    // 4. Create downloadable blob
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+
 }

@@ -280,7 +280,7 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
         for(int i = 0; i < this.DataCount; i++)
         {
             string iNodeId = this.IdColumn[i];
-            Dictionary<string, int> partitionNodeCount = new() { [partitions[iNodeId]] = 0 };
+            Dictionary<string, int> partitionNodeCount = new() { [partitions[iNodeId]] = 1 };
             Dictionary<string, double> averageSimilarities = new() { [partitions[iNodeId]] = 0 };
             for(int j = 0; j < this.DataCount; j++)
             {
@@ -289,12 +289,18 @@ public class DataFrame : IEnumerable<KeyValuePair<string, IColumn>>
                 string jNodePartitions = partitions[jNodeId];
                 if (!partitionNodeCount.TryGetValue(jNodePartitions, out int count))
                 {
-                    partitionNodeCount[jNodePartitions] = 0;
+                    partitionNodeCount[jNodePartitions] = 1;
                     averageSimilarities[jNodePartitions] = 0;
                 }
 
                 partitionNodeCount[jNodePartitions]++;
                 averageSimilarities[jNodePartitions] += metricMat[i,j];
+            }
+
+            if(partitionNodeCount[partitions[iNodeId]] < 2)
+            {
+                silhouette[iNodeId] = 0;
+                continue;
             }
 
             foreach (var partition in averageSimilarities.Keys)

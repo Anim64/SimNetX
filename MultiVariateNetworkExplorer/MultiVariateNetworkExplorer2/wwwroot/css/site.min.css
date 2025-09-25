@@ -105,7 +105,7 @@ footer {
     flex-direction: row;
     -webkit-justify-content: flex-end;
     justify-content: flex-end;
-    padding: 1rem;
+    padding: 0.4rem 1rem;
     
 }
 
@@ -343,7 +343,7 @@ input[type=color]::-moz-color-swatch {
 }
 
 .gradient-colouring-legend {
-    fill: url(./#attribute-node-colouring-preview-gradient);
+    /*fill: url(./#attribute-node-colouring-preview-gradient);*/
 }
 
 

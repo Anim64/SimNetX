@@ -56,16 +56,16 @@ namespace Metrics.Metrics
                             double vectorValueB = Convert.ToDouble(column.Data[j]);
 
                             distance += Math.Abs(vectorValueA - vectorValueB) / (numericalRanges[columnName]);
-                            
+                            validFeatureCount++;
                             continue;
                         }
 
-                        if(column is ColumnString)
-                        {
-                            string vectorValueA = column.Data[i].ToString();
-                            string vectorValueB = column.Data[j].ToString();
-                            distance += vectorValueA == vectorValueB ? 0 : 1;
-                        }
+                        //if(column is ColumnString)
+                        //{
+                        //    string vectorValueA = column.Data[i].ToString();
+                        //    string vectorValueB = column.Data[j].ToString();
+                        //    distance += vectorValueA == vectorValueB ? 0 : 1;
+                        //}
 
                         validFeatureCount++;
 

@@ -120,11 +120,6 @@ const addSelectionDiv = function (selectionData) {
 
     panel_list_delete_btn.append('i')
         .attr('class', 'fa fa-trash');
-
-    const partitionColourList = d3.select("#partition-colour-list");
-    const color = addListColour(selectionId, groupColors(value), "partition", partitionColourList)
-        .property("value");
-    panel.style("background-color", color);
 }
 
 const addSelectionDivs = function (selectionGraph) {
@@ -144,8 +139,6 @@ const addSelectionDivs = function (selectionGraph) {
         .attr('contenteditable', 'true')
         .on('click', () => { stopClickPropagation(d3.event); })
         .html((d) => { return `Selection \"${d.id}\"`; });
-
-    /*panel.style('background-color', groupColours(selectionId));*/
 
     const panel_list_add_btn = panels.append('button')
         .attr('class', 'btn btn-danger btn-sm rounded-0')
@@ -170,49 +163,11 @@ const addSelectionDivs = function (selectionGraph) {
         .attr('class', 'fa fa-trash');
 
     const partitionColourList = d3.select("#partition-colour-list").html("");
-
-    panels.style("background-color", function (d) {
-        return addListColour(d.id, groupColours(d.id), "partition", partitionColourList)
-            .property("value");
-    })
 }
 
 
 
-const hexToRgb = function (hex) {
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
-        return r + r + g + g + b + b;
-    });
 
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-const fontLightness = function (newColour) {
-    const threshold = 0.5;
-    let rgbRepresentation = newColour;
-    if (typeof newColour !== 'object') {
-        rgbRepresentation = hexToRgb(newColour);
-    }
-    const { r, g, b } = rgbRepresentation;
-
-    const lumaRed = r * 0.2126;
-    const lumaGreen = g * 0.7152;
-    const lumaBlue = b * 0.0722;
-
-    const lumaSum = lumaRed + lumaGreen + lumaBlue;
-    const perceivedLightness = lumaSum / 255;
-
-    const finalLightness = (perceivedLightness - threshold) * -10000000;
-
-    return finalLightness;
-}
 
 
 //Move nodes to different selection
@@ -315,10 +270,11 @@ const addNodesToSelection = function (event, selectionId) {
 const deleteAllSelections = function () {
     currentGraph.clearPartitions();
 
+    if (selectionGraph === null) {
+        return;
+    }
     selectionGraph.nodes = [];
     selectionGraph.links = [];
-
-    updateSelectionNodesAndLinks();
 
     document.getElementById('list-selections').innerHTML = "";
     document.getElementById("partition-colour-list").innerHTML = "";
@@ -435,7 +391,8 @@ const requestCommunityDetection = function () {
             selectionGraph = JSON.parse(result.newSelections);
             
             addSelectionDivs(selectionGraph);
-
+            updatePartitionColours();
+            updatePartitionColourList();
             updateSelectionNodesAndLinks();
 
             setPartitionColouring("partition-colour-list");

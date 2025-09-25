@@ -1,5 +1,14 @@
 ﻿const attributeTransform = {}
 const excludedAttributes = [];
+let currentRemodelSettings = {
+    algorithm: "",
+    algorithmParams: [],
+    nulify: false,
+    metric: "",
+    metricParams: [],
+    activeFeatures: [],
+    inactiveFeatures: []
+}
 
 const updateRemodelOptionsHeader = function (headerId, attributeSelectId) {
     const header = document.getElementById(headerId);
@@ -213,6 +222,11 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             return $(this).val();
         }).get();
 
+    const tempRemodelSettings = structuredClone(currentRemodelSettings);
+
+    tempRemodelSettings.algorithm = selectedAlgorithm;
+    tempRemodelSettings.metric = selectedMetric;
+    tempRemodelSettings.nulify = nulify;
 
     const networkRemodelParams =
     {
@@ -231,11 +245,12 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
 
     switch (selectedMetric) {
         default:
+            tempRemodelSettings.metricParams.length = 0;
             break;
         case 'GaussKernel':
-            const metricParams = networkRemodelParams["metric"]["params"];
             const sigma = parseFloat(document.getElementById('remodel_sigma').value);
-            metricParams.push(sigma);
+            networkRemodelParams["metric"]["params"] = [sigma];
+            tempRemodelSettings.metricParams = [sigma];
             break;
     }
 
@@ -245,8 +260,12 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
     const algorithmParams = networkRemodelParams["algorithm"]["params"];
     for (const parameter of parameterInputs) {
         algorithmParams.push(parseFloat(parameter.value));
+        
     }
-    
+    tempRemodelSettings.algorithmParams = algorithmParams;
+
+    tempRemodelSettings.activeFeatures = Array.from(d3.select("#remodel-active-attributes-select").property("options"), opt => opt.value);
+    tempRemodelSettings.inactiveFeatures = Array.from(d3.select("#remodel-inactive-attributes-select").property("options"), opt => opt.value);
 
     const nodes_string = JSON.stringify(dataStore.nodeData);
     const attributes_string = JSON.stringify(currentGraph.attributes);
@@ -266,25 +285,25 @@ const remodelNetwork = function (checkboxesDivId, algorithmSelectId, metricSelec
             excludedAttributes: excluded_attributes_string
         },
         success: function (result) {
+            currentRemodelSettings = tempRemodelSettings;
             if (result.newVectorData != "") {
                 const newVectorData = JSON.parse(result.newVectorData);
                 dataStore.nodeData = newVectorData;
 
                 const newTransformedColumnNames = JSON.parse(result.newTransformedColumnNames);
                 currentGraph.attributes.num.push(...newTransformedColumnNames);
+                currentRemodelSettings.activeFeatures.push(...newTransformedColumnNames);
                 for (const columnName of newTransformedColumnNames) {
                     addNewAttributeControls(columnName);
                 }
             }
             const newNet = JSON.parse(result.newNetwork);
             currentGraph.links = newNet;
-            currentGraph.metric = networkRemodelParams.metric;
-            currentGraph.conversionAlg = networkRemodelParams.algorithm;
-
             currentGraph.updateLinkIndeces();
 
+            currentGraph.similarityMatrix = JSON.parse(result.simMat);
+            drawHeatmap(currentGraph.similarityMatrix);
             updateLinks();
-            //updateNodesAndLinks();
             requestCommunityDetection(currentGraph);
             calculateAllMetrics();
             startSimulation();

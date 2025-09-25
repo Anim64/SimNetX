@@ -218,7 +218,7 @@ const prepareCanvas = function () {
 
 
 //Draw graph of the network
-const drawNetwork = function (data) {
+const drawNetwork = function () {
     prepareLinks();
     prepareNodes();
     prepareText();
@@ -291,30 +291,25 @@ function hclustOrder(data) {
 }
 
 const drawHeatmap = function (data) {
-    const { simMat } = data.graph;
+    const rows = data.length;
+    const cols = data[0].length;
 
-    const rows = simMat.length;
-    const cols = simMat[0].length;
-
-    // Row order
-    const rowOrder = hclustOrder(simMat);
-
-    // Column order (just cluster transposed matrix)
-    const transpose = m => m[0].map((_, j) => m.map(row => row[j]));
-    const colOrder = hclustOrder(transpose(simMat));
+    // Row and Column order, Matrix is symmetric
+    const rowOrder = hclustOrder(data);
 
     const flatData = [];
     rowOrder.forEach((ri, i) => {
-        colOrder.forEach((cj, j) => {
-            flatData.push({ row: i, col: j, value: simMat[ri][cj] });
+        rowOrder.forEach((cj, j) => {
+            flatData.push({ row: i, col: j, value: data[ri][cj] });
         });
     });
 
-    const margin = { top: 40, right: 80, bottom: 40, left: 60 };
+    const margin = { top: 40, right: 80, bottom: 20, left: 40 };
     const svg = d3.select("#networkHeatmap svg");
     
     const width = +svg.attr("width") - margin.left - margin.right;
-    const height = +svg.attr("height") - margin.top - margin.bottom;
+    const height = +svg.attr("height"); - margin.top - margin.bottom;
+    //svg.attr("viewBox", `0 0 ${rows + margin.left} ${rows}`);
 
     
 
@@ -325,12 +320,12 @@ const drawHeatmap = function (data) {
     const x = d3.scaleBand()
         .domain(d3.range(cols))
         .range([0, width])
-        .padding(0.05);
+        //.padding(0.05);
 
     const y = d3.scaleBand()
         .domain(d3.range(rows))
         .range([0, height])
-        .padding(0.05);
+        //.padding(0.05);
 
     const color = d3.scaleSequential()
         .interpolator(d3.interpolateViridis)
@@ -395,15 +390,24 @@ const createDataGraphObjects = function (data) {
     const { graph: init_graph, data: nodeData } = data;
     dataStore = new DataStore(nodeData);
     currentGraph = new Graph(init_graph, dataStore, width, height);
+    
+    currentRemodelSettings.algorithm = init_graph.conversionAlg.name;
+    currentRemodelSettings.algorithmParams = [1,1];
+    currentRemodelSettings.metric = init_graph.metric.name;
+    if (currentRemodelSettings.metric === "GaussKernel") {
+        currentRemodelSettings.metricParams = init_graph.metric.params;
+    }
+    currentRemodelSettings.activeFeatures = structuredClone(currentGraph.attributes.num);
 }
 
 const initGraph = function (data) {
     prepareCanvas();
     createDataGraphObjects(data);
-    drawNetwork(data);
-    drawHeatmap(data);
+    drawNetwork();
+    drawHeatmap(currentGraph.similarityMatrix);
     updateForces();
     setDefaultNodeAndLinkColour(node, link);
+    initVisualSettings();
 }
 
 
@@ -773,6 +777,7 @@ const updateForces = function(reset = true) {
     updateCenterForce();
     updateChargeForce();
     updateCollideForce();
+    updateNodeForce();
     updateLinkForce();
 
     if (reset) {
@@ -793,7 +798,7 @@ const updateCollideForce = function () {
     currentGraph.updateCollideForce();
 
     const radius = currentGraph.getForcePropertyValue("collide", "radius");
-    if (nodeVisualProperties.sizing.enabled) {
+    if (visualSettings.currentNodeSize !== "") {
         node.attr("r", function (d) {
             const previousRadius = currentGraph.getForcePropertyValue("collide", "radius");
             const resultRadius = ((d.r - 1) / (previousRadius)) * (radius) + 1;
@@ -812,6 +817,10 @@ const updateLinkForce = function () {
     link
         .attr("stroke-width", linksEnabled ? 1 : .5)
         .attr("opacity", linksEnabled ? 1 : 0);
+}
+
+const updateNodeForce = function () {
+    currentGraph.updateNodeForce();
 }
 
 //const resetSimulation = function() {
@@ -1176,6 +1185,23 @@ const calculateMetricAsync = function (current_graph, metricDiv) {
             metricDisplayElement.value = currentGraph.getPropertyValue(nodeId, workerName);
 
         }
+
+        gradientColourList = ['#0000FF', '#FF9933', '#FFFFFF'];
+        const colourObject = [];
+        const centralityMax = currentGraph.getPropertyAttributeValue(workerName, "max");
+        const centralityMin = currentGraph.getPropertyAttributeValue(workerName, "min");
+        const centralityRange = centralityMax - centralityMin;
+
+        for (const [i, colour] of gradientColourList.entries()) {
+            const valueThreshold = centralityMin + (centralityRange * (i * (1.0 / (gradientColourList.length - 1))));
+            colourObject.push({
+                value: valueThreshold,
+                colour: colour
+            });
+        }
+
+        visualSettings.gradientColour.centralities[workerName] = colourObject;
+        
 
     }
     

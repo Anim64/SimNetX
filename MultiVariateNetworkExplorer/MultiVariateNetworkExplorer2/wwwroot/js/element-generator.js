@@ -1,6 +1,10 @@
-﻿const generateGraphControlAndElements = function (graph, forceProperties, filters) {
-    generateGraphElements(graph);
-    generateGraphControls(graph, forceProperties, filters);
+﻿const generateGraphControlsAndElements = function () {
+    generateLayoutControls();
+    generateVisualControls();
+    generateRemodelSettings();
+
+    generateNodeHeadings(currentGraph);
+    generateNodeDetails(currentGraph);
 }
 
 
@@ -12,7 +16,7 @@ const generateGraphElements = function (graph) {
 
 const generateNodeDetails = function (graph) {
     const nodeAttributesDiv = d3.select("#node-attributes");
-    const { numAttributes, catAttributes } = graph.attributes;
+    const { num: numAttributes, cat: catAttributes } = graph.attributes;
     for (const attribute of numAttributes) {
         generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
         const containerDivId = `${attribute}-histogram-container`;
@@ -20,11 +24,15 @@ const generateNodeDetails = function (graph) {
             .attr("id", containerDivId);
 
         const attributeValues = graph.getAllAttributeValues(attribute)
-        hist(containerDivId, attributeValues, attribute, 300, 250);
+        hist(containerDivId, attributeValues, attribute, 300, 100);
     }
 
     for (const attribute of catAttributes) {
         generateNodeDetailDisplayElements(nodeAttributesDiv, attribute);
+    }
+
+    for (const centrality in graph.properties) {
+        generateNodeDetailDisplayElements(nodeAttributesDiv, centrality);
     }
 }
 
@@ -49,7 +57,7 @@ const generateNodeHeadings = function (graph) {
     const nodeHeadingsList = d3.select("#node-list");
     for (const node of graph.nodes) {
         const { id, index } = node;
-        const nodeHeading = nodeHeadingsList.append("li")
+        nodeHeadingsList.append("li")
             .classed("node-li", true)
             .attr("id", "node-li-" + node.id)
             .on("mousedown", function () { nodeHeadingClick(id, index) })
@@ -60,59 +68,52 @@ const generateNodeHeadings = function (graph) {
     
 }
 
-const generateGraphControls = function (graph, forceProperties, filters) {
-    const { x, y } = forceProperties.center;
-    updateForceControlValue("center_XSliderOutput", x);
-    updateForceControlValue("center_YSliderOutput", y);
-
-    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = forceProperties.charge;
+const generateLayoutControls = function () {
+    const { strength: chargeStrength, enabled: chargeEnabled, distanceMin, distanceMax } = currentGraph.forces.charge;
     updateForceState("charge_EnabledCheckbox", chargeEnabled);
     updateForceControlValue("charge_StrengthSliderOutput", chargeStrength);
     updateForceControlValue("charge_distanceMinSliderOutput", distanceMin);
     updateForceControlValue("charge_distanceMaxSliderOutput", distanceMax);
 
-    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = forceProperties.collide;
+    const { strength: collideStrength, enabled: collideEnabled, radius, iterations: collideIterations } = currentGraph.forces.collide;
     updateForceState("collide_EnabledCheckbox",collideEnabled);
     updateForceControlValue("collide_StrengthSliderOutput", collideStrength);
     updateForceControlValue("collide_radiusSliderOutput", radius);
     updateForceControlValue("collide_iterationsSliderOutput", collideIterations);
 
-    const { enabled: linksEnabled, distance, iterations: linkIterations } = forceProperties.link;
+    const { enabled: linksEnabled, distance, iterations: linkIterations } = currentGraph.forces.link;
     updateForceState("link_EnabledCheckbox", linksEnabled);
     updateForceControlValue("link_DistanceSliderOutput", distance);
     updateForceControlValue("link_IterationsSliderOutput", linkIterations);
 
-    const { attributes } = graph;
-    const { numAttributes, catAttributes } = attributes;
-    const allAttributes = [...new Set([...numAttributes, ...catAttributes])];
-    const { attribute: xAttribute } = forceProperties.forceX;
-    updateForceAttributeList("project-x-attributes", numAttributes, xAttribute);
+    //const { attributes } = currentGraph;
+    //const { num: numAttributes } = attributes;
+    //const { attribute: xAttribute } = currentGraph.forces.forceX;
+    //updateAttributeList("project-x-attributes", numAttributes, xAttribute, "Attributes");
 
-    const { attribute: yAttribute } = forceProperties.forceY;
-    updateForceAttributeList("project-y-attributes", numAttributes, yAttribute);
+    //const { attribute: yAttribute } = currentGraph.forces.forceY;
+    //updateAttributeList("project-y-attributes", numAttributes, yAttribute, "Attributes");
+}
 
-    const { enabled: labelEnabled, attribute: labelAttribute } = forceProperties.labels;
-    //updateForceState("label_EnabledCheckbox", labelEnabled);
-    const labelForceSelect = updateForceAttributeList("node-label-select", allAttributes, labelAttribute);
-    setNodeLabel(labelForceSelect);
+const generateVisualControls = function () {
+    d3.select("#network-colour-input").property("value", visualSettings.monoColour)
+    const { num: features, cat: labels } = currentGraph.attributes;
+    const allAttributes = [...features, ...labels];
 
-    const { attribute: sizingAttribute } = forceProperties.sizing;
-    const sizingForceSelect = updateForceAttributeList("attribute-node-sizing", numAttributes, sizingAttribute);
-    setAttributeNodeSizing(sizingForceSelect);
+    updateAttributeList("node-label-select", allAttributes, visualSettings.currentLabel, "Attributes");
+    setNodeLabel(document.getElementById("node-label-select"));
+    updateAttributeList("attribute-node-colouring", features, visualSettings.gradientColour.currentFeature, "Attributes");
+    updateGradientColourList("attribute-node-colouring");
+    updateGradientLegendAxis("attribute-node-colouring");
+    updateGradientLegend('attribute-node-colouring-preview', 'numerical-colour-list');
 
-    const { network, background } = forceProperties.colouring;
-    updateColourControl("network-colour-input", network);
-    updateColourControl("background-colour-input", background);
-    changeNetworkBackgroundColour(background);
+    updateAttributeList("categorical-attribute-node-colouring", labels, visualSettings.categoryColour.currentLabel);
+    changeAttributeCategoryColouringList("categorical-attribute-node-colouring", 'categorical-colour-list');
 
+    updateAttributeList("partition-metric-mcc-attribute-select", labels, currentGraph.currentClassLabel, null);
 
-    const { attribute: colouringAttribute, lowValue, highValue } = forceProperties.attributeColouring;
-    const colouringForceSelect = updateColouringForceAttributeList("attribute-node-colouring", attributes, colouringAttribute);
-    updateColouringColourInputs(lowValue, highValue);
-    setAttributeNodeColouring(colouringForceSelect);
-
-    generateAttributeFilters(filters);
-    generateRemodelAttributes(graph);
+    updateAttributeList("attribute-node-sizing", features, visualSettings.currentNodeSize, "Attributes");
+    setAttributeNodeSizing(document.getElementById("attribute-node-sizing"));
 
 }
 
@@ -128,49 +129,61 @@ const updateForceState = function (forceCheckboxId, state) {
     forceCheckbox.checked = state;
 }
 
-const updateForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
-    const forceSelect = d3.select("#" + forceSelectId);
-    const attributeOptGroup = forceSelect.select('optgroup[label=Attributes]');
+const updateAttributeList = function (forceSelectId, attributes, chosenAttribute, optgroup = null) {
+    const forceSelect = d3.select(`#${forceSelectId}`);
+    const attributeOptGroup = optgroup !== null ? forceSelect.select(`optgroup[label=${optgroup}]`) : forceSelect;
     for (const attribute of attributes) {
         attributeOptGroup.append("option")
             .property("value", attribute)
             .html(attribute);
     }
 
-    forceSelect.property("value", chosenAttribute);
-
-    return forceSelect.node();
-}
-
-const updateColouringForceAttributeList = function (forceSelectId, attributes, chosenAttribute) {
-    const forceSelect = d3.select("#" + forceSelectId);
-    const { numAttributes, catAttributes } = attributes;
-    const numericAttributeOptGroup = forceSelect.select('optgroup[label="Numeric Attributes"]');
-    for (const attribute of numAttributes) {
-        numericAttributeOptGroup.append("option")
-            .property("value", attribute)
-            .html(attribute);
+    if (chosenAttribute !== null) {
+        forceSelect.property("value", chosenAttribute);
     }
 
-    //const categoricalAttributeOptGroup = forceSelect.select('optgroup[label="Categorical Attributes"]');
-    //for (const attribute of catAttributes) {
-    //    categoricalAttributeOptGroup.append("option")
-    //        .property("value", attribute)
-    //        .html(attribute);
-    //}
-
-    forceSelect.property("value", chosenAttribute);
-
     return forceSelect.node();
 }
 
-const updateColouringColourInputs = function (lowColour, highColour) {
-    document.getElementById("low-value-colour").value = lowColour;
-    document.getElementById("high-value-colour").value = highColour;
+const generatePartitionColourList = function () {
+    const partitionColourList = d3.select("#partition-colour-list").html("");
+    for (const [cluster, colour] of Object.entries(visualSettings.partitionColour))
+    addListColour(cluster, colour, "partition", partitionColourList)
+        .property("value");
 }
 
-const updateColourControl = function (forceColourId, colourValue) {
-    document.getElementById(forceColourId).value = colourValue;
+const generateRemodelSettings = function () {
+    updateAttributeList("remodel-network-select", currentGraph.attributes.num);
+    const activeFeaturesSelect = d3.select("#remodel-active-attributes-select");
+    const inactiveFeaturesSelect = d3.select("#remodel-inactive-attributes-select");
+
+    for (const feature of currentRemodelSettings.activeFeatures) {
+        activeFeaturesSelect.append("option")
+            .property("value", feature)
+            .attr("title", feature)
+            .text(feature);
+    }
+
+    for (const feature of currentRemodelSettings.inactiveFeatures) {
+        inactiveFeaturesSelect.append("option")
+            .property("value", feature)
+            .attr("title", feature)
+            .text(feature);
+    }
+
+    d3.select("#remodel-algorithm-select").property("value", currentRemodelSettings.algorithm);
+    const algorithmParameterInputs =
+        d3.selectAll(`#${currentRemodelSettings.algorithm.toLowerCase()}-parameters-remodel input`)
+
+    d3.select("#remodel-metric-select").property("value", currentRemodelSettings.metric);
+
+    if (currentRemodelSettings.metric === "GaussKernel") {
+        const metricParameterInputs =
+            d3.select(`#gauss-parameters input`).property("value", currentRemodelSettings.metricParams[0]);
+    }
+
+    d3.select("#remodel-nulify").property("checked", currentRemodelSettings.nulify);
+    
 }
 
 const generateAttributeFilters = function (filters) {
@@ -255,69 +268,78 @@ const generateAttributeFilters = function (filters) {
 
 }
 
-const generateRemodelAttributes = function (graph) {
-    const remodelAttributesSelect = d3.select("#remodel-network-select");
-    const { numAttributes} = graph.attributes;
-    for (const attribute of numAttributes) {
-        remodelAttributesSelect
-            .append("option")
-            .html(attribute);
-    }
-}
 
-const deleteGraphElementsAndControls = function () {
+
+const clearGraphElementsAndControls = function () {
+    //Layout elements
+    clearLayoutElements();
+    //Visual elements
+    clearVisualElements();
+    //Remodel elements
+    clearRemodelElements();
+    //Network canvas
+    clearNetworkCanvas();
+    //Cluster statistics
+    clearClusterStatistics();
+    //Nodes, histograms
+    clearNodeSection();
+    //Cluster detection attribute
+    clearClusterAttributeSelect();
+
+    //Clusters
     deleteAllSelections();
-    deleteNodeDetailsAttributes();
-    deleteNodeHeadings();
+    
 
-    const clearedSelects = ["project-x-attributes", "project-y-attributes", "node-label-select",
-        , "attribute-node-colouring"];
-
-    for (const select of clearedSelects) {
-        deleteForceAttributeList(select);
-    }
-
-    deleteVisualsListsAndAttributes();
-    clearElement("attributes");
-    deleteRemodelAttributes();
 }
 
-const deleteNodeDetailsAttributes = function () {
-    clearElement("node-attributes");
+const clearLayoutElements = function () {
+    deleteForceAttributeList("project-x-attributes");
+    deleteForceAttributeList("project-y-attributes");
+}
+
+const clearVisualElements = function () {
+    deleteForceAttributeList("node-label-select");
+    deleteForceAttributeList("attribute-node-colouring");
+    clearElement("categorical-attribute-node-colouring");
+    deleteForceAttributeList("attribute-node-sizing");
+}
+
+const clearRemodelElements = function () {
+    clearElement("remodel-active-attributes-select");
+    clearElement("remodel-inactive-attributes-select");
+}
+
+const clearNetworkCanvas = function () {
+    d3.select("#networkGraph svg").html("");
+    d3.select("#networkHeatmap svg").html("");
+}
+
+const clearClusterStatistics = function () {
+    clearElement("partition-metric-mcc-attribute-select");
+    clearElement("partition-metric-mcc-graph-container");
+    clearElement("partition-metric-partition-boxplot-graph-container");
+    clearElement("partition-metric-attribute-boxplot-graph-container");
+}
+
+const clearNodeSection = function () {
+    //Node search list
+    clearElement("node-list");
+    //Node features
+    clearElement("node-attributes-numerical");
+    //Node labels
+    clearElement("node-attributes-categorical");
+    //Node neighbours
     clearElement("neighbors-nav");
 }
 
-const deleteNodeHeadings = function () {
-    document.getElementById("node-list-input").value = "";
-    clearElement("node-list");
-}
-
-const deleteVisualsListsAndAttributes = function () {
-
-    const colourListIDs = ["categorical-colour-list", "class-colour-list"];
-    for (const listID of colourListIDs) {
-        clearElement(listID);
-    }
-
-    clearElement("categorical-attribute-node-colouring");
-    clearElement("partition-metric-mcc-attribute-select");
-    deleteForceAttributeList("attribute-node-colouring");
-    deleteForceAttributeList("attribute-node-sizing");
+const clearClusterAttributeSelect = function () {
+    const clusterDetectionAttributeSelect = document.getElementById("partitions-selection-attributes");
+    clusterDetectionAttributeSelect.length = 1;
+    clusterDetectionAttributeSelect.selectedIndex = 0;
 }
 
 const deleteForceAttributeList = function (forceSelectId) {
     d3.select("#" + forceSelectId).selectAll('optgroup[label]:not([label="Centralities"])').html("");
 }
 
-const deleteRemodelAttributes = function () {
-    for (const attribute in attributeTransform) {
-        delete attributeTransform[attribute];
-    }
-    excludedAttributes.length = 0;
-    clearElement("remodel-network-select");
 
-    clearElement("attribute-transformation-list");
-
-    clearElement("remodel-active-attributes-select");
-    clearElement("remodel-inactive-attributes-select");
-}

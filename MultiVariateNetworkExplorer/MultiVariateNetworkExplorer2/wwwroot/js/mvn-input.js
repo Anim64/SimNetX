@@ -279,7 +279,9 @@ const switchFormPart = function (partId1, partId2) {
 
 const loadDataset = function () {
     const form = document.getElementById("mvn-input-form");
-    validateNewNetworkForm(form);
+    if (!validateNewNetworkForm(form)) {
+        return;
+    }
     const fileInput = document.getElementById("fileVector");
     const file = fileInput.files[0];
     const reader = new FileReader();
@@ -291,14 +293,19 @@ const loadDataset = function () {
         const lines = text.split("\n").slice(0, 6); // preview first 5 rows
 
         const separator = document.getElementById("InputModel_Separators").value;
+        const missingValuesString = document.getElementById("InputModel_MissingValues").value;
+        const idColumnName = document.getElementById("InputModel_IdColumnName").value;
         const headers = lines[0].split(separator);
 
         // Auto-detect attribute types (simple example: numeric vs categorical)
         const tbody = document.querySelector("#attribute-table tbody");
         tbody.innerHTML = "";
         headers.forEach((col, idx) => {
+            if (col === idColumnName) {
+                return;
+            }
             const sampleValues = lines.slice(1).map(l => l.split(separator)[idx]);
-            const isNumeric = sampleValues.every(v => !isNaN(parseFloat(v)));
+            const isNumeric = sampleValues.every(v => !isNaN(parseFloat(v)) || v === missingValuesString);
 
             const row = document.createElement("tr");
             row.innerHTML = `

@@ -22,53 +22,51 @@
                 </div>
                 <div class="node-detail-container" id="node-detail-container">
                     <div id="node-detail" class="node-detail">
-                        @if (!Model.GraphModel.Mvn.IsEmpty())
-                        {
-                            <div id="node-attributes">
-                                <div id="node-attributes-numerical">
-                                    @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
-                                    {
-                                        <div class="node-property-group">
-                                            <label title="@(numAttribute)" for="@("display-" + numAttribute)">
-                                                @(
-                                                    numAttribute + ":"
-                                                    )
-                                            </label>
-                                            <input type="text" id="@("display-" + numAttribute)" value="" data-attribute="@(
-                                        $"{numAttribute}"
+                        <div id="node-attributes">
+                            <div id="node-attributes-numerical">
+                                @foreach (string numAttribute in Model.GraphModel.Mvn.VectorData.NumAtrrExtremes.Keys)
+                                {
+                                    <div class="node-property-group">
+                                        <label title="@(numAttribute)" for="@("display-" + numAttribute)">
+                                            @(
+                                                numAttribute + ":"
+                                                )
+                                        </label>
+                                        <input type="text" id="@("display-" + numAttribute)" value="" data-attribute="@(
+                                    $"{numAttribute}"
+                                    )" readonly />
+                                    </div>
+                                    <div id="@(numAttribute + "-histogram-container")"></div>
+                                }
+                            </div>
+                            <div id="node-attributes-categorical">
+                                @foreach (string catAttribute in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
+                                {
+                                    <div class="node-property-group">
+                                        <label title="@(catAttribute)" for="@("display-" + catAttribute)">
+                                            @(
+                                                catAttribute + ":"
+                                                )
+                                        </label>
+                                        <input type="text" id="@("display-" + catAttribute)" value="" data-attribute="@(
+                                        $"{catAttribute}"
                                         )" readonly />
-                                        </div>
-                                        <div id="@(numAttribute + "-histogram-container")"></div>
-                                    }
-                                </div>
-                                <div id="node-attributes-categorical">
-                                    @foreach (string catAttribute in Model.GraphModel.Mvn.VectorData.CatAttrValues.Keys)
-                                    {
-                                        <div class="node-property-group">
-                                            <label title="@(catAttribute)" for="@("display-" + catAttribute)">
-                                                @(
-                                                    catAttribute + ":"
-                                                    )
-                                            </label>
-                                            <input type="text" id="@("display-" + catAttribute)" value="" data-attribute="@(
-                                            $"{catAttribute}"
-                                            )" readonly />
-                                        </div>
-                                    }
-                                </div>
+                                    </div>
+                                }
                             </div>
-                            <div id="node-centralities">
-                                <div class="node-property-group">
-                                    <label for="display-degree">Degree:</label>
-                                    <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
-                                </div>
-                                <div class="node-property-group">
-                                    <label for="display-clustering-coefficient">Clustering Coefficient:</label>
-                                    <input type="text" id="display-clustering-coefficient" value="" data-attribute="clustering_coefficient" readonly />
-                                </div>
+                        </div>
+                        <div id="node-centralities">
+                            <div class="node-property-group">
+                                <label for="display-degree">Degree:</label>
+                                <input type="text" id="display-degree" value="" data-attribute="degree" readonly />
+                            </div>
+                            <div class="node-property-group">
+                                <label for="display-clustering-coefficient">Clustering Coefficient:</label>
+                                <input type="text" id="display-clustering-coefficient" value="" data-attribute="clustering_coefficient" readonly />
+                            </div>
 
-                            </div>
-                        }
+                        </div>
+                        
                     </div>
                 </div>
             </div>
